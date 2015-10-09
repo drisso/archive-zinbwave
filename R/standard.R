@@ -8,7 +8,7 @@ logistic <- binomial()$linkinv
 #' This is a standard implementation of the log-likelihood of a 
 #' zero-inflated negative binomial regression model.
 #' The problem with this implementation is that, when applied to our model, it requires
-#' the design matrices to be (n*J) x p, where p = n * (k_W + 1) + J * (k_X + 1) + J,
+#' the design matrices to be (n*J) x k_W and (n*J) x k_X, where p = n * k_W + J * k_X + J,
 #' n is the number of cells, J the number of genes, k_W is the number of covariates
 #' of the logistic regression, k_X is the number of covariates in the log-linear regression.
 #' Moreover, this model assumes only one global dispersion parameter, but this should be easy to change.
