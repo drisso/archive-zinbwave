@@ -20,6 +20,9 @@
 #' @param linkobj the link function object for the regression on pi (typically the result of binomial())
 loglik_small <- function(parms, Y, Y1, X, W, kx, kw, offsetx, offsetw, linkobj) {
   
+  J <- nrow(Y)
+  n <- ncol(Y)
+  
   beta <- matrix(parms[1:kx], ncol=J, nrow=ncol(X))
   mu <- t(exp(X %*% beta))
   
@@ -60,6 +63,9 @@ loglik_small <- function(parms, Y, Y1, X, W, kx, kw, offsetx, offsetw, linkobj) 
 #' @param linkobj the link function object for the regression on pi (typically the result of binomial())
 grad_small <- function(parms, Y, Y1, X, W, kx, kw, offsetx, offsetw, linkobj) {
   
+  J <- nrow(Y)
+  n <- ncol(Y)
+
   beta <- matrix(parms[1:kx], ncol=J, nrow=ncol(X))
   mu <- t(exp(X %*% beta))
   
