@@ -3,7 +3,7 @@ source("../R/reg_smallmatrix.R")
 
 ## true expression: low, high, medium genes.
 set.seed(12324)
-n <- 4
+n <- 5
 J <- 9
 mu_pop <- rep(c(10, 50, 100), each=3)
 
@@ -87,11 +87,13 @@ dim(W)
 nbeta <- J
 nalpha <- n*4
 
-loglik_small(parameters, Y, X, W, nbeta, nalpha, 0, 0, binomial())
+loglik_small(parameters, Y, Y>0, X, W, nbeta, nalpha, 0, 0, binomial())
+grad_small(parameters, Y, Y>0, X, W, nbeta, nalpha, 0, 0, binomial())
 
 ## optimize the likelihood with optim, starting from the true values
-system.time(fit3 <- optim(fn = loglik_small, par = parameters, Y=Y, X=X, W=W, 
+system.time(fit3 <- optim(fn = loglik_small, gr = grad_small, par = parameters, Y=Y, Y1=Y>0, X=X, W=W, 
                           kx=nbeta, kw=nalpha, offsetx=0, offsetw=0, linkobj=binomial(),
                           hessian = FALSE, method = "BFGS", control=list(fnscale=-1)))
 fit3$value
 fit3$par
+
