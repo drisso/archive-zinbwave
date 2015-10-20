@@ -3,7 +3,7 @@ title: "Zero-inflated model for single-cell RNA-seq data"
 author: "Davide Risso"
 date: '`r Sys.Date()`'
 output:
-  html_document
+  pdf_document
 ---
 
 ```{r options, echo=FALSE, results="hide",mesasge=FALSE, error=FALSE,include=FALSE}
