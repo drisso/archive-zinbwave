@@ -169,9 +169,9 @@ ziNegBin.U <- function(parms,i,V,W,offset.M,offset.pi,counts,thetas){
   loglik <- sum(loglik0[is0counts[i,]]) + sum(loglik1[n0counts[i,]])
   loglik
 }
-sum(sapply(seq(1000),function(i){ziNegBin.U(U[i,],i,V,W,t(alpha.M)%*%t(X.M),t(alpha.pi)%*%t(X.pi),counts,thetas)}))
+# sum(sapply(seq(1000),function(i){ziNegBin.U(U[i,],i,V,W,t(alpha.M)%*%t(X.M),t(alpha.pi)%*%t(X.pi),counts,thetas)}))
 # gradient function for optimization in U
-sum(sapply(seq(20),function(j){ziNegBin(trueparam[,j],j)}))
+# sum(sapply(seq(20),function(j){ziNegBin(trueparam[,j],j)}))
 # gradient function for optimization in U
 
 gradNegBin.U <- function(parms,i,V,W,offset.M,offset.pi,counts,thetas) {
@@ -200,7 +200,8 @@ optim(fn=ziNegBin.U,gr=gradNegBin.U,i=448,par=c(0.7,0.5),counts=Y,
 
 #Put everything together
 #alt.number - number of alternations
-alt.number=10
+#alt.number=10
+alt.number=1
 #initialization
 p=2
 U0=U+matrix(3,nrow=n,ncol=p)
