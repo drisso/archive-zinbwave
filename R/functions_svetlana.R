@@ -97,7 +97,7 @@ gradNegBin <- function(parms,j,X.M,X.pi,U,Y,epsilon=0,offsetx=0,offsetz=0) {
 #' @param X.M is the design matrix for M 
 #' @param X.pi is the design matrix for Pi.
 #' @param V,W,alpha.M,alpha.pi are the "right parts" to be given as arguments
-#' @theta vector of length J with gene specific dispersion parameters
+#' @param theta vector of length J with gene specific dispersion parameters
 #' @param linkobj the link function object for the regression on pi (typically the result of binomial())
 
 #log(M)=X.M%*%alpa.M+U%*%V, transpose the equation and consider X.M%*%alpha.M as known
