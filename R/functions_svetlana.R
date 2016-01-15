@@ -132,7 +132,7 @@ ziNegBin.U <- function(parms,i,V,W,alpha.M,alpha.pi,Y,theta){
 #' @param X.M is the design matrix for M 
 #' @param X.pi is the design matrix for Pi.
 #' @param V,W,alpha.M,alpha.pi are the "right parts" to be given as arguments
-#' @theta vector of length J with gene specific dispersion parameters
+#' @param theta vector of length J with gene specific dispersion parameters
 #' @param linkobj the link function object for the regression on pi (typically the result of binomial())
 
 gradNegBin.U <- function(parms,i,V,W,alpha.M,alpha.pi,Y,theta) {
