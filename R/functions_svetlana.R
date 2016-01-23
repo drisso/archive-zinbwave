@@ -102,19 +102,23 @@ gradNegBin <- function(parms,j,X.M,X.pi,U,Y,epsilon=0,offsetx=0,offsetz=0) {
 
 #log(M)=X.M%*%alpa.M+U%*%V, transpose the equation and consider X.M%*%alpha.M as known
 
-ziNegBin.U <- function(parms,i,V,W,alpha.M,alpha.pi,Y,theta){
-    offset.M=t(alpha.M)%*%t(X.M)
-    offset.pi=t(alpha.pi)%*%t(X.pi)
+ziNegBin.U <- function(parms,i,V,W,X.M=F,X.pi=F,alpha.M=F,alpha.pi=F,theta,Y){
+    if((X.M!=F)&(alpha.M!=F)){
+        offset.M=(t(alpha.M)%*%t(X.M))[,i]
+    }else{offset.M=0}
+    if((X.pi!=F)&(alpha.pi!=F)){
+        offset.pi=(t(alpha.pi)%*%t(X.pi))[,i]
+    }else{offset.pi=0}
     theta=exp(theta)
     Y0 <- Y == 0
     Y1 <- Y != 0
-    mu <- as.vector(exp(t(V) %*% parms + offset.M[,i]))
+    mu <- as.vector(exp(t(V) %*% parms + offset.M))
     phi <- as.vector(linkinv(t(W) %*% parms + 
-                                 offset.pi[,i]))
+                                 offset.pi))
     loglik0 <- log(phi + exp(log(1 - phi) + suppressWarnings(dnbinom(0, 
                                                                      size = theta, mu = mu, log = TRUE))))
     # counts[i,] is i-th column of t(counts)
-    loglik1 <- log(1 - phi) + suppressWarnings(dnbinom(counts[i,], 
+    loglik1 <- log(1 - phi) + suppressWarnings(dnbinom(Y[i,], 
                                                        size = theta, mu = mu, log = TRUE))
     loglik <- sum(loglik0[Y0[i,]]) + sum(loglik1[Y1[i,]])
     loglik
@@ -135,20 +139,24 @@ ziNegBin.U <- function(parms,i,V,W,alpha.M,alpha.pi,Y,theta){
 #' @param theta vector of length J with gene specific dispersion parameters
 #' @param linkobj the link function object for the regression on pi (typically the result of binomial())
 
-gradNegBin.U <- function(parms,i,V,W,alpha.M,alpha.pi,Y,theta) {
+gradNegBin.U <- function(parms,i,V,W,X.M=F,X.pi=F,alpha.M=F,alpha.pi=F,Y,theta) {
     Y0 <- Y == 0
     Y1 <- Y != 0
-    offset.M=t(alpha.M)%*%t(X.M)
-    offset.pi=t(alpha.pi)%*%t(X.pi)
-    eta <- as.vector(t(V) %*% parms + offset.M[,i])
+    if((X.M!=F)&(alpha.M!=F)){
+        offset.M=(t(alpha.M)%*%t(X.M))[,i]
+    }else{offset.M=0}
+    if((X.pi!=F)&(alpha.pi!=F)){
+        offset.pi=(t(alpha.pi)%*%t(X.pi))[,i]
+    }else{offset.pi=0}
+    eta <- as.vector(t(V) %*% parms + offset.M)
     mu <- exp(eta)
-    etaz <- as.vector(t(W) %*% parms + offset.pi[,i])
+    etaz <- as.vector(t(W) %*% parms + offset.pi)
     muz <- linkinv(etaz)
     theta <- exp(theta)
     clogdens0 <- dnbinom(0, size = theta, mu = mu, log = TRUE)
     dens0 <- muz * (1 - as.numeric(Y1[i,])) + exp(log(1 - muz) + 
                                                             clogdens0)
-    wres_count <- ifelse(Y1[i,],  counts[i,] - mu * (counts[i,] + theta)/(mu + thetas), 
+    wres_count <- ifelse(Y1[i,],  Y[i,] - mu * (Y[i,] + theta)/(mu + theta), 
                          -exp(-log(dens0) + log(1 - muz) + clogdens0 + log(theta) - 
                                   log(mu + theta) + log(mu)))
     wres_zero <- ifelse(Y1[i,], -1/(1 - muz) * linkobj$mu.eta(etaz), 
