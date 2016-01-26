@@ -103,7 +103,7 @@ for (alt in 1:alt.number){
             estimate=zeroinfl(X1~X2-1|X2-1,data=data.frame(cbind(gene.exp.zeroinf[,gene],U.0)),dist="negbin",link="logit")
             V.0[,gene]=estimate$coefficients$count
             W.0[,gene]=estimate$coefficients$zero
-            theta0[gene]=theta[gene]#estimate$theta
+            theta0[gene]=estimate$theta
             #if no zeros, fit negative binomial (would be better to include a test of zero inflation)
         }else{
             estimate=glm.nb(X1~X2-1,data=data.frame(cbind(gene.exp.zeroinf[,gene],U.0)),link="log")
@@ -115,7 +115,7 @@ for (alt in 1:alt.number){
 
     for(cell in 1:n){
         U.0[cell,]=optim(fn=ziNegBin.U,gr=gradNegBin.U,i=cell,par=U.0[cell,],Y=gene.exp.zeroinf,
-                        theta=theta0,V=V.0,W=W.0,X.M=F,X.pi=F,
+                        theta=log(theta0),V=V.0,W=W.0,X.M=F,X.pi=F,
                         alpha.M=F,alpha.pi=F,
                         control=list(fnscale=-1),method="BFGS")$par        
     }
