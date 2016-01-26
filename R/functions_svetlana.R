@@ -20,8 +20,7 @@ linkinv <- linkobj$linkinv
 #' @param offsetx the offset for the regression on M
 #' @param offsetw the offset for the regression on Pi
 #' @param linkobj the link function object for the regression on pi (typically the result of binomial())
-
-
+#' @export
 ziNegBin <- function(parms,j,X.M,X.pi,U,Y,epsilon=0,offsetx=0,offsetz=0) {
     X=cbind(X.M,U)
     Z=cbind(X.pi,U)
@@ -53,8 +52,7 @@ ziNegBin <- function(parms,j,X.M,X.pi,U,Y,epsilon=0,offsetx=0,offsetz=0) {
 #' @param offsetx the offset for the regression on M
 #' @param offsetw the offset for the regression on Pi
 #' @param linkobj the link function object for the regression on pi (typically the result of binomial())
-
-#gradient function
+#' @export
 gradNegBin <- function(parms,j,X.M,X.pi,U,Y,epsilon=0,offsetx=0,offsetz=0) {
     X=cbind(X.M,U)
     Z=cbind(X.pi,U)
@@ -99,9 +97,7 @@ gradNegBin <- function(parms,j,X.M,X.pi,U,Y,epsilon=0,offsetx=0,offsetz=0) {
 #' @param V,W,alpha.M,alpha.pi are the "right parts" to be given as arguments
 #' @param theta vector of length J with gene specific dispersion parameters
 #' @param linkobj the link function object for the regression on pi (typically the result of binomial())
-
-#log(M)=X.M%*%alpa.M+U%*%V, transpose the equation and consider X.M%*%alpha.M as known
-
+#' @export
 ziNegBin.U <- function(parms,i,V,W,X.M=F,X.pi=F,alpha.M=F,alpha.pi=F,theta,Y){
     if((X.M!=F)&(alpha.M!=F)){
         offset.M=(t(alpha.M)%*%t(X.M))[,i]
@@ -138,7 +134,7 @@ ziNegBin.U <- function(parms,i,V,W,X.M=F,X.pi=F,alpha.M=F,alpha.pi=F,theta,Y){
 #' @param V,W,alpha.M,alpha.pi are the "right parts" to be given as arguments
 #' @param theta vector of length J with gene specific dispersion parameters
 #' @param linkobj the link function object for the regression on pi (typically the result of binomial())
-
+#' @export
 gradNegBin.U <- function(parms,i,V,W,X.M=F,X.pi=F,alpha.M=F,alpha.pi=F,Y,theta) {
     Y0 <- Y == 0
     Y1 <- Y != 0

@@ -1,5 +1,5 @@
 library(pscl)
-source('~/GitHub/zinb/R/functions_svetlana.R')
+library(zinb)
 
 # goal: simulate data K times with the same value of parameters (we take one gene only) 
 # and check the variability of estimators
