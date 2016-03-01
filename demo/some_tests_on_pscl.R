@@ -61,8 +61,8 @@ hist(results[,5],breaks=50,xlab="theta (true = 1.38)",main="sample size n=150, 5
 
 U=matrix(runif(n)*3+1,ncol=1)
 V=matrix(runif(J)*2,nrow=1)
-W=-matrix(runif(J)*(2+2*runif(J)),nrow=1)
-theta=1.1+runif(J)  #a known theta same for all genes for the moment 
+W=-matrix(runif(J)*(2.5+2*runif(J)),nrow=1)
+theta=1+runif(J)  #a known theta same for all genes for the moment 
 theta.matr=matrix(0,nrow=n,ncol=J)
 for(j in 1:length(theta)){
 theta.matr[,j]=theta[j]
@@ -136,25 +136,33 @@ plot(as.vector(binomial()$linkinv(U%*%W)),as.vector(binomial()$linkinv(U.0%*%W.0
 ########################################################################
 #      31 JANUARY PCA with rank =2
 ########################################################################
+Nsim=50
+zero.fraction=rep(0,Nsim)
+L2.zinb=rep(0,Nsim)
+L2.pca=rep(0,Nsim)
 
+for(k in 1:Nsim){
 n=100
 J=100
-U=matrix(runif(2*n)*2+1,ncol=2)
 
 U=matrix(0,nrow=n,ncol=2)
-U[,1]=c(rep(0.5,n/2)+runif(n/2)*1.5,1+runif(n/2)*1.5)
-U[,2]=c(1+runif(n/2)*1.5,rep(3,n/2)+runif(n/2))
-
-
-
+U[,1]=c(rnorm(n/2)*0.6+2,rnorm(n/2)*0.6+4)
+#c(rep(1,n/2)+runif(n/2)*1.5,2.5+runif(n/2)*1.5)
+U[,2]=c(rnorm(n/2)*0.6+3,rnorm(n/2)*0.6+5)
+#c(1+runif(n/2)*1.5,rep(3,n/2)+runif(n/2))
+U=U/mean(U)
+#plot(U)
 V=matrix(runif(2*J)*2.2,nrow=2)
-W=-0.1*matrix(runif(2*J)*(2+2*runif(2*J)),nrow=2)
-theta=1.1+runif(J)  #a known theta same for all genes for the moment 
+#W=-0.8*matrix(runif(2*J)*(2+2*runif(2*J)),nrow=2) #22% of zeros
+#W=-45*matrix(runif(2*J)*(2+2*runif(2*J)),nrow=2) #10% of zeros
+W=-0.4*matrix(runif(2*J)*(2+2*runif(2*J)),nrow=2)
+theta=1+runif(J)  #a known theta same for all genes for the moment 
 theta.matr=matrix(0,nrow=n,ncol=J)
 for(j in 1:length(theta)){
     theta.matr[,j]=theta[j]
 }
 #mean of NB
+
 M=exp(U%*%V)
 #zero inflation probabilities
 Pi=binomial()$linkinv(U%*%W)
@@ -175,54 +183,190 @@ gene.is1=matrix(gene.is1,ncol=J)
 gene.exp.zeroinf=gene.exp
 gene.exp.zeroinf[gene.is1==0]=0
 
+zero.fraction[k]=sum(gene.exp.zeroinf==0)/(n*J)*100
+#sizes=1+runif(n)/2
+#sizemat=matrix(rep(sizes,J),ncol=J)
+#gene.exp.zeroinf=round(gene.exp.zeroinf*sizemat)
 
 #initialization at random
-U.0=matrix(1+runif(2*n),nrow=n,ncol=2)
-V.0=matrix(1+runif(2*J),nrow=2,ncol=J)
-W.0=matrix(1,nrow=2,ncol=J)
-theta0=rep(1,J)
+#U.0=matrix(1+runif(2*n),nrow=n,ncol=2)
+#V.0=matrix(1+runif(2*J),nrow=2,ncol=J)
+#W.0=matrix(1,nrow=2,ncol=J)
+
 
 #initialization with PCA
-PCA.init=prcomp(log(gene.exp.zeroinf+1),scale.=TRUE,center=TRUE)
+PCA.init=prcomp(log(1+gene.exp.zeroinf),center=TRUE,scale.=TRUE)
 U.0=PCA.init$x[,1:2]
 V.0=t(PCA.init$rotation[,1:2])
 colnames(U.0)=NULL
 colnames(V.0)=NULL
 W.0=matrix(1,nrow=2,ncol=J)
+theta0=rep(1,J)
+
 #for this simulation : X.M=0, X.pi=0 alpha.M=0 alpha.pi=0
 
-total.lik=rep(0,30)
-alt.number=5
+alt.number=15 #max number of alternations
+total.lik=rep(0,alt.number)
 
+
+# for (alt in 1:alt.number){
+#     for (gene in 1:J){
+#  #       if(sum(gene.exp.zeroinf[,gene]==0)>6){
+#             estimate=zeroinfl(X1~X2+X3-1|X2+X3-1,data=data.frame(cbind(gene.exp.zeroinf[,gene],U.0)),dist="negbin",link="logit")
+#             V.0[,gene]=estimate$coefficients$count
+#             W.0[,gene]=estimate$coefficients$zero
+#             theta0[gene]=estimate$theta
+#             #if no zeros, fit negative binomial (would be better to include a test of zero inflation)
+#  #       }else{
+#   #          estimate=glm.nb(X1~X2+X3-1,data=data.frame(cbind(gene.exp.zeroinf[,gene],U.0)),link="log")
+#    #         V.0[,gene]=estimate$coefficients
+#     #        W.0[,gene]=0
+#      #       theta0[gene]=estimate$theta
+# #        }
+#     if(gene %in% c(1:9)*1000){paste(gene)}
+#     }
+# 
+#     for(cell in 1:n){
+#         U.0[cell,]=optim(fn=ziNegBin.U,gr=gradNegBin.U,i=cell,par=U.0[cell,],Y=gene.exp.zeroinf,
+#                          theta=log(theta0),V=V.0,W=W.0,X.M=F,X.pi=F,
+#                          alpha.M=F,alpha.pi=F,
+#                          control=list(fnscale=-1),method="BFGS")$par        
+#     }
+#     total.lik[alt]=sum(sapply(1:n,function(t) ziNegBin.U(U.0[t,],t,V.0,W.0,X.M=F,X.pi=F,alpha.M=F,alpha.pi=F,theta0,Y=gene.exp.zeroinf)))
+#     alt=alt+1
+# }
+
+#UNE VERSION ALTERNATIVE AVEC PENALIZATION
 for (alt in 1:alt.number){
-    for (gene in 1:J){
-        if(sum(gene.exp.zeroinf[,gene]==0)>6){
-            estimate=zeroinfl(X1~X2+X3-1|X2+X3-1,data=data.frame(cbind(gene.exp.zeroinf[,gene],U.0)),dist="negbin",link="logit")
-            V.0[,gene]=estimate$coefficients$count
-            W.0[,gene]=estimate$coefficients$zero
-            theta0[gene]=estimate$theta
-            #if no zeros, fit negative binomial (would be better to include a test of zero inflation)
-        }else{
-            estimate=glm.nb(X1~X2+X3-1,data=data.frame(cbind(gene.exp.zeroinf[,gene],U.0)),link="log")
-            V.0[,gene]=estimate$coefficients
-            W.0[,gene]=0
-            theta0[gene]=estimate$theta
-        }
-    if(gene %in% c(1:9)*1000){paste(gene)}
+    #evaluate total likelihood before alternation num alt
+    total.lik[alt]=sum(sapply(1:n,function(t) ziNegBin.U(U.0[t,],t,V.0,W.0,X.M=F,X.pi=F,alpha.M=F,alpha.pi=F,theta0,Y=gene.exp.zeroinf)))
+    #if the increase in likelihood is smaller than 0.5%, stop maximization
+    if(alt>1){if(abs((total.lik[alt]-total.lik[alt-1])/total.lik[alt-1])<0.005)break}
+    #optimization for V and W, by gene, theta is optimized also
+    for (gene in 1:J){        
+        estimate=optim(fn=ziNegBin,gr=gradNegBin,j=gene,U=U.0,par=c(V.0[,gene],W.0[,gene],log(theta0)[j]),Y=gene.exp.zeroinf,
+                       control=list(fnscale=-1),method="BFGS",epsilon=0.001)$par 
+        V.0[,gene]=estimate[1:length(V.0[,gene])]
+        W.0[,gene]=estimate[(length(V.0[,gene])+1):(length(V.0[,gene])+length(W.0[,gene]))]
+        theta0[gene]=min(exp(estimate[length(V.0[,gene])+length(W.0[,gene])+1]),10)
+        if(gene %in% c(1:9)*1000){paste(gene)}
     }
-
+    #optimization for U, by cell, V,W and theta are fixed 
     for(cell in 1:n){
         U.0[cell,]=optim(fn=ziNegBin.U,gr=gradNegBin.U,i=cell,par=U.0[cell,],Y=gene.exp.zeroinf,
                          theta=log(theta0),V=V.0,W=W.0,X.M=F,X.pi=F,
                          alpha.M=F,alpha.pi=F,
                          control=list(fnscale=-1),method="BFGS")$par        
     }
-    total.lik[alt]=sum(sapply(1:n,function(t) ziNegBin.U(U.0[t,],t,V.0,W.0,X.M=F,X.pi=F,alpha.M=F,alpha.pi=F,theta0,Y=gene.exp.zeroinf)))
     alt=alt+1
 }
 
-plot(as.vector(U%*%V),as.vector(U.0%*%V.0))
+#true matrix of log expressions
+ref=U%*%V
+#matrix of log expressions reconstructed by zinb
+logM.zinb=U.0%*%V.0
+#L2error of zinb
+L2.zinb[k]=sqrt(sum((ref-logM.zinb)^2))
 
+#do PCA
+pca.reconstruct=prcomp(log(1+gene.exp.zeroinf),center=TRUE,scale.=TRUE)
+#scaled matrix of log expressions reconstructed by first two PCs
+logM.pca=pca.reconstruct$x[,1:2]%*%t(pca.reconstruct$rotation[,1:2])
+#means of initial log-counts
+means=apply(log(gene.exp.zeroinf+1),2,mean)
+#standard deviations of initial log-counts
+sds=apply(log(gene.exp.zeroinf+1),2,sd)
+#go back to unscaled matrix of log counts: multiply by sd and add mean to each column
+for(j in 1:ncol(gene.exp.zeroinf)){
+    logM.pca[,j]=logM.pca[,j]*sds[j]+means[j]
+}
+#L2error of pca
+L2.pca[k]=sqrt(sum((ref-logM.pca)^2))
+paste(k)
+}
+
+zero.fraction.22=zero.fraction
+L2.pca.22=L2.pca
+L2.zinb.22=L2.zinb
+
+zero.fraction.10=zero.fraction
+L2.pca.10=L2.pca
+L2.zinb.10=L2.zinb
+
+zero.fraction.30=zero.fraction
+L2.pca.30=L2.pca
+L2.zinb.30=L2.zinb
+
+hist(L2.pca.30/L2.zinb.30, xlab="Ratio of PCA L2 error over ZINB L2 error")
+hist(zero.fraction.30)
+
+plot(c(zero.fraction.10,zero.fraction.22,zero.fraction.30),c(L2.pca.10/L2.zinb.10,L2.pca.22/L2.zinb.22,L2.pca.30/L2.zinb.30))
+
+
+
+
+
+
+
+
+
+
+
+
+
+#center and standartize the true matrix of log expressions
+ref=scale(U%*%V,center=TRUE,scale=TRUE)
+#reconstruction by zinb of matrix of log expressions
+logM.zinb=U.0%*%V.0
+#center and standartize zinb reconstruction of matrix of log expressions
+logM.zinb=scale(logM.zinb,center=TRUE,scale=TRUE)
+#calculate PCA reconstruction based on first two PCs
+pca.reconstruct=prcomp(log(1+gene.exp.zeroinf),center=TRUE,scale.=TRUE)
+logM.pca=pca.reconstruct$x[,1:2]%*%t(pca.reconstruct$rotation[,1:2])
+#calculate L2 error
+L2.zinb=sqrt(sum((ref-logM.zinb)^2))
+#calculate L2 error
+L2.pca=sqrt(sum((ref-logM.pca)^2))
+
+#another way: find the initial non scaled matrix 
+means=apply(log(gene.exp.zeroinf+1),2,mean)
+sds=apply(log(gene.exp.zeroinf+1),2,sd)
+for(j in 1:ncol(gene.exp.zeroinf)){
+    logM.pca[,j]=logM.pca[,j]*sds[j]+means[j]
+}
+
+L2.zinb.2=sqrt(sum((U%*%V-U.0%*%V.0)^2))
+L2.pca.2=sqrt(sum((U%*%V-logM.pca)^2))
+
+
+
+
+
+
+
+#compare distances between points
+#put all on the same scale (of log)
+dist.ref.zinb=dist(U%*%V)
+dist.ref.zinb2=dist(scale(log(1+U%*%V)))
+dist.ref.pca=dist(scale(U%*%V))
+
+dist.zinb=dist(U.0)
+dist.zinb2=dist(scale(log(1+U.0%*%V.0)))
+dist.pca=dist(U.0.0)
+
+cor(dist.ref.pca,dist.pca,method="spearman")
+cor(dist.ref.zinb,dist.zinb,method="spearman")
+
+plot(dist.ref,dist.zinb)
+plot(dist.ref.pca,dist.pca)
+
+
+
+
+
+plot(as.vector(U%*%V),as.vector(U.0%*%V.0))
+sum(sapply(1:n,function(t) ziNegBin.U(U[t,],t,V,W,X.M=F,X.pi=F,alpha.M=F,alpha.pi=F,theta0,Y=gene.exp.zeroinf)))
+sum(sapply(1:n,function(t) ziNegBin.U(U.0[t,],t,V.0,W.0,X.M=F,X.pi=F,alpha.M=F,alpha.pi=F,theta0,Y=gene.exp.zeroinf)))
 
 plot(V,V.0)
 plot(U,U.0)
@@ -239,6 +383,17 @@ plot(U.0[,1],U.0[,2])
 plot(U[,1],U[,2])
 pca.sim=prcomp(log(1+gene.exp.zeroinf),scale.=TRUE,center=TRUE)
 plot(pca.sim$x[,c(1,2)])
+
+points(pca.sim$x[U[,2]<2.5,c(1,2)],col="red")
+#kmeans criterion
+kPCA=kmeans(pca.sim$x[,c(1,2)],2)
+kZINB=kmeans(U.0,2)
+plot(pca.sim$x[,c(1,2)])
+points(pca.sim$x[kPCA$cluster==1,c(1,2)],col="red")
+
+
+
+
 sqrt(sum((U%*%V-U.0%*%V.0)^2))#error of zinb comapring to the true matrix
 sqrt(sum((U%*%V)^2))
 hist(U%*%V-U.0%*%V.0,main="U*V-its zinb estimation")
