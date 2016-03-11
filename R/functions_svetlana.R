@@ -21,7 +21,9 @@ linkinv <- linkobj$linkinv
 #' @param offsetw the offset for the regression on Pi
 #' @param linkobj the link function object for the regression on pi (typically the result of binomial())
 #' @export
-ziNegBin <- function(parms,j,X.M,X.pi,U,Y,epsilon=0,offsetx=0,offsetz=0) {
+
+
+ziNegBin <- function(parms,j,X.M=NULL,X.pi=NULL,U,Y,epsilon=0,offsetx=0,offsetz=0) {
     X=cbind(X.M,U)
     Z=cbind(X.pi,U)
     kx=ncol(X)
@@ -53,7 +55,7 @@ ziNegBin <- function(parms,j,X.M,X.pi,U,Y,epsilon=0,offsetx=0,offsetz=0) {
 #' @param offsetw the offset for the regression on Pi
 #' @param linkobj the link function object for the regression on pi (typically the result of binomial())
 #' @export
-gradNegBin <- function(parms,j,X.M,X.pi,U,Y,epsilon=0,offsetx=0,offsetz=0) {
+gradNegBin <- function(parms,j,X.M=NULL,X.pi=NULL,U,Y,epsilon=0,offsetx=0,offsetz=0) {
     X=cbind(X.M,U)
     Z=cbind(X.pi,U)
     kx=ncol(X)
@@ -78,7 +80,7 @@ gradNegBin <- function(parms,j,X.M,X.pi,U,Y,epsilon=0,offsetx=0,offsetz=0) {
                                      (Y[,j] + theta)/(mu + theta), exp(-log(dens0) + log(1 - 
                                                                                              muz) + clogdens0) * (log(theta) - log(mu + theta) + 
                                                                                                                       1 - theta/(mu + theta)))
-    colSums(cbind(wres_count * X, wres_zero * Z-2*parms[(kx + 1):(kx + kz)]*epsilon, wres_theta))
+    c(colSums(wres_count * X), colSums(wres_zero * Z)-2*epsilon*parms[(kx + 1):(kx + kz)],sum(wres_theta))
 }
 
 
@@ -159,4 +161,47 @@ gradNegBin.U <- function(parms,i,V,W,X.M=F,X.pi=F,alpha.M=F,alpha.pi=F,Y,theta) 
                         (linkobj$mu.eta(etaz) - exp(clogdens0) * linkobj$mu.eta(etaz))/dens0)
     colSums(wres_count * t(V) + wres_zero * t(W))
 }
+
+#function which estimates latent factors
+zinb = function(datamatrix){
+    n=nrow(datamatrix)
+    J=ncol(datamatrix)
+    PCA.init=prcomp(log(1+datamatrix),center=TRUE,scale.=TRUE)
+    U.0=PCA.init$x[,1:2]
+    V.0=t(PCA.init$rotation[,1:2])
+    colnames(U.0)=NULL
+    colnames(V.0)=NULL
+    W.0=matrix(1,nrow=2,J)
+    theta0=rep(1,ncol(datamatrix))
+    alt.number=15 #max number of alternations
+    total.lik=rep(0,alt.number)
+ 
+    for (alt in 1:alt.number){
+        print(alt)
+        #evaluate total likelihood before alternation num alt
+        total.lik[alt]=sum(sapply(1:n,function(t) ziNegBin.U(U.0[t,],t,V.0,W.0,X.M=F,X.pi=F,alpha.M=F,alpha.pi=F,theta0,Y=datamatrix)))
+        print(total.lik[alt])
+        #if the increase in likelihood is smaller than 0.5%, stop maximization
+        if(alt>1){if(abs((total.lik[alt]-total.lik[alt-1])/total.lik[alt-1])<0.005)break}
+        #optimization for V and W, by gene, theta is optimized also
+        for (gene in 1:J){        
+            estimate=optim(fn=ziNegBin,gr=gradNegBin,j=gene,U=U.0,par=c(V.0[,gene],W.0[,gene],log(theta0)[j]),Y=datamatrix,
+                           control=list(fnscale=-1),method="BFGS",epsilon=0.001)$par 
+            V.0[,gene]=estimate[1:length(V.0[,gene])]
+            W.0[,gene]=estimate[(length(V.0[,gene])+1):(length(V.0[,gene])+length(W.0[,gene]))]
+            #in some cases theta is extremely high, put the limitation
+            theta0[gene]=min(exp(estimate[length(V.0[,gene])+length(W.0[,gene])+1]),10^2)
+        }
+        #optimization for U, by cell, V,W and theta are fixed 
+        for(cell in 1:n){
+            U.0[cell,]=optim(fn=ziNegBin.U,gr=gradNegBin.U,i=cell,par=U.0[cell,],Y=datamatrix,
+                             theta=log(theta0),V=V.0,W=W.0,X.M=F,X.pi=F,
+                             alpha.M=F,alpha.pi=F,
+                             control=list(fnscale=-1),method="BFGS")$par        
+        }
+        alt=alt+1
+    }
+    zinb.result <- list(U=U.0,V=V.0,theta=theta.0)
+}
+
 
