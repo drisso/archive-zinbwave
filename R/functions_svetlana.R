@@ -173,26 +173,28 @@ zinb = function(datamatrix){
     colnames(V.0)=NULL
     W.0=matrix(1,nrow=2,J)
     theta0=rep(1,ncol(datamatrix))
-    alt.number=15 #max number of alternations
+    alt.number=25 #max number of alternations
     total.lik=rep(0,alt.number)
  
+    #OPTIMIZATION PROCEDURE
     for (alt in 1:alt.number){
         print(alt)
         #evaluate total likelihood before alternation num alt
         total.lik[alt]=sum(sapply(1:n,function(t) ziNegBin.U(U.0[t,],t,V.0,W.0,X.M=F,X.pi=F,alpha.M=F,alpha.pi=F,theta0,Y=datamatrix)))
         print(total.lik[alt])
         #if the increase in likelihood is smaller than 0.5%, stop maximization
-        if(alt>1){if(abs((total.lik[alt]-total.lik[alt-1])/total.lik[alt-1])<0.005)break}
+        # if(alt>1){if(abs((total.lik[alt]-total.lik[alt-1])/total.lik[alt-1])<0.005)break}
+        if(alt>1){if(abs(total.lik[alt]-total.lik[alt-1])<1)break}
         #optimization for V and W, by gene, theta is optimized also
         for (gene in 1:J){        
-            estimate=optim(fn=ziNegBin,gr=gradNegBin,j=gene,U=U.0,par=c(V.0[,gene],W.0[,gene],log(theta0)[j]),Y=datamatrix,
+            estimate=optim(fn=ziNegBin,gr=gradNegBin,j=gene,U=U.0,par=c(V.0[,gene],W.0[,gene],log(theta0)[gene]),Y=datamatrix,
                            control=list(fnscale=-1),method="BFGS",epsilon=0.001)$par 
             V.0[,gene]=estimate[1:length(V.0[,gene])]
-            W.0[,gene]=estimate[(length(V.0[,gene])+1):(length(V.0[,gene])+length(W.0[,gene]))]
-            #in some cases theta is extremely high, put the limitation
-            theta0[gene]=min(exp(estimate[length(V.0[,gene])+length(W.0[,gene])+1]),10^2)
+            W.0[,gene]=estimate[(length(V.0[,gene])+1):(length(V.0[,gene])+length(W.0[,gene]))]        
+            theta0[gene]=exp(estimate[length(V.0[,gene])+length(W.0[,gene])+1])
         }
         #optimization for U, by cell, V,W and theta are fixed 
+        print("Step2")
         for(cell in 1:n){
             U.0[cell,]=optim(fn=ziNegBin.U,gr=gradNegBin.U,i=cell,par=U.0[cell,],Y=datamatrix,
                              theta=log(theta0),V=V.0,W=W.0,X.M=F,X.pi=F,
@@ -201,7 +203,7 @@ zinb = function(datamatrix){
         }
         alt=alt+1
     }
-    zinb.result <- list(U=U.0,V=V.0,theta=theta.0)
+    zinb.result <- list(U=U.0,V=V.0,theta=theta0)
 }
 
 
