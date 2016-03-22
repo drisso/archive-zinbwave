@@ -174,7 +174,13 @@ zinb = function(datamatrix){
     colnames(U.0)=NULL
     colnames(V.0)=NULL
     W.0=matrix(1,nrow=2,J)
-    theta0=rep(1,ncol(datamatrix))
+    #theta0=rep(1,ncol(datamatrix))
+    
+    for(l in 1:J){
+    theta0[l]=fitdistr(datamatrix[,l],densfun="negative binomial")$estimate[1]
+    }
+    
+    
     alt.number=25 #max number of alternations
     total.lik=rep(0,alt.number)
  
@@ -182,7 +188,7 @@ zinb = function(datamatrix){
     for (alt in 1:alt.number){
         print(alt)
         #evaluate total likelihood before alternation num alt
-        total.lik[alt]=sum(sapply(1:n,function(t) ziNegBin.U(U.0[t,],t,V.0,W.0,X.M=F,X.pi=F,alpha.M=F,alpha.pi=F,theta0,Y=gene.exp.zeroinf)))
+        total.lik[alt]=sum(sapply(1:n,function(t) ziNegBin.U(U.0[t,],t,V.0,W.0,X.M=F,X.pi=F,alpha.M=F,alpha.pi=F,theta0,Y=datamatrix)))
         #if the increase in likelihood is smaller than 0.5%, stop maximization
         #if(alt>1){if(abs((total.lik[alt]-total.lik[alt-1])/total.lik[alt-1])<0.005)break}
         print(total.lik[alt])
@@ -191,15 +197,16 @@ zinb = function(datamatrix){
         if(alt>1){if(abs(total.lik[alt]-total.lik[alt-1])<1)break}
         #optimization for V and W, by gene, theta is optimized also
         for (gene in 1:J){            
-            estimate=optim(fn=ziNegBin,gr=gradNegBin,j=gene,U=U.0,par=c(V.0[,gene],W.0[,gene],log(theta0)[gene]),Y=gene.exp.zeroinf,
+            estimate=optim(fn=ziNegBin,gr=gradNegBin,j=gene,U=U.0,par=c(V.0[,gene],W.0[,gene],log(theta0)[gene]),Y=datamatrix,
                            control=list(fnscale=-1),method="BFGS",epsilon=0.001)$par 
             V.0[,gene]=estimate[1:length(V.0[,gene])]
             W.0[,gene]=estimate[(length(V.0[,gene])+1):(length(V.0[,gene])+length(W.0[,gene]))]
-            theta0[gene]=min(exp(estimate[length(V.0[,gene])+length(W.0[,gene])+1]),10)       
+            theta0[gene]=exp(estimate[length(V.0[,gene])+length(W.0[,gene])+1])    
         }
+        print(sum(sapply(1:n,function(t) ziNegBin.U(U.0[t,],t,V.0,W.0,X.M=F,X.pi=F,alpha.M=F,alpha.pi=F,theta0,Y=datamatrix))))
         #optimization for U, by cell, V,W and theta are fixed 
         for(cell in 1:n){
-            U.0[cell,]=optim(fn=ziNegBin.U,gr=gradNegBin.U,i=cell,par=U.0[cell,],Y=gene.exp.zeroinf,
+            U.0[cell,]=optim(fn=ziNegBin.U,gr=gradNegBin.U,i=cell,par=U.0[cell,],Y=datamatrix,
                              theta=log(theta0),V=V.0,W=W.0,X.M=F,X.pi=F,
                              alpha.M=F,alpha.pi=F,
                              control=list(fnscale=-1),method="BFGS")$par        
