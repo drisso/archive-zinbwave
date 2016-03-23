@@ -28,7 +28,7 @@ ziNegBin <- function(parms,j,X.M=NULL,X.pi=NULL,U,Y,epsilon=0,offsetx=0,offsetz=
     Z=cbind(X.pi,U)
     kx=ncol(X)
     kz=ncol(Z)
-    # TODO : I added 'epsilon=0' as parameter otherwise it was undefined. Check this is correct
+
     mu <- as.vector(exp(X %*% parms[1:kx] + offsetx))
     phi <- as.vector(linkinv(Z %*% parms[(kx + 1):(kx + kz)] + 
                                  offsetz))
@@ -40,7 +40,7 @@ ziNegBin <- function(parms,j,X.M=NULL,X.pi=NULL,U,Y,epsilon=0,offsetx=0,offsetz=
     Y0 <- Y <= 0 #==1 if counts is 0
     Y1 <- Y > 0 #==1 if count is not 0
     loglik <- sum(loglik0[Y0[,j]]) + sum(loglik1[Y1[,j]])
-    loglik-sum(parms[(kx + 1):(kx + kz)]^2)*epsilon
+    loglik<-loglik-sum(parms[(kx + 1):(kx + kz)]^2)*epsilon
 }
 
 #' Gradient with respect to "right parts" of log-likelihood function of the zero-inflated negative binomial model with 
@@ -174,11 +174,11 @@ zinb = function(datamatrix){
     colnames(U.0)=NULL
     colnames(V.0)=NULL
     W.0=matrix(1,nrow=2,J)
-    #theta0=rep(1,ncol(datamatrix))
+    theta0=rep(1,ncol(datamatrix))
     
-    for(l in 1:J){
-    theta0[l]=fitdistr(datamatrix[,l],densfun="negative binomial")$estimate[1]
-    }
+   # for(l in 1:J){
+    #theta0[l]=fitdistr(datamatrix[,l],densfun="negative binomial")$estimate[1]
+    #}
     
     
     alt.number=25 #max number of alternations
@@ -196,9 +196,13 @@ zinb = function(datamatrix){
         # if(alt>1){if(abs((total.lik[alt]-total.lik[alt-1])/total.lik[alt-1])<0.005)break}
         if(alt>1){if(abs(total.lik[alt]-total.lik[alt-1])<1)break}
         #optimization for V and W, by gene, theta is optimized also
-        for (gene in 1:J){            
+        for (gene in 1:J){     
+            #test=zeroinfl(X1~0+X2+X3,data.frame(cbind(datamatrix[,gene],U.0)),start=list(count=V.0[,gene],zero=W.0[,gene],theta=theta0[gene]),dist="negbin")
+            #test=zeroinfl(X1~0+X2+X3,data.frame(cbind(datamatrix[,gene],U.0)),dist="negbin")
+            #print(ziNegBin(parms=c(V.0[,gene],W.0[,gene],log(theta0)[gene]),gene,X.M=NULL,X.pi=NULL,U=U.0,Y=datamatrix,epsilon=0,offsetx=0,offsetz=0))
+            #print(ziNegBin(parms=estimate,gene,X.M=NULL,X.pi=NULL,U=U.0,Y=datamatrix,epsilon=0,offsetx=0,offsetz=0))
             estimate=optim(fn=ziNegBin,gr=gradNegBin,j=gene,U=U.0,par=c(V.0[,gene],W.0[,gene],log(theta0)[gene]),Y=datamatrix,
-                           control=list(fnscale=-1),method="BFGS",epsilon=0.001)$par 
+                           control=list(fnscale=-1),method="BFGS",epsilon=0)$par 
             V.0[,gene]=estimate[1:length(V.0[,gene])]
             W.0[,gene]=estimate[(length(V.0[,gene])+1):(length(V.0[,gene])+length(W.0[,gene]))]
             theta0[gene]=exp(estimate[length(V.0[,gene])+length(W.0[,gene])+1])    
