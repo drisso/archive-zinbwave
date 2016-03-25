@@ -1,0 +1,19 @@
+---
+title: "Test Zinb"
+author: "Jean-Philippe Vert"
+date: "24 mars 2016"
+output: html_document
+---
+
+Here we demonstrate the use of ZINB on a toy dataset. Let us first look at the toy data using standard PCA of the log(count+1) matrix
+
+```{r message=FALSE}
+library(zinb)
+pc <- prcomp(log(1+toydata),center=TRUE,scale.=TRUE)
+plot(pc$x[,1:2])
+```
+
+We see two well-separated clusters, mostly separated along the first principal component. Let us now apply ZINB with two factors, and show that the likelihood increases at each iteration (it takes some time to run, we need at least to parallelize the embarassingly parallel parts)
+```{r message=FALSE}
+z <- zinb(toydata, alt.number=10)
+```
