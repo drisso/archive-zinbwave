@@ -249,7 +249,7 @@ zinb2 = function(datamatrix, k=2, alt.number=25, epsilon=0.1, verbose=TRUE, use.
     colnames(U.0)=NULL
     colnames(V.0)=NULL
     # Initialize W and theta to 1
-    W.0=matrix(1,nrow=k,ncol=J)
+    W.0=matrix(0,nrow=k,ncol=J)
     theta0=rep(1,ncol(datamatrix))
     
     # for(l in 1:J){

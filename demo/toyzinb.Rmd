@@ -23,7 +23,7 @@ print(proc.time()-ptm)
 plot(z$U)
 ```
 
-We have also made a 10x faster and hopefully more stable version:
+We have also made a 5~10x faster and hopefully more stable version:
 ```{r message=FALSE}
 ptm <- proc.time()
 z <- zinb2(toydata, alt.number=10)
@@ -31,7 +31,8 @@ print(proc.time()-ptm)
 plot(z$U)
 ```
 
-There is still room for speed-up, in particular:
+We see that the new version converges in less iterations, and in less time, to an apparently better solution. There is still much room for speed-up, in particular:
+
 * parallelize the embarassingly parallel loops
 * do not optimize over theta, whose gradient is the most expensive to compute
 * be careful when passing matrices as argument
