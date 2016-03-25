@@ -162,8 +162,11 @@ gradNegBin.U <- function(parms,i,V,W,X.M=F,X.pi=F,alpha.M=F,alpha.pi=F,Y,theta) 
     colSums(wres_count * t(V) + wres_zero * t(W))
 }
 
-#function which estimates latent factors
-zinb = function(datamatrix){
+#' Estimation of latent factors from a count matrix
+#' @param datamatrix the count data matrix (cells in rows, genes in columns)
+#' @param alt.number maximum number of iterations (default 25)
+#' @export
+zinb = function(datamatrix, alt.number=25){
     n=nrow(datamatrix)
     J=ncol(datamatrix)
     PCA.init=prcomp(log(1+datamatrix),center=TRUE,scale.=TRUE)
@@ -181,14 +184,13 @@ zinb = function(datamatrix){
     #}
     
     
-    alt.number=25 #max number of alternations
     total.lik=rep(0,alt.number)
  
     #UNE VERSION ALTERNATIVE AVEC PENALIZATION
     for (alt in 1:alt.number){
         print(alt)
         #evaluate total likelihood before alternation num alt
-        total.lik[alt]=sum(sapply(1:n,function(t) ziNegBin.U(U.0[t,],t,V.0,W.0,X.M=F,X.pi=F,alpha.M=F,alpha.pi=F,theta0,Y=datamatrix)))
+        total.lik[alt]=sum(sapply(1:n,function(t) ziNegBin.U(U.0[t,],t,V.0,W.0,X.M=F,X.pi=F,alpha.M=F,alpha.pi=F,log(theta0),Y=datamatrix)))
         #if the increase in likelihood is smaller than 0.5%, stop maximization
         #if(alt>1){if(abs((total.lik[alt]-total.lik[alt-1])/total.lik[alt-1])<0.005)break}
         print(total.lik[alt])
@@ -207,7 +209,7 @@ zinb = function(datamatrix){
             W.0[,gene]=estimate[(length(V.0[,gene])+1):(length(V.0[,gene])+length(W.0[,gene]))]
             theta0[gene]=exp(estimate[length(V.0[,gene])+length(W.0[,gene])+1])    
         }
-        print(sum(sapply(1:n,function(t) ziNegBin.U(U.0[t,],t,V.0,W.0,X.M=F,X.pi=F,alpha.M=F,alpha.pi=F,theta0,Y=datamatrix))))
+        print(sum(sapply(1:n,function(t) ziNegBin.U(U.0[t,],t,V.0,W.0,X.M=F,X.pi=F,alpha.M=F,alpha.pi=F,log(theta0),Y=datamatrix))))
         #optimization for U, by cell, V,W and theta are fixed 
         for(cell in 1:n){
             U.0[cell,]=optim(fn=ziNegBin.U,gr=gradNegBin.U,i=cell,par=U.0[cell,],Y=datamatrix,
@@ -215,7 +217,6 @@ zinb = function(datamatrix){
                              alpha.M=F,alpha.pi=F,
                              control=list(fnscale=-1),method="BFGS")$par        
         }
-        alt=alt+1
     }    
     zinb.result <- list(U=U.0,V=V.0,W=W.0,theta=theta0)
 }
