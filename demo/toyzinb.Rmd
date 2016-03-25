@@ -13,7 +13,25 @@ pc <- prcomp(log(1+toydata),center=TRUE,scale.=TRUE)
 plot(pc$x[,1:2])
 ```
 
-We see two well-separated clusters, mostly separated along the first principal component. Let us now apply ZINB with two factors, and show that the likelihood increases at each iteration (it takes some time to run, we need at least to parallelize the embarassingly parallel parts)
+We see two well-separated clusters, mostly separated along the first principal component. Let us now apply ZINB with two factors, and show that the likelihood increases at each iteration
+
 ```{r message=FALSE}
-z <- zinb(toydata, alt.number=10)
+ptm <- proc.time()
+z <- zinb(toydata, alt.number=5)
+print(proc.time()-ptm)
+
+plot(z$U)
 ```
+
+We have also made a 10x faster and hopefully more stable version:
+```{r message=FALSE}
+ptm <- proc.time()
+z <- zinb2(toydata, alt.number=10)
+print(proc.time()-ptm)
+plot(z$U)
+```
+
+There is still room for speed-up, in particular:
+* parallelize the embarassingly parallel loops
+* do not optimize over theta, whose gradient is the most expensive to compute
+* be careful when passing matrices as argument

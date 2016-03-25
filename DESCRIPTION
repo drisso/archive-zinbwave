@@ -9,5 +9,7 @@ Maintainer: Who to complain to <yourfault@somewhere.net>
 Description: Implements a zero-inflated negative binomial model for single-cell
     RNA-seq data, with latent factors.
 License: GPL (>= 2)
+Imports:
+    copula
 LazyData: TRUE
 RoxygenNote: 5.0.1

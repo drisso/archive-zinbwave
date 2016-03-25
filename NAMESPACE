@@ -2,6 +2,9 @@
 
 export(gradNegBin)
 export(gradNegBin.U)
+export(gradNegBinNEW)
 export(ziNegBin)
 export(ziNegBin.U)
+export(ziNegBinNEW)
 export(zinb)
+export(zinb2)
