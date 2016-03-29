@@ -21,6 +21,7 @@ README[.]md
 ^cran-comments[.].*$
 ^vignettes/.*[.](pdf|PDF)$
 ^vignettes/.*[.](r|R)$
+^vignettes/.*[.](html|HTML)$
 ^vignettes/[.]install_extras$
 ^Makefile$
 ^incl
