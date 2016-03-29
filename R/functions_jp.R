@@ -67,7 +67,6 @@ zinb.make.matrices <- function( alpha , X.mu = NULL, X.pi = NULL , X.theta = NUL
     if (!is.null(X.theta)) {
         n <- ncol(X.theta)
         logtheta <- X.theta %*% alpha[(i+1):(i+n)]
-        i <- i+n
         dim.alpha[4] <- n
         start.alpha[4] <- i+1
     }
@@ -119,20 +118,39 @@ zinb.make.matrices <- function( alpha , X.mu = NULL, X.pi = NULL , X.theta = NUL
 #' @param offset.mu matrix of the model (see above, default=NULL)
 #' @param offset.pi matrix of the model (see above, default=NULL)
 #' @param offset.theta matrix of the model (see above, default=NULL)
-#' @example g <- sapply(seq(500), function(i) {zinb.loglik.regression(c(V.0[,i],W.0[,i]) , Y=datamatrix[,i] , X.mu = U.0 , X.pi=U.0 , offset.theta = rep(log(theta0[i]),96))})
 #' @export
-
-zinb.loglik.regression <- function( alpha , Y, X.mu = NULL, X.pi = NULL , X.theta = NULL , Y.mu = NULL , Y.pi = NULL , offset.mu = NULL , offset.pi = NULL , offset.theta = NULL ) {
+zinb.loglik.regression <- function( alpha , Y, X.mu = NULL, X.pi = NULL , X.theta = NULL , Y.mu = NULL , Y.pi = NULL , offset.mu = NULL , offset.pi = NULL , offset.theta = NULL , epsilon=0) {
     
     # Parse the model
     r <- zinb.make.matrices(alpha=alpha, X.mu=X.mu, X.pi=X.pi, X.theta=X.theta , Y.mu = Y.mu, Y.pi=Y.pi , offset.mu=offset.mu , offset.pi=offset.pi , offset.theta=offset.theta)
     
     # Call the log likelihood function
-    zinb.loglik(Y, exp(r$logM), exp(r$logtheta), r$logitPi)
+    z=zinb.loglik(Y, exp(r$logM), exp(r$logtheta), r$logitPi) - epsilon*sum(alpha^2)/2
+#    print(z)
+    z
 }
 
 
-gradient.zinb.loglik.regression <- function( alpha , Y, X.mu = NULL, X.pi = NULL , X.theta = NULL , Y.mu = NULL , Y.pi = NULL , offset.mu = NULL , offset.pi = NULL , offset.theta = NULL ) {
+#' Gradient of the log-likelihood of the zero-inflated negative binomial model for a regression model
+#' 
+#' This function computes the gradient of the log-likelihood of a vector of counts according to a zero-inflated negative binomial model parametrized as follows:
+#' Mean of the negative binomial: log(mu) = X.mu %*% a.mu + Y.mu %*%* b + offset.mu
+#' Dispersion of the negative binomial: log(theta) = X.theta %*% a.theta + offset.theta
+#' Probability of the zero component: logit(P(Y=0)) = X.pi %*% alpha.pi + Y.pi %*% b + offset.pi
+#' Note that the b vector is shared between the mean of the negative binomial and the probability of zero.
+#'
+#' @param alpha the vectors of parameters c(a.mu, b, a.pi, a.theta) concatenated
+#' @param Y the vector of counts
+#' @param X.mu matrix of the model (see above, default=NULL)
+#' @param X.pi matrix of the model (see above, default=NULL)
+#' @param X.theta matrix of the model (see above, default=NULL)
+#' @param Y.mu matrix of the model (see above, default=NULL)
+#' @param Y.pi matrix of the model (see above, default=NULL)
+#' @param offset.mu matrix of the model (see above, default=NULL)
+#' @param offset.pi matrix of the model (see above, default=NULL)
+#' @param offset.theta matrix of the model (see above, default=NULL)
+#' @export
+gradient.zinb.loglik.regression <- function( alpha , Y, X.mu = NULL, X.pi = NULL , X.theta = NULL , Y.mu = NULL , Y.pi = NULL , offset.mu = NULL , offset.pi = NULL , offset.theta = NULL , epsilon=0) {
     
     # Parse the model
     r <- zinb.make.matrices(alpha=alpha, X.mu=X.mu, X.pi=X.pi, X.theta=X.theta , Y.mu = Y.mu, Y.pi=Y.pi , offset.mu=offset.mu , offset.pi=offset.pi , offset.theta=offset.theta)
@@ -154,7 +172,11 @@ gradient.zinb.loglik.regression <- function( alpha , Y, X.mu = NULL, X.pi = NULL
     # Compute some useful quantities
     muz <- linkinv(r$logitPi)
     clogdens0 <- dnbinom(0, size = theta[Y0], mu = mu[Y0], log = TRUE)
-    dens0 <- muz[Y0] + exp(log(1 - muz[Y0]) + clogdens0)
+    # dens0 <- muz[Y0] + exp(log(1 - muz[Y0]) + clogdens0)
+    # More accurate: log(1-muz) is the following
+    lognorm <- -r$logitPi - copula::log1pexp(-r$logitPi)
+    
+    dens0 <- muz[Y0] + exp(lognorm[Y0] + clogdens0)
     
     # Compute the partial derivatives we need
     if (need.wres.mu) {
@@ -163,17 +185,24 @@ gradient.zinb.loglik.regression <- function( alpha , Y, X.mu = NULL, X.pi = NULL
             wres_mu[Y1] <- Y[Y1] - mu[Y1] * (Y[Y1] + theta[Y1])/(mu[Y1] + theta[Y1])
         }
         if (has0) {
-            wres_mu[Y0] <- -exp(-log(dens0) + log(1 - muz[Y0]) + clogdens0 + r$logtheta[Y0] - log(mu[Y0] + theta[Y0]) + log(mu[Y0]))
+            #wres_mu[Y0] <- -exp(-log(dens0) + log(1 - muz[Y0]) + clogdens0 + r$logtheta[Y0] - log(mu[Y0] + theta[Y0]) + log(mu[Y0]))
+            # more accurate:
+            wres_mu[Y0] <- -exp(-log(dens0) + lognorm[Y0] + clogdens0 + r$logtheta[Y0] - log(mu[Y0] + theta[Y0]) + log(mu[Y0]))
         }
     }
     
     if (need.wres.pi) {
         wres_pi <- numeric(length = n)
         if (has1) { 
-            wres_pi[Y1] <- -1/(1 - muz[Y1]) * linkobj$mu.eta(r$logitPi)[Y1]
+#            wres_pi[Y1] <- -1/(1 - muz[Y1]) * linkobj$mu.eta(r$logitPi)[Y1]
+            # simplification for the logit link function:
+            wres_pi[Y1] <- - muz[Y1]
+            
         }
         if (has0) {
-            wres_pi[Y0] <- (linkobj$mu.eta(r$logitPi)[Y0] - exp(clogdens0) * linkobj$mu.eta(r$logitPi)[Y0])/dens0
+            # wres_pi[Y0] <- (linkobj$mu.eta(r$logitPi)[Y0] - exp(clogdens0) * linkobj$mu.eta(r$logitPi)[Y0])/dens0
+            # simplification for the logit link function:
+            wres_pi[Y0] <- (1 - exp(clogdens0)) * muz[Y0] * (1-muz[Y0]) / dens0
         }
     }
     
@@ -183,17 +212,19 @@ gradient.zinb.loglik.regression <- function( alpha , Y, X.mu = NULL, X.pi = NULL
             wres_theta[Y1] <- theta[Y1] * (digamma(Y[Y1] + theta[Y1]) - digamma(theta[Y1]) + r$logtheta[Y1] - log(mu[Y1] + theta[Y1]) + 1 - (Y[Y1] + theta[Y1])/(mu[Y1] + theta[Y1]) )
         }
         if (has0) {
-            wres_theta[Y0] <- theta[Y0] * ( exp(-log(dens0) + log(1 - muz[Y0]) + clogdens0) * (r$logtheta[Y0] - log(mu[Y0] + theta[Y0]) + 1 - theta[Y0]/(mu[Y0] + theta[Y0])) )
+            #wres_theta[Y0] <- theta[Y0] * ( exp(-log(dens0) + log(1 - muz[Y0]) + clogdens0) * (r$logtheta[Y0] - log(mu[Y0] + theta[Y0]) + 1 - theta[Y0]/(mu[Y0] + theta[Y0])) )
+            # more accurate:
+            wres_theta[Y0] <- theta[Y0] * ( exp(-log(dens0) + lognorm[Y0] + clogdens0) * (r$logtheta[Y0] - log(mu[Y0] + theta[Y0]) + 1 - theta[Y0]/(mu[Y0] + theta[Y0])) )
         }
     }
     
     # Make gradient
     grad <- numeric(0)
-    if (r$dim.alpha[1] >0) { grad <- c(grad , colSums(wres_mu * X.mu))}
-    if (r$dim.alpha[2] >0) { grad <- c(grad , colSums(wres_mu * Y.mu) + colSums(wres_pi * Y.pi))}
-    if (r$dim.alpha[3] >0) { grad <- c(grad , colSums(wres_pi * X.pi))}
-    if (r$dim.alpha[4] >0) { grad <- c(grad , colSums(wres_theta * X.theta))}
-    
+    if (r$dim.alpha[1] >0) { grad <- c(grad , colSums(wres_mu * X.mu) - epsilon*alpha[r$start.alpha[1]:(r$start.alpha[1]+r$dim.alpha[1]-1)])}
+    if (r$dim.alpha[2] >0) { grad <- c(grad , colSums(wres_mu * Y.mu) + colSums(wres_pi * Y.pi) - epsilon*alpha[r$start.alpha[2]:(r$start.alpha[2]+r$dim.alpha[2]-1)] )}
+    if (r$dim.alpha[3] >0) { grad <- c(grad , colSums(wres_pi * X.pi) - epsilon*alpha[r$start.alpha[3]:(r$start.alpha[3]+r$dim.alpha[3]-1)] )}
+    if (r$dim.alpha[4] >0) { grad <- c(grad , colSums(wres_theta * X.theta) - epsilon*alpha[r$start.alpha[4]:(r$start.alpha[4]+r$dim.alpha[4]-1)] )}
+
     grad
 }
 
@@ -206,9 +237,10 @@ gradient.zinb.loglik.regression <- function( alpha , Y, X.mu = NULL, X.pi = NULL
 #' @param k number of latent factors (default 2)
 #' @param alt.number maximum number of iterations (default 25)
 #' @param epsilon regularization parameter (default 0.1)
-#' @param verbose print information (default TRUE)
+#' @param stop.epsilon stopping criterion, when the relative gain in likelihood is below epsilon (default 0.0001)
+#' @param verbose print information (default FALSE)
 #' @export
-zinb.PCA = function(datamatrix, k=2, alt.number=25, epsilon=0.1, verbose=TRUE){
+zinb.PCA = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop.epsilon=.0001, verbose=FALSE, no_cores=parallel::detectCores()-1){
     
     n <- nrow(datamatrix)
     p <- ncol(datamatrix)
@@ -231,16 +263,19 @@ zinb.PCA = function(datamatrix, k=2, alt.number=25, epsilon=0.1, verbose=TRUE){
         # Evaluate total likelihood before alternation num alt
         total.lik[alt] <- zinb.loglik(datamatrix, exp( U %*% t(V) ), exp(X.theta %*% a.theta), U %*% t(W))
         if (verbose) {cat("log-likelihood = ",total.lik[alt],"\n",sep="")}
-        
+
         # If the increase in likelihood is smaller than 0.5%, stop maximization
-        #if(alt>1){if(abs((total.lik[alt]-total.lik[alt-1])/total.lik[alt-1])<0.005)break}
+        if(alt>1){if(abs((total.lik[alt]-total.lik[alt-1])/total.lik[alt-1])<stop.epsilon)break}
         
         
         # Fix U, optimize in V, W and theta
         ptm <- proc.time()
-        estimate <- sapply(seq(p), function(i) {
-            optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(V[i,],W[i,], a.theta[i]) , Y=datamatrix[,i] , X.mu=U , X.pi=U , X.theta=X.theta , control=list(fnscale=-1,trace=0) , method="BFGS")$par })
+        estimate <- matrix(unlist( parallel::mclapply(seq(p), function(i) {
+                optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(V[i,],W[i,], a.theta[i]) , Y=datamatrix[,i] , X.mu=U , X.pi=U , X.theta=X.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=no_cores)) , nrow=2*k+1)
         if (verbose) {print(proc.time()-ptm)}
+        
+#        estimate <- matrix(unlist(sapply(seq(p), function(i) {
+#            optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(V[i,],W[i,], a.theta[i]) , Y=datamatrix[,i] , X.mu=U , X.pi=U , X.theta=X.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par })) , nrow=2*k+1)
         
         V <- t(estimate[1:k,])
         W <- t(estimate[(k+1):(2*k),])
@@ -251,8 +286,10 @@ zinb.PCA = function(datamatrix, k=2, alt.number=25, epsilon=0.1, verbose=TRUE){
         
         # Fix V, W, theta, optimize in U
         ptm <- proc.time()
-        estimate <- sapply(seq(n), function(i) {
-            optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(U[i,]) , Y=datamatrix[i,] , Y.mu=V , Y.pi=W , offset.theta=a.theta , control=list(fnscale=-1,trace=0) , method="BFGS")$par })
+#        estimate <- sapply(seq(n), function(i) {
+#            optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(U[i,]) , Y=datamatrix[i,] , Y.mu=V , Y.pi=W , offset.theta=a.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par })
+        estimate <- matrix(unlist( parallel::mclapply(seq(n), function(i) {
+            optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(U[i,]) , Y=datamatrix[i,] , Y.mu=V , Y.pi=W , offset.theta=a.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=no_cores)) , nrow=k)
         U <- t(estimate)
         if (verbose) {print(proc.time()-ptm)}
     }    

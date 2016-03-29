@@ -10,6 +10,7 @@ Description: Implements a zero-inflated negative binomial model for single-cell
     RNA-seq data, with latent factors.
 License: GPL (>= 2)
 Imports:
-    copula
+    copula,
+    parallel
 LazyData: TRUE
 RoxygenNote: 5.0.1
