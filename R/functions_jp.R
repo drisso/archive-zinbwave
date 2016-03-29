@@ -119,6 +119,7 @@ zinb.make.matrices <- function( alpha , X.mu = NULL, X.pi = NULL , X.theta = NUL
 #' @param offset.mu matrix of the model (see above, default=NULL)
 #' @param offset.pi matrix of the model (see above, default=NULL)
 #' @param offset.theta matrix of the model (see above, default=NULL)
+#' @param epsilon the regularization parameter (default=0)
 #' @export
 zinb.loglik.regression <- function( alpha , Y, X.mu = NULL, X.pi = NULL , X.theta = NULL , Y.mu = NULL , Y.pi = NULL , offset.mu = NULL , offset.pi = NULL , offset.theta = NULL , epsilon=0) {
 
@@ -150,6 +151,7 @@ zinb.loglik.regression <- function( alpha , Y, X.mu = NULL, X.pi = NULL , X.thet
 #' @param offset.mu matrix of the model (see above, default=NULL)
 #' @param offset.pi matrix of the model (see above, default=NULL)
 #' @param offset.theta matrix of the model (see above, default=NULL)
+#' @param epsilon regularization parameter (default=0)
 #' @export
 gradient.zinb.loglik.regression <- function( alpha , Y, X.mu = NULL, X.pi = NULL , X.theta = NULL , Y.mu = NULL , Y.pi = NULL , offset.mu = NULL , offset.pi = NULL , offset.theta = NULL , epsilon=0) {
 
@@ -171,7 +173,7 @@ gradient.zinb.loglik.regression <- function( alpha , Y, X.mu = NULL, X.pi = NULL
     need.wres.theta <- r$dim.alpha[4] >0
 
     # Compute some useful quantities
-    muz <- linkinv(r$logitPi)
+    muz <- 1/(1+exp(-r$logitPi))
     clogdens0 <- dnbinom(0, size = theta[Y0], mu = mu[Y0], log = TRUE)
     # dens0 <- muz[Y0] + exp(log(1 - muz[Y0]) + clogdens0)
     # More accurate: log(1-muz) is the following
@@ -230,9 +232,6 @@ gradient.zinb.loglik.regression <- function( alpha , Y, X.mu = NULL, X.pi = NULL
 }
 
 
-
-
-
 #' Estimation of latent factors from a count matrix
 #' @param datamatrix the count data matrix (cells in rows, genes in columns)
 #' @param k number of latent factors (default 2)
@@ -240,9 +239,10 @@ gradient.zinb.loglik.regression <- function( alpha , Y, X.mu = NULL, X.pi = NULL
 #' @param epsilon regularization parameter (default 0.1)
 #' @param stop.epsilon stopping criterion, when the relative gain in likelihood is below epsilon (default 0.0001)
 #' @param verbose print information (default FALSE)
+#' @param no_cores number of cores (default to 1)
 #' @export
 #' @importFrom parallel mclapply
-zinb.PCA = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop.epsilon=.0001, verbose=FALSE, no_cores=parallel::detectCores()-1){
+zinb.PCA = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop.epsilon=.0001, verbose=FALSE, no_cores=1){
 
     n <- nrow(datamatrix)
     p <- ncol(datamatrix)

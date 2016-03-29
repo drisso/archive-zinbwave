@@ -28,6 +28,8 @@ gradient.zinb.loglik.regression(alpha, Y, X.mu = NULL, X.pi = NULL,
 \item{offset.pi}{matrix of the model (see above, default=NULL)}
 
 \item{offset.theta}{matrix of the model (see above, default=NULL)}
+
+\item{epsilon}{regularization parameter (default=0)}
 }
 \description{
 This function computes the gradient of the log-likelihood of a vector of counts according to a zero-inflated negative binomial model parametrized as follows:

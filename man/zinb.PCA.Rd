@@ -5,8 +5,7 @@
 \title{Estimation of latent factors from a count matrix}
 \usage{
 zinb.PCA(datamatrix, k = 2, alt.number = 25, epsilon = 0.1,
-  stop.epsilon = 1e-04, verbose = FALSE,
-  no_cores = parallel::detectCores() - 1)
+  stop.epsilon = 1e-04, verbose = FALSE, no_cores = 1)
 }
 \arguments{
 \item{datamatrix}{the count data matrix (cells in rows, genes in columns)}
@@ -20,6 +19,8 @@ zinb.PCA(datamatrix, k = 2, alt.number = 25, epsilon = 0.1,
 \item{stop.epsilon}{stopping criterion, when the relative gain in likelihood is below epsilon (default 0.0001)}
 
 \item{verbose}{print information (default FALSE)}
+
+\item{no_cores}{number of cores (default to 1)}
 }
 \description{
 Estimation of latent factors from a count matrix
