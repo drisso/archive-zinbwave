@@ -1,16 +1,20 @@
 Package: zinb
 Type: Package
-Title: Zero-inflated Negative Binomial model for RNA-seq data
-Version: 0.1
+Title: Zero-Inflated Negative Binomial Model for RNA-Seq Data
+Version: 0.0.2
 Date: 2015-12-30
-Authors@R: c(person("Davide","Risso",role=c("aut","cre"), email="davide.risso@berkeley.edu" ), person("Svetlana","Gribkova",role="aut", email="svetlana.gribkova@mines-paristech.fr"), person("Jean-Philippe", "Vert", role="aut", email="jean-philippe.vert@mines-paristech.fr"), person("Sandrine", "Dudoit", role="aut", email="sandrine@stat.berkeley.edu"))
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
+Authors@R: c(person("Davide","Risso", role=c("aut","cre", "cph"), email="risso.davide@gmail.com" ),
+             person("Svetlana","Gribkova", role="aut", email="svetlana.gribkova@mines-paristech.fr"),
+	     person("Jean-Philippe", "Vert", role="aut", email="jean-philippe.vert@mines-paristech.fr"),
+	     person("Sandrine", "Dudoit", role="aut", email="sandrine@stat.berkeley.edu"))
+Author: Davide Risso [aut, cre, cph], Svetlana Gribkova [aut], Jean-Philippe Vert [aut], Sandrine Dudoit [aut]
+Maintainer: Davide Risso <risso.davide@gmail.com>
 Description: Implements a zero-inflated negative binomial model for single-cell
     RNA-seq data, with latent factors.
 License: GPL (>= 2)
-Imports:
-    copula,
-    parallel
+Depends: R (>= 2.10)
+Imports: copula, parallel
+Suggests: knitr, rmarkdown
+VignetteBuilder: knitr
 LazyData: TRUE
 RoxygenNote: 5.0.1

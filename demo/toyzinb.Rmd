@@ -24,6 +24,7 @@ We see two well-separated clusters, mostly separated along the first principal c
 Let us now apply ZINB with two factors, and show that the likelihood increases at each iteration (after a small bug correction to make sure this is the case). This is the original function in the functions_svetlana.R file
 
 ```{r message=FALSE, eval=TRUE}
+source("../temporary_files/functions_svetlana.R")
 ptm <- proc.time()
 z <- zinb(toydata, alt.number=10)
 print(proc.time()-ptm)
@@ -69,7 +70,7 @@ plot(z3$U)
 Not bad, we have a 1.5x speed-up compared to the previous version on a single core (and 5.8x compared to the initial version), and we obtain the same result (visually). Let us now run the parallel version (by default, without the no_cores argument, the function will use all the cores of your machine minus one):
 ```{r message=FALSE}
 ptm <- proc.time()
-z4 <- zinb.PCA(toydata, alt.number=10, verbose=TRUE)
+z4 <- zinb.PCA(toydata, alt.number=10, verbose=TRUE, no_cores=3)
 print(proc.time()-ptm)
 plot(z4$U)
 ```
