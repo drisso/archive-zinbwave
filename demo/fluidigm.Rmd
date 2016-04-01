@@ -1,0 +1,24 @@
+---
+title: "Tests on fluidigm data set"
+output: html_document
+---
+
+Attach package scRNAseq, Select high quality cells, filter out those which do not have at least 10 counts in at least 10 cells and run zinb
+```{r, eval=TRUE}
+install.packages("/Users/svetlanagribkova/GitHub/scRNAseq",repos=NULL,type="source")
+library(scRNAseq)
+data("fluidigm")
+high.cov.cells=assays(fluidigm)$counts[,which(colData(fluidigm)$Coverage_Type=="High")]
+filter.out=apply(high.cov.cells>10,1,sum)<10
+sum(!filter.out) 
+fluidigm2=t(high.cov.cells[!filter.out,])
+zinb.fluidigm=zinb.PCA(fluidigm2,no_cores=7,alt.number=25,verbose=TRUE)
+```
+
+Plot the results with cells colored according to their cluster 
+
+```{r, echo=FALSE}
+plot(zinb.fluidigm,col=colData(fluidigm)$Cluster2[colData(fluidigm)$Coverage_Type=="High"])
+```
+
+
