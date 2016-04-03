@@ -82,9 +82,9 @@ zinb.make.matrices <- function( alpha , X.mu = NULL, X.pi = NULL , X.theta = NUL
 
     if (!is.null(offset.pi)) {
         if (is.null(logitPi)) {
-            logitPi <- offset.mu
+            logitPi <- offset.pi
         } else {
-            logitPi <- logitPi + offset.mu
+            logitPi <- logitPi + offset.pi
         }
     }
 
@@ -298,4 +298,163 @@ zinb.PCA = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop.epsilon=.0
     zinb.result <- list(U=U,V=V,W=W,theta=exp(a.theta))
 }
 
+#' Estimation of latent factors from a count matrix
+#' @param datamatrix the count data matrix (cells in rows, genes in columns)
+#' @param k number of latent factors (default 2)
+#' @param alt.number maximum number of iterations (default 25)
+#' @param epsilon regularization parameter (default 0.1)
+#' @param stop.epsilon stopping criterion, when the relative gain in likelihood is below epsilon (default 0.0001)
+#' @param verbose print information (default FALSE)
+#' @param no_cores number of cores (default to 1)
+#' @export
+#' @importFrom parallel mclapply
+zinb.PCA.correct.sf = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop.epsilon=.0001, verbose=FALSE, no_cores=1){
+    
+    n <- nrow(datamatrix)
+    p <- ncol(datamatrix)
+    
+    # Initialize U and V by PCA on log(count+1) matrix
+    PCA.init <- prcomp(log(1+datamatrix),center=TRUE,scale.=TRUE)
+    U <- PCA.init$x[,1:k]
+    V <- PCA.init$rotation[,1:k]
+    
+    #create a vector of size factors initialized as 0
+    SF=rep(0,n)
+    V.1=rep(1,p)
+    
+    # Initialize W and theta 
+    W <- matrix(0,nrow=p,ncol=k)
+    a.theta <- numeric(p)
+    X.theta <- matrix(1,nrow=n) # the model is theta = exp(X.theta %*% a.theta)
+    
+    total.lik=rep(NA,alt.number)
+    
+    for (alt in 1:alt.number){
+        if (verbose) {cat("Iteration ",alt,"\n",sep="")}
+        
+        # Evaluate total likelihood before alternation num alt
+        total.lik[alt] <- zinb.loglik(datamatrix, exp( cbind(U,SF) %*% t(cbind(V,V.1)) ), exp(X.theta %*% a.theta), U %*% t(W))
+        if (verbose) {cat("log-likelihood = ",total.lik[alt],"\n",sep="")}
+        
+        # If the increase in likelihood is smaller than 0.5%, stop maximization
+        if(alt>1){if(abs((total.lik[alt]-total.lik[alt-1])/total.lik[alt-1])<stop.epsilon)break}
+        
+        
+        # Fix U, optimize in V, W and theta
+        ptm <- proc.time()
+        estimate <- matrix(unlist( parallel::mclapply(seq(p), function(i) {
+            optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(V[i,],W[i,], a.theta[i]) , Y=datamatrix[,i] , X.mu=U , X.pi=U , offset.mu=SF, X.theta=X.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=no_cores)) , nrow=2*k+1)
+        if (verbose) {print(proc.time()-ptm)}
+        
+        #        estimate <- matrix(unlist(sapply(seq(p), function(i) {
+        #            optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(V[i,],W[i,], a.theta[i]) , Y=datamatrix[,i] , X.mu=U , X.pi=U , X.theta=X.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par })) , nrow=2*k+1)
+        
+        V <- t(estimate[1:k,])
+        W <- t(estimate[(k+1):(2*k),])
+        a.theta <- estimate[(2*k+1),]
+        
+        
+        if (verbose) {cat("log-likelihood = ",zinb.loglik(datamatrix, exp( cbind(U,SF) %*% t(cbind(V,V.1)) ), exp(X.theta %*% a.theta), U %*% t(W)),"\n",sep="")}
+        
+        # Fix V, W, theta, optimize in U
+        # SF is learned as a third column of U corresponding to third column of V and W equal to 1
+        ptm <- proc.time()
+        #        estimate <- sapply(seq(n), function(i) {
+        #            optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(U[i,]) , Y=datamatrix[i,] , Y.mu=V , Y.pi=W , offset.theta=a.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par })        
 
+        # the code expect Y.mu (V) and Y.pi (W) be of the same size, that of U: to force, add a third zero column to W. Brings no change in likelihood but fix problem with the dimension. 
+        estimate <- matrix(unlist( parallel::mclapply(seq(n), function(i) {
+            optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(U[i,],SF[i]) , Y=datamatrix[i,] , Y.mu=cbind(V,V.1) , Y.pi=cbind(W,rep(0,p)) , offset.theta=a.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=no_cores)) , nrow=k+1)
+        testimate=t(estimate)
+        U <- testimate[,1:2]
+        SF <- testimate[,3]
+        if (verbose) {print(proc.time()-ptm)}
+    }
+    zinb.result <- list(U=U,V=V,W=W,theta=exp(a.theta),SF=SF)
+}
+
+#' Estimation of latent factors from a count matrix
+#' @param datamatrix the count data matrix (cells in rows, genes in columns)
+#' @param k number of latent factors (default 2)
+#' @param alt.number maximum number of iterations (default 25)
+#' @param epsilon regularization parameter (default 0.1)
+#' @param stop.epsilon stopping criterion, when the relative gain in likelihood is below epsilon (default 0.0001)
+#' @param verbose print information (default FALSE)
+#' @param no_cores number of cores (default to 1)
+#' @export
+#' @importFrom parallel mclapply
+zinb.PCA.correct.sf2 = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop.epsilon=.0001, verbose=FALSE, no_cores=1){
+    
+    n <- nrow(datamatrix)
+    p <- ncol(datamatrix)
+    
+    #calculate total numbers of zeros per cell and total numbers of reads
+    cell.Nzeros <- rowSums(datamatrix==0)
+    cell.Nreads <- rowSums(datamatrix)
+    
+    #make known design matrices with those technical variables
+    Xtech.mu <- cbind(log(cell.Nzeros+1),log(cell.Nreads))
+    Xtech.pi <- Xtech.mu
+    
+    #initiamize the corresponding coefficients
+    atech.mu <- matrix(0,nrow=2,ncol=p)
+    atech.pi <- matrix(0,nrow=2,ncol=p)
+    
+    # Initialize U and V by PCA on log(count+1) matrix
+    PCA.init <- prcomp(log(1+datamatrix),center=TRUE,scale.=TRUE)
+    U <- PCA.init$x[,1:k]
+    V <- PCA.init$rotation[,1:k]    
+    
+    # Initialize W and theta to 1
+    W <- matrix(0,nrow=p,ncol=k)
+    a.theta <- numeric(p)
+    X.theta <- matrix(1,nrow=n) # the model is theta = exp(X.theta %*% a.theta)
+    
+    total.lik=rep(NA,alt.number)
+    
+    for (alt in 1:alt.number){
+        if (verbose) {cat("Iteration ",alt,"\n",sep="")}
+        
+        # Evaluate total likelihood before alternation num alt
+        total.lik[alt] <- zinb.loglik(datamatrix, exp( cbind(U,Xtech.mu) %*% rbind(t(V),atech.mu) ), exp(X.theta %*% a.theta), cbind(U,Xtech.mu) %*% rbind(t(W),atech.pi) )
+        if (verbose) {cat("log-likelihood = ",total.lik[alt],"\n",sep="")}
+        
+        # If the increase in likelihood is smaller than 0.5%, stop maximization
+        if(alt>1){if(abs((total.lik[alt]-total.lik[alt-1])/total.lik[alt-1])<stop.epsilon)break}
+        
+        
+        # Fix U, optimize in V, W and theta
+        ptm <- proc.time()
+        estimate <- matrix(unlist( parallel::mclapply(seq(p), function(i) {
+            optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(V[i,],atech.mu[,i],W[i,],atech.pi[,i], a.theta[i]) , Y=datamatrix[,i] , X.mu=cbind(U,Xtech.mu) , X.pi=cbind(U,Xtech.pi) , X.theta=X.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=no_cores)) , nrow=4*k+1)
+        if (verbose) {print(proc.time()-ptm)}
+        
+        #        estimate <- matrix(unlist(sapply(seq(p), function(i) {
+        #            optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(V[i,],W[i,], a.theta[i]) , Y=datamatrix[,i] , X.mu=U , X.pi=U , X.theta=X.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par })) , nrow=2*k+1)
+        
+        V <- t(estimate[1:k,])
+        atech.mu=estimate[(k+1):(2*k),]
+        W <- t(estimate[(2*k+1):(3*k),])
+        atech.pi <- estimate[(3*k+1):(4*k),]
+        a.theta <- estimate[(4*k+1),]
+        
+        
+        if (verbose) {cat("log-likelihood = ",zinb.loglik(datamatrix, exp( cbind(U,Xtech.mu) %*% rbind(t(V),atech.mu) ), exp(X.theta %*% a.theta), cbind(U,Xtech.mu) %*% rbind(t(W),atech.pi)),"\n",sep="")}
+        
+        # Fix V, W, theta, optimize in U
+        # SF is learned as a third column of U corresponding to third column of V and W equal to 1
+        ptm <- proc.time()
+        #        estimate <- sapply(seq(n), function(i) {
+        #            optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(U[i,]) , Y=datamatrix[i,] , Y.mu=V , Y.pi=W , offset.theta=a.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par })        
+        
+        #calculate matrices of offsets
+        offset.mu1 <- Xtech.mu %*% atech.mu 
+        offset.pi1 <- Xtech.pi %*% atech.pi
+        
+        estimate <- matrix(unlist( parallel::mclapply(seq(n), function(i) {
+            optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(U[i,]) , Y=datamatrix[i,] , offset.mu=offset.mu1[i,], offset.pi=offset.pi1[i,], Y.mu=V , Y.pi=W, offset.theta=a.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=no_cores)) , nrow=k)
+        U <- t(estimate)
+        if (verbose) {print(proc.time()-ptm)}
+    }
+    zinb.result <- list(U=U,V=V,W=W,theta=exp(a.theta),atech.mu=atech.mu,atech.pi=atech.pi)
+}
