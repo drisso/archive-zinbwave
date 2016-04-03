@@ -3,22 +3,194 @@ title: "Tests on fluidigm data set"
 output: html_document
 ---
 
-Attach package scRNAseq, Select high quality cells, filter out those which do not have at least 10 counts in at least 10 cells and run zinb
+Attach package scRNAseq, select high quality cells, filter out those which do not have at least 10 counts in at least 10 cells and run zinb
 ```{r, eval=TRUE}
-install.packages("/Users/svetlanagribkova/GitHub/scRNAseq",repos=NULL,type="source")
+library(SummarizedExperiment)
 library(scRNAseq)
+source("../R/functions_jp.R")
 data("fluidigm")
 high.cov.cells=assays(fluidigm)$counts[,which(colData(fluidigm)$Coverage_Type=="High")]
 filter.out=apply(high.cov.cells>10,1,sum)<10
-sum(!filter.out) 
-fluidigm2=t(high.cov.cells[!filter.out,])
-zinb.fluidigm=zinb.PCA(fluidigm2,no_cores=7,alt.number=25,verbose=TRUE)
+```
+Number of genes which remain:
+```{r}
+print(sum(!filter.out)) 
 ```
 
-Plot the results with cells colored according to their cluster 
+Select those genes and run zinb PCA:
+
+```{r}
+fluidigm2=t(high.cov.cells[!filter.out,])
+zinb.fluidigm=zinb.PCA(fluidigm2,no_cores=7,alt.number=10,verbose=TRUE)
+```
+
+Plot the results with cells colored according to their cluster
 
 ```{r, echo=FALSE}
-plot(zinb.fluidigm,col=colData(fluidigm)$Cluster2[colData(fluidigm)$Coverage_Type=="High"])
+plot(zinb.fluidigm$U,col=colData(fluidigm)$Cluster2[colData(fluidigm)$Coverage_Type=="High"])
 ```
 
+Remark that points are almost aligned along a line suggesting that the correlation between columns of U is very high:
 
+```{r}
+print(cor(zinb.fluidigm$U[,1],zinb.fluidigm$U[,2]),method="spearman")
+```
+
+Check the correlations between two zinb factors, the total numbers of reads and the total numbers of detected genes.
+
+```{r,eval=TRUE}
+#first factor and total number of detected genes in the cell
+
+cor(zinb.fluidigm$U[,1],rowSums(fluidigm2!=0),method="spearman")
+#second factor and the total number of detected genes in the cell
+
+cor(zinb.fluidigm$U[,2],rowSums(fluidigm2!=0),method="spearman")
+#first factor and the total number of counts in the cell
+
+cor(zinb.fluidigm$U[,1],rowSums(fluidigm2),method="spearman")
+#second factor and the total number of counts in the cell
+
+cor(zinb.fluidigm$U[,2],rowSums(fluidigm2),method="spearman")
+```
+
+Plot the first and then the second column of U versus the total number of counts:
+
+```{r`, echo = FALSE}
+plot(rowSums(fluidigm2),zinb.fluidigm$U[,1])
+plot(rowSums(fluidigm2),zinb.fluidigm$U[,2])
+```
+
+Plot the first and then the second column of U versus the total number detected genes:
+
+```{r echo = FALSE}
+plot(rowSums(fluidigm2!=0),zinb.fluidigm$U[,1])
+plot(rowSums(fluidigm2!=0),zinb.fluidigm$U[,2])
+```
+
+The high correlation between the first factor and the total number of reads suggests adding this variable explicitely as the known cell level covariate as a possible way of normalization. What do you think?
+
+Modification of the first step (optimization wrt right parts): we need to add a known design matrix containing the total number of reads and the total number of detected genes. Its coefficients are to be estimated in the first step with V and W. For that, we give as X.mu the concatenation of U with Xtech.mu and the same for X.pi.
+
+Modification of the second step (optimization wrt U): for the moment, the code does not (does it?) give an explicit possibility to give known X.mu, a.mu, X.pi and a.pi to the step which optimizes in U. I pass those     arguments Xtech.mu * atech.mu with Xtech.mu * atech.mu as offsets.
+
+I think I have not understood something in your code because it does not give what I expect. Here is the function followed by its output on few first iterations
+
+```{r}
+zinb.PCA.correct.for.sf2 = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop.epsilon=.0001, verbose=FALSE, no_cores=1){
+    
+    n <- nrow(datamatrix)
+    p <- ncol(datamatrix)
+    
+    # calculate total numbers of zeros per cell and total numbers of reads
+    
+    cell.Nzeros <- rowSums(datamatrix==0)
+    cell.Nreads <- rowSums(datamatrix)
+    
+    # make known design matrices with those technical variables
+    
+    Xtech.mu <- cbind(cell.Nzeros,cell.Nreads)
+    Xtech.pi <- Xtech.mu    
+    
+    # initiamize the corresponding coefficients
+    atech.mu <- matrix(0,nrow=2,ncol=p)
+    atech.pi <- matrix(0,nrow=2,ncol=p)
+    
+    # Initialize U and V by PCA on log(count+1) matrix
+    PCA.init <- prcomp(log(1+datamatrix),center=TRUE,scale.=TRUE)
+    U <- PCA.init$x[,1:k]
+    V <- PCA.init$rotation[,1:k]    
+    
+    # Initialize W and theta to 1
+    W <- matrix(0,nrow=p,ncol=k)
+    a.theta <- numeric(p)
+    X.theta <- matrix(1,nrow=n) # the model is theta = exp(X.theta %*% a.theta)
+    
+    total.lik=rep(NA,alt.number)
+    
+    for (alt in 1:alt.number){
+        if (verbose) {cat("Iteration ",alt,"\n",sep="")}
+        
+        # Evaluate total likelihood before alternation num alt
+        total.lik[alt] <- zinb.loglik(datamatrix, exp( cbind(U,Xtech.mu) %*% rbind(t(V),atech.mu) ), exp(X.theta %*% a.theta), cbind(U,Xtech.mu) %*% rbind(t(W),atech.pi) )
+        if (verbose) {cat("log-likelihood = ",total.lik[alt],"\n",sep="")}
+        
+        # If the increase in likelihood is smaller than 0.5%, stop maximization
+        if(alt>1){if(abs((total.lik[alt]-total.lik[alt-1])/total.lik[alt-1])<stop.epsilon)break}
+        
+        
+        # Fix U, optimize in V, W and theta
+        ptm <- proc.time()
+        
+        # Give as design matrix U concatenated with Xtech.mu in order to estimate atech.mu and atech.pi
+        estimate <- matrix(unlist( parallel::mclapply(seq(p), function(i) {
+            optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(V[i,],atech.mu[,i],W[i,],atech.pi[,i], a.theta[i]) , Y=datamatrix[,i] , X.mu=cbind(U,Xtech.mu) , X.pi=cbind(U,Xtech.pi) , X.theta=X.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=no_cores)) , nrow=4*k+1)
+        
+        if (verbose) {print(proc.time()-ptm)}        
+        
+        V <- t(estimate[1:k,])
+        atech.mu=estimate[(k+1):(2*k),]
+        W <- t(estimate[(2*k+1):(3*k),])
+        atech.pi <- estimate[(3*k+1):(4*k),]
+        a.theta <- estimate[(4*k+1),]
+        
+        
+        if (verbose) {cat("log-likelihood = ",zinb.loglik(datamatrix, exp( cbind(U,Xtech.mu) %*% rbind(t(V),atech.mu) ), exp(X.theta %*% a.theta), cbind(U,Xtech.mu) %*% rbind(t(W),atech.pi)),"\n",sep="")}
+        
+        # Fix V, W, theta, optimize in U
+        ptm <- proc.time()      
+        
+        # calculate matrices of offsets
+        offset.mu1 <- Xtech.mu %*% atech.mu 
+        offset.pi1 <- Xtech.pi %*% atech.pi
+        
+        # Xtech.mu and Xtech.pi are known, to be given in offsets during the U-optimization 
+        estimate <- matrix(unlist( parallel::mclapply(seq(n), function(i) {
+            optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(U[i,]) , Y=datamatrix[i,] , offset.mu=offset.mu1[i,], offset.pi=offset.pi1[i,], Y.mu=V , Y.pi=W, offset.theta=a.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=no_cores)) , nrow=k)
+        U <- t(estimate)
+        if (verbose) {print(proc.time()-ptm)}
+    }
+    zinb.result <- list(U=U,V=V,W=W,theta=exp(a.theta),atech.mu=atech.mu,atech.pi=atech.pi)
+}
+```
+
+Do first three iterations:
+
+```{r}
+zinb.PCA.correct.for.sf2(fluidigm2,no_cores=7,alt.number=3)
+```
+
+Second modification (seems to work)
+
+leads to function zinb.PCA.correct.sf (about which we were speaking last time): consists to fit logM = X.mu * a.mu + Y.mu * b + SF * I, where SF is a column of cell's size factors to be estimated and I is a line of ones. 
+
+When optimizing wrt to V and W: the vector SF is given as offset for each of the genes 
+When optimizing wrt U: SF is learned as the 3-rd line of b, where Y.mu is taken as V concatenated with I and Y.pi is taken as W concatenated with a column of zeros (to fix the problem of size).
+
+```{r}
+zinb.fluidigm.SF=zinb.PCA.correct.sf(fluidigm2,no_cores=7,alt.number=25,verbose=TRUE)
+```
+
+Plot the result (quite different):
+
+```{r, echo=FALSE}
+plot(zinb.fluidigm.SF$U,col=colData(fluidigm)$Cluster2[colData(fluidigm)$Coverage_Type=="High"])
+```
+
+Check correlations with total reads and total detected:
+
+```{r,eval=TRUE}
+#first factor and total number of detected genes in the cell
+
+cor(zinb.fluidigm.SF$U[,1],rowSums(fluidigm2!=0),method="spearman")
+#second factor and the total number of detected genes in the cell
+
+cor(zinb.fluidigm.SF$U[,2],rowSums(fluidigm2!=0),method="spearman")
+#first factor and the total number of counts in the cell
+
+cor(zinb.fluidigm.SF$U[,1],rowSums(fluidigm2),method="spearman")
+#second factor and the total number of counts in the cell
+
+cor(zinb.fluidigm.SF$U[,2],rowSums(fluidigm2),method="spearman")
+```
+
+First factor still captures the number of detected genes. May help to add another "size factor" vector but this time to the logitPi part?
