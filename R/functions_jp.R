@@ -383,20 +383,26 @@ zinb.PCA.correct.sf = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop
 #' @param no_cores number of cores (default to 1)
 #' @export
 #' @importFrom parallel mclapply
-zinb.PCA.correct.sf2 = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop.epsilon=.0001, verbose=FALSE, no_cores=1){
+
+
+zinb.PCA.correct.for.sf2 = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop.epsilon=.0001, verbose=FALSE, no_cores=1){
     
     n <- nrow(datamatrix)
     p <- ncol(datamatrix)
     
-    #calculate total numbers of zeros per cell and total numbers of reads
-    cell.Nzeros <- rowSums(datamatrix==0)
+    # calculate total numbers of zeros per cell and total numbers of reads
+    
+    cell.Nzeros <- rowSums(datamatrix!=0)
     cell.Nreads <- rowSums(datamatrix)
+    cell.Nzeros <- cell.Nzeros/mean(cell.Nzeros)
+    cell.Nreads <- cell.Nreads/mean(cell.Nreads)
     
-    #make known design matrices with those technical variables
-    Xtech.mu <- cbind(log(cell.Nzeros+1),log(cell.Nreads))
-    Xtech.pi <- Xtech.mu
+    # make known design matrices with those technical variables
     
-    #initiamize the corresponding coefficients
+    Xtech.mu <- cbind(cell.Nzeros,cell.Nreads)
+    Xtech.pi <- Xtech.mu    
+    
+    # initiamize the corresponding coefficients
     atech.mu <- matrix(0,nrow=2,ncol=p)
     atech.pi <- matrix(0,nrow=2,ncol=p)
     
@@ -425,12 +431,12 @@ zinb.PCA.correct.sf2 = function(datamatrix, k=2, alt.number=25, epsilon=0.1, sto
         
         # Fix U, optimize in V, W and theta
         ptm <- proc.time()
+        
+        # Give as design matrix U concatenated with Xtech.mu in order to estimate atech.mu and atech.pi
         estimate <- matrix(unlist( parallel::mclapply(seq(p), function(i) {
             optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(V[i,],atech.mu[,i],W[i,],atech.pi[,i], a.theta[i]) , Y=datamatrix[,i] , X.mu=cbind(U,Xtech.mu) , X.pi=cbind(U,Xtech.pi) , X.theta=X.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=no_cores)) , nrow=4*k+1)
-        if (verbose) {print(proc.time()-ptm)}
         
-        #        estimate <- matrix(unlist(sapply(seq(p), function(i) {
-        #            optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(V[i,],W[i,], a.theta[i]) , Y=datamatrix[,i] , X.mu=U , X.pi=U , X.theta=X.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par })) , nrow=2*k+1)
+        if (verbose) {print(proc.time()-ptm)}        
         
         V <- t(estimate[1:k,])
         atech.mu=estimate[(k+1):(2*k),]
@@ -442,15 +448,13 @@ zinb.PCA.correct.sf2 = function(datamatrix, k=2, alt.number=25, epsilon=0.1, sto
         if (verbose) {cat("log-likelihood = ",zinb.loglik(datamatrix, exp( cbind(U,Xtech.mu) %*% rbind(t(V),atech.mu) ), exp(X.theta %*% a.theta), cbind(U,Xtech.mu) %*% rbind(t(W),atech.pi)),"\n",sep="")}
         
         # Fix V, W, theta, optimize in U
-        # SF is learned as a third column of U corresponding to third column of V and W equal to 1
-        ptm <- proc.time()
-        #        estimate <- sapply(seq(n), function(i) {
-        #            optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(U[i,]) , Y=datamatrix[i,] , Y.mu=V , Y.pi=W , offset.theta=a.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par })        
+        ptm <- proc.time()      
         
-        #calculate matrices of offsets
+        # calculate matrices of offsets
         offset.mu1 <- Xtech.mu %*% atech.mu 
         offset.pi1 <- Xtech.pi %*% atech.pi
         
+        # Xtech.mu and Xtech.pi are known, to be given in offsets during the U-optimization 
         estimate <- matrix(unlist( parallel::mclapply(seq(n), function(i) {
             optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(U[i,]) , Y=datamatrix[i,] , offset.mu=offset.mu1[i,], offset.pi=offset.pi1[i,], Y.mu=V , Y.pi=W, offset.theta=a.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=no_cores)) , nrow=k)
         U <- t(estimate)
@@ -458,3 +462,4 @@ zinb.PCA.correct.sf2 = function(datamatrix, k=2, alt.number=25, epsilon=0.1, sto
     }
     zinb.result <- list(U=U,V=V,W=W,theta=exp(a.theta),atech.mu=atech.mu,atech.pi=atech.pi)
 }
+
