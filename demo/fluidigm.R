@@ -24,18 +24,18 @@ nrow(high.cov.cells)#26262
 
 ######## SIZE FACTORS ESTIMATION  ############
 #to estimate size factors, find genes never 0
-all1=(apply(fluidigm2==0,1,sum)==0) 
+all1=(apply(fluidigm2==0,2,sum)==0) 
 sum(all1) #81
 #estimate size factors
-sizeFgenes=fluidigm2[all1==1,]
+sizeFgenes=fluidigm2[,all1==1]
 #calculate geometric means of lines
-geom.means.lines=apply(sizeFgenes^(1/ncol(sizeFgenes)),1,prod)
+geom.means.lines=apply(sizeFgenes^(1/ncol(sizeFgenes)),2,prod)
 #divide each line by its geom mean
 for(i in 1:nrow(sizeFgenes)){
     sizeFgenes[i,]=sizeFgenes[i,]/geom.means.lines[i]
 }
 #compute size factors
-size.factors=apply(sizeFgenes,2,median)
+size.factors=apply(sizeFgenes,1,median)
 ###############################################
 #find genes to be filtered out
 #filter.out=apply(high.cov.cells>10,1,sum)<20 4 groups
