@@ -1,0 +1,43 @@
+---
+title: "Simulation study of the ZINB model"
+output: html_document
+---
+
+Decisions to take about the plan of simulations:
+
+* Define and list all configurations which we want to simulate. Some suggestions: 
+    + 2 latent factors without known design matrix (PCA case)
+    + Should we consider more than 2 factors? Do we have a solution to choose the nb of factors?
+    + Case of different library sizes ? Our way to normalize versus Deseq?
+    + Any others?
+
+* Number of datasets to simulate for each configuration. Suggestion: 
+    + 50 datasets
+
+* Number of genes, number of cells : 
+    + reasonable values? 
+    + one or several configuration per simulated case?
+
+* Zero inflation
+    + Should we consider the case of no zero inflation?
+    + Which configurations of zero inflation we consider?
+        + Several proportions of zeros: which ones?
+    
+* Define a list of methods to compare with :
+    + ZIFA
+    + PCA
+    + Weighted PCA
+    + Any others ?
+
+* Define criteria of comparison :
+    + General measures of quality of dimension reduction ? (without notion of clusters)
+    + Dimension reduction + clustering. Suggestions:
+        + For each method, do a dimension reduction followed by k-means, including the choice of number of                 clusters.
+            1. Case of simulation with known true partition: compare Rand indices of similarity
+            2. General statistics on quality of clustering. Which ones?
+                + Silhouette averaged over all observations ( any better solution using silhouette? )
+                
+    
+
+
+
