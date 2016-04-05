@@ -112,6 +112,65 @@ $(document).ready(function () {
 </div>
 
 
+<p>I wrote two functions to simulate data :</p>
+<ul>
+<li>sim.make.matrices functions in a similar way as zinb.make.matrices and compute logM, logitPi and logtheta from model matrices which are provided as its arguments</li>
+<li>simulateNB takes as argument model matrices and simulate a dataset, parallelized to simulate large data more rapidly. The number of genes and cells being determined automatically from sizes of the provided design matrices.</li>
+</ul>
+<p>A small test of function simulating the data:</p>
+<pre class="r"><code>source(&quot;../R/functions_sim.R&quot;)
+
+# number of cells
+n=10
+
+# number of genes
+J=10
+
+# define U, V, W and logtheta
+U &lt;- matrix(rep(2,n),ncol=1)
+V &lt;- matrix(rep(1,J),nrow=1)
+W &lt;- matrix(rep(1,J),nrow=1)
+logtheta &lt;- matrix( rep ( 0 , n*J ) , ncol = J , nrow = n )
+
+# run simulateNB
+test.simulation &lt;- simulateNB( U = U , V = V , W = W , offset.theta = logtheta )
+
+print(test.simulation$counts)</code></pre>
+<pre><code>##       [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]
+##  [1,]    0    0    0    0    0    0    0    0    0     0
+##  [2,]    0    2    0    0    6    0    0   13    0     0
+##  [3,]    0    0    0    0    0    0    0    0    0     0
+##  [4,]    0   11    0    0    5    1    0    0    0     0
+##  [5,]    0    8   11   19    0    0    0    0    0     0
+##  [6,]    0    0    1   11    0    0    0    0    0     0
+##  [7,]    0    0    0    0    0    0    0    0    0     0
+##  [8,]    0    0    0    0    0    0    0    0    0     2
+##  [9,]    0    0    0    0    0    0    0    0    0     0
+## [10,]    0   25    0    0    0    0    0    0    0     0</code></pre>
+<pre class="r"><code>print(test.simulation$data.nb)</code></pre>
+<pre><code>##       [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]
+##  [1,]    3    1   13   17    2   10    4    3    0     2
+##  [2,]   21    2    0    3    6   16   28   13    0     8
+##  [3,]   10    8   17    0    1    3    3   29   18     6
+##  [4,]    3   11    0   20    5    1    3   12    7     9
+##  [5,]    1    8   11   19    3    0   15    5   11     8
+##  [6,]    9   18    1   11   10    0   19    5    0     8
+##  [7,]    3   12   20    6   40   11    4    0    6    14
+##  [8,]   11    7    4    4    0    5    3    5    4     2
+##  [9,]   23    6    2    6   27    3    2    3   12    55
+## [10,]   12   25    0    1   22    2    1    1   17     5</code></pre>
+<pre class="r"><code>print(test.simulation$dropouts)</code></pre>
+<pre><code>##       [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]
+##  [1,]    1    1    1    1    1    1    1    1    1     1
+##  [2,]    1    0    1    1    0    1    1    0    1     1
+##  [3,]    1    1    1    1    1    1    1    1    1     1
+##  [4,]    1    0    0    1    0    0    1    1    1     1
+##  [5,]    1    0    0    0    1    1    1    1    1     1
+##  [6,]    1    1    0    0    1    1    1    1    0     1
+##  [7,]    1    1    1    1    1    1    1    1    1     1
+##  [8,]    1    1    1    1    1    1    1    1    1     0
+##  [9,]    1    1    1    1    1    1    1    1    1     1
+## [10,]    1    0    1    1    1    1    1    1    1     1</code></pre>
 <p>Decisions to take about the plan of simulations:</p>
 <ul>
 <li>Define and list all configurations which we want to simulate. Some suggestions:
@@ -143,19 +202,41 @@ $(document).ready(function () {
 <li>ZIFA</li>
 <li>PCA</li>
 <li>Weighted PCA</li>
-<li>Any others ?</li>
+<li>Any others ? Should we compare to non linear methods:
+<ul>
+<li>Kernel PCA</li>
+<li>Isomap</li>
+<li>Maximum Variance Unfolding</li>
+<li>Diffusion Maps</li>
+<li>Locally Linear Embedding</li>
+<li>Laplacian Eigenmaps</li>
+</ul></li>
 </ul></li>
 <li>Define criteria of comparison :
 <ul>
+<li>Error of reconstruction of M matrix? Error of reconstruction of Pi matrix?</li>
 <li>General measures of quality of dimension reduction ? (without notion of clusters)</li>
 <li>Dimension reduction + clustering. Suggestions:
 <ul>
 <li>For each method, do a dimension reduction followed by k-means, including the choice of number of clusters.
 <ol style="list-style-type: decimal">
-<li>Case of simulation with known true partition: compare Rand indices of similarity</li>
-<li>General statistics on quality of clustering. Which ones?
+<li>Case of simulation with a known reference partition: compare Rand indices of similarity with ref</li>
+<li>General statistics on quality of clustering. Which ones? Package fpc, function cluster.stats provides:
 <ul>
+<li>Vector of clusterwise within cluster distance medians</li>
+<li>Vector of cluster diameters</li>
+<li>Vector of clusterwise minimum distances of a point in the cluster to a point of another cluster</li>
+<li>Vector of clusterwise average distances of a point in the cluster to the points of other clusters</li>
+<li>Matrix of separation values between all pairs of clusters</li>
+<li>Matrix of mean dissimilarities between points of every pair of clusters</li>
+<li>Average distance between clusters</li>
+<li>Average distance within clusters</li>
+<li>A generalisation of the within clusters sum of squares (k-means objective function)</li>
+<li>Vector of cluster average silhouette widths</li>
+<li>Average silhouette width</li>
 <li>Silhouette averaged over all observations ( any better solution using silhouette? )</li>
+<li>Minimum average dissimilarity between two cluster / maximum average within cluster dissimilarity</li>
+<li>Average.within/average.between</li>
 </ul></li>
 </ol></li>
 </ul></li>

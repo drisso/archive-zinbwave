@@ -3,6 +3,36 @@ title: "Simulation study of the ZINB model"
 output: html_document
 ---
 
+I wrote two functions to simulate data : 
+
+* sim.make.matrices functions in a similar way as zinb.make.matrices and compute logM, logitPi and logtheta from model matrices which are provided as its arguments
+* simulateNB takes as argument model matrices and simulate a dataset, parallelized to simulate large data more rapidly. The number of genes and cells being determined automatically from sizes of the provided design matrices.
+
+A small test of function simulating the data:
+
+```{r}
+source("../R/functions_sim.R")
+
+# number of cells
+n=10
+
+# number of genes
+J=10
+
+# define U, V, W and logtheta
+U <- matrix(rep(2,n),ncol=1)
+V <- matrix(rep(1,J),nrow=1)
+W <- matrix(rep(1,J),nrow=1)
+logtheta <- matrix( rep ( 0 , n*J ) , ncol = J , nrow = n )
+
+# run simulateNB
+test.simulation <- simulateNB( U = U , V = V , W = W , offset.theta = logtheta )
+
+print(test.simulation$counts)
+print(test.simulation$data.nb)
+print(test.simulation$dropouts)
+```
+
 Decisions to take about the plan of simulations:
 
 * Define and list all configurations which we want to simulate. Some suggestions: 
@@ -27,17 +57,35 @@ Decisions to take about the plan of simulations:
     + ZIFA
     + PCA
     + Weighted PCA
-    + Any others ?
+    + Any others ? Should we compare to non linear methods:
+        + Kernel PCA
+        + Isomap
+        + Maximum Variance Unfolding
+        + Diffusion Maps
+        + Locally Linear Embedding
+        + Laplacian Eigenmaps
 
 * Define criteria of comparison :
+    + Error of reconstruction of M matrix? Error of reconstruction of Pi matrix?
     + General measures of quality of dimension reduction ? (without notion of clusters)
     + Dimension reduction + clustering. Suggestions:
-        + For each method, do a dimension reduction followed by k-means, including the choice of number of                 clusters.
-            1. Case of simulation with known true partition: compare Rand indices of similarity
-            2. General statistics on quality of clustering. Which ones?
+        + For each method, do a dimension reduction followed by k-means, including the choice of number of clusters.
+            1. Case of simulation with a known reference partition: compare Rand indices of similarity with ref
+            2. General statistics on quality of clustering. Which ones? Package fpc, function cluster.stats provides:
+                + Vector of clusterwise within cluster distance medians
+                + Vector of cluster diameters
+                + Vector of clusterwise minimum distances of a point in the cluster to a point of another cluster
+                + Vector of clusterwise average distances of a point in the cluster to the points of other clusters
+                + Matrix of separation values between all pairs of clusters
+                + Matrix of mean dissimilarities between points of every pair of clusters
+                + Average distance between clusters
+                + Average distance within clusters
+                + A generalisation of the within clusters sum of squares (k-means objective function)
+                + Vector of cluster average silhouette widths
+                + Average silhouette width
                 + Silhouette averaged over all observations ( any better solution using silhouette? )
+                + Minimum average dissimilarity between two cluster / maximum average within cluster dissimilarity
+                + Average.within/average.between
                 
-    
-
 
 
