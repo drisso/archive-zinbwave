@@ -120,8 +120,8 @@ zinb.fluidigm.SF2=zinb.PCA.correct.for.sf2(fluidigm2,no_cores=7,alt.number=25,ve
 Plot the result:
 
 ```{r, echo = FALSE}
-plot(zinb.fluidigm.SF2$U,col=colData(fluidigm)$Cluster2[colData(fluidigm)$Coverage_Type=="High"],main="zinb.fluidigm.SF2")
-plot(prcomp(log(1+fluidigm2),scale.=TRUE,center=TRUE)$x[,1:2],col=colData(fluidigm)$Cluster2[colData(fluidigm)$Coverage_Type=="High"],main="PCA")
+plot(zinb.fluidigm.SF2$U,col=colData(fluidigm)$Cluster1[colData(fluidigm)$Coverage_Type=="High"],main="zinb.fluidigm.SF2")
+plot(prcomp(log(1+fluidigm2),scale.=TRUE,center=TRUE)$x[,1:2],col=colData(fluidigm)$Cluster1[colData(fluidigm)$Coverage_Type=="High"],main="PCA")
 ```
 
 
