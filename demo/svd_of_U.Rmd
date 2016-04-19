@@ -1,0 +1,90 @@
+---
+title: "Orthogonalization of U by SVD"
+output: html_document
+---
+
+In order to skip the multiplication of matrices, use the QR decomposition:
+$$U=U_QU_R$$
+where $U_Q$ is orthogonal of the same size as $U$,  and $U_R$ is upper triangular $2\times 2$. We have:
+$$UV^T=U_QU_RV_R^TV_Q^T,$$
+with $U_RV_R^T$ of size $2\times 2$. The SVD of $A:=U_RV_R^T$ is
+$$A=A_UA_DA_V^T,$$
+with $A_U,A_V$ orthogonals and $A_D$ diagonal matrices. This gives:
+$$UV^T=U_QA_UA_DA_V^TV_Q^T=:\tilde{U}\tilde{V}^T,$$
+where $\tilde{U}=U_QA_U$ and $\tilde{V}=V_Q A_V A_D$ are orthogonal. To keep the same $UW^T$, modifie $W$:
+$$UW^T=U_QU_RW^T=U_QA_UA_U^TU_RW^T=\tilde{U}\tilde{W}^T,$$
+with $\tilde{W}=WU_R^TA_U$. JP: in this version we do not need to inverse the diagonal and I do not use "solve" any more.
+
+Test on small simulated matrices that this code does what it should:
+
+```{r}
+U <- matrix( rnorm(16), ncol=2 )
+V <- matrix( rnorm(20), ncol=2 )
+W <- matrix( rnorm(20), ncol=2 )
+
+UV <- U %*% t(V)
+UW <- U %*% t(W)
+
+# do QR of U
+U.qr <- qr (U)
+U.Q <- qr.Q (U.qr)
+U.R <- qr.R (U.qr)
+
+#do QR of V
+V.qr <- qr (V)
+V.Q <- qr.Q (V.qr)
+V.R <- qr.R (V.qr)
+
+# do SVD of A
+A <- svd( U.R %*% t(V.R) )
+
+# orthogonalized U
+U <- U.Q %*% A$u
+
+# orthogonalized V
+V <- V.Q %*% A$v %*% diag(A$d)
+
+# U changed -> change W to keep the product U%*%t(W) 
+W <- W %*% t(U.R) %*% A$u
+```
+Check that we do not change $UV^T$ and $UW^T$:
+```{r,echo=FALSE}
+cat("sum( UV - U %*% t(V) ) = ",sum(UV-U%*%t(V)),"\n",sep="")
+cat("sum( UW - U %*% t(W) ) = ",sum(UW-U%*%t(W)),"\n",sep="")
+```
+
+Check that U and V are indeed orthogonal:
+```{r, echo=FALSE}
+cat("t(U[,1])%*%U[,2] =",t(U[,1])%*%U[,2])
+cat("t(V[,1])%*%V[,2] =",t(V[,1])%*%V[,2])
+```
+
+This code is included in new function which I called zinb.PCA.svd. Run it on fluidigm data set and check that $U$ and $V$ that we estimated are indeed orthogonal:
+```{r, echo=FALSE}
+source("../R/functions_jp.R")
+library(SummarizedExperiment)
+library(scRNAseq)
+```
+```{r}
+data("fluidigm")
+high.cov.cells=assays(fluidigm)$counts[,which(colData(fluidigm)$Coverage_Type=="High")]
+filter.out=apply(high.cov.cells>10,1,sum)<10
+fluidigm2=t(high.cov.cells[!filter.out,])
+zinb.orthog <- zinb.PCA.svd(fluidigm2,no_cores=7,alt.number=25,verbose=TRUE)
+```
+Check that U and V that we learned are orthogonal:
+```{r, echo=FALSE}
+cat("t(zinb.orthog$U[,1])%*%zinb.orthog$U[,2] =",t(zinb.orthog$U[,1])%*%zinb.orthog$U[,2])
+cat("t(zinb.orthog$V[,1])%*%zinb.orthog$V[,2] =",t(zinb.orthog$V[,1])%*%zinb.orthog$V[,2])
+```
+
+Plot the result:
+
+```{r, echo=FALSE}
+plot(zinb.orthog$U,col=colData(fluidigm)$Cluster2[colData(fluidigm)$Coverage_Type=="High"])
+```
+
+
+
+
+

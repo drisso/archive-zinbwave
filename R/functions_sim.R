@@ -145,6 +145,21 @@ simulateNB <- function( X.mu = NULL, a.mu=NULL , U = NULL , V = NULL , offset.mu
     
 }
 
+#' Function which runs k-means on the two-dimensional projection of the data  
+#' Returns all outputs of kmeansruns function from fpc 
+#' @param data_kD matrix with cell's projections in k-dimensional space in lines, k is the number of columns of U
+#' @param cl.range range for the possible number of clusters, default : from 2 to 10 
+#' @export
+kmeans_projection <- function ( data_kD , cl.range = NULL){
+    
+    if ( !is.null(cl.range) ){
+        kmeans.result <- fpc::kmeansruns ( data = data_kD , krange = cl.range , criterion = "asw" )
+    } else {
+        kmeans.result <- fpc::kmeansruns ( data = data_kD , criterion = "asw" )
+    }
+    return ( kmeans.result )
+}
+
 #' Function which calculate rand indices comparing a reference partition to the zinb partition and  
 #' to other partitions which are provided 
 #' @param ref reference partition
