@@ -91,9 +91,9 @@ zinb.orthog <- zinb.PCA.svd(fluidigm2,no_cores=7,alt.number=25,verbose=TRUE)
 ```
 Check orthogonality ($U$ has orthogonal columns, but not $V$ or $W$)
 ```{r}
-t(U)%*%U
-t(V)%*%V
-t(W)%*%W
+t(zinb.orthog$U)%*%zinb.orthog$U
+t(zinb.orthog$V)%*%zinb.orthog$V
+t(zinb.orthog$W)%*%zinb.orthog$W
 ```
 
 Plot the result:
