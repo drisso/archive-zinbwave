@@ -3,6 +3,8 @@ title: "Orthogonalization of U by SVD"
 output: html_document
 ---
 
+## How to orthogonalize efficiently
+Consider the problem of computing the SVD of a matrix $UV^\top$. 
 In order to skip the multiplication of matrices, use the QR decomposition:
 $$U=U_QU_R$$
 where $U_Q$ is orthogonal of the same size as $U$,  and $U_R$ is upper triangular $2\times 2$. We have:
@@ -15,73 +17,91 @@ where $\tilde{U}=U_QA_U$ and $\tilde{V}=V_Q A_V A_D$ are orthogonal. To keep the
 $$UW^T=U_QU_RW^T=U_QA_UA_U^TU_RW^T=\tilde{U}\tilde{W}^T,$$
 with $\tilde{W}=WU_R^TA_U$. JP: in this version we do not need to inverse the diagonal and I do not use "solve" any more.
 
-Test on small simulated matrices that this code does what it should:
+## Modification (JP)
+Let's remember that we maximize the log-likelihood $\ell(U,V,W)$ penalized by the Frobenius norm of the matrices:
+$$
+\max_{U,V,W} \ell(U,V,W) - \epsilon(||U||^2+||V||^2 + ||W||^2) \,.
+$$
+The likelihood $\ell(U,V,W)$ only depends on $U,V,W$ through $UV^\top$ and $UW^\top$, so we can rewrite our objective function as
+$$
+\max_{U,V,W} f(UV^\top,UW^\top) - \epsilon(||U||^2+||V||^2 + ||W||^2) \,.
+$$
+The regularization is not only beneficial for statistical and numerical reasons, but also has the effect of naturally enforcing orthogonality of columns in the matrices. More precisely, forget about $W$ for a moment and consider the problem
+$$
+\max_{U,V} f(UV^\top) - \epsilon(||U||^2+||V||^2) \,.
+$$
+It is well known that the trace norm of a matrix $M$ (i.e., the sum of singular values) can be expressed as
+$$
+||M||_{\ast} = \min_{UV^\top=M}\left(||U||^2 + ||V||^2\right)
+$$
+so our problem becomes
+$$
+\max_M f(M) - \epsilon ||M||_{\ast} \,,
+$$
+and if $M^*$ denotes the solution of this problem then the $U^*$ and $V^*$ that achieve the maximum are the singular vectors of $M^*$ scaled by the square roots of the singular values: if $M^*=ASB^\top$ is the SVD of $M^*$, then $U^* = A\sqrt(S)$ and $V^*=B\sqrt{S}$. In other words, the optimal $U^*$ and $V^*$ are (scaled) singular vectors of $M$, and in particular have orthogonal columns.
+
+Back to our problem with $W$, the same reasoning applies to the matrices $U$ and $[V;W]$, i.e., at the optimum the columns or U are orthogonal, as well as the columns of $[V,W]$.
+
+In practice we optimize by alternating optimization in $U$ on the one hand, and $[V;W]$ on the other hand. To speed up convergence it can therefore be useful to insert an orthogonalization step between each optimization, where $U$ and $[V;W]$ are set to the scaled singular vectors of the matrix $M = U*[V;W]^\top$; this amounts to minimizing the regularization $(||U||^2+||V||^2 + ||W||^2)$ under the constraint that $\ell(U,V,W)$ does not change, and is obtained by a simple SVD.
+
+This orthogononatization is implemented in the orthogonalizeJointly(U,V,W) function.
+
+Note that the columns of $V$ only have no reason to be orthogonal, neither the columns of $W$ only. Hence the procedure presented in the first paragraph above (enforce orthogonal columns for $U$ and $V$, but not $W$) is not correct, in the sense that it degrades the objective function. This explains why we observed some oscillation in the objective function when we tried it. Instead, when $V$ and $W$ are treated jointly, then the orthogonalization step really corresponds to a partical maximization of the objective function.
+
+## Test of the orthogonalization step
+
+Test on small simulated matrices that this function does what it should
 
 ```{r}
+library(zinb)
+set.seed(1234)
+
+# random matrices
 U <- matrix( rnorm(16), ncol=2 )
 V <- matrix( rnorm(20), ncol=2 )
 W <- matrix( rnorm(20), ncol=2 )
 
-UV <- U %*% t(V)
-UW <- U %*% t(W)
+# orthogonalize them
+o <- orthogonalizeJointly(U,V,W)
 
-# do QR of U
-U.qr <- qr (U)
-U.Q <- qr.Q (U.qr)
-U.R <- qr.R (U.qr)
+# Check that UV' is conserved
+sum((U%*%t(V) - o$U %*% t(o$V))^2)
 
-#do QR of V
-V.qr <- qr (V)
-V.Q <- qr.Q (V.qr)
-V.R <- qr.R (V.qr)
+# Check that UW' is conserved
+sum((U%*%t(W) - o$U %*% t(o$W))^2)
 
-# do SVD of A
-A <- svd( U.R %*% t(V.R) )
+# Check that U has orthogonal columns
+t(o$U) %*% o$U
 
-# orthogonalized U
-U <- U.Q %*% A$u
-
-# orthogonalized V
-V <- V.Q %*% A$v %*% diag(A$d)
-
-# U changed -> change W to keep the product U%*%t(W) 
-W <- W %*% t(U.R) %*% A$u
-```
-Check that we do not change $UV^T$ and $UW^T$:
-```{r,echo=FALSE}
-cat("sum( UV - U %*% t(V) ) = ",sum(UV-U%*%t(V)),"\n",sep="")
-cat("sum( UW - U %*% t(W) ) = ",sum(UW-U%*%t(W)),"\n",sep="")
+# Check that the regularization term has decreased
+sum(U^2) + sum(V^2) + sum(W^2)
+sum(o$U^2) + sum(o$V^2) + sum(o$W^2)
 ```
 
-Check that U and V are indeed orthogonal:
+## Test on Fluidigm data
+This procedure is included in the function called zinb.PCA.svd. (JP: I also changed initialization to SVD of log(count+1) instead of PCA(logcount+1). Let's run it on Fluidigm data
 ```{r, echo=FALSE}
-cat("t(U[,1])%*%U[,2] =",t(U[,1])%*%U[,2])
-cat("t(V[,1])%*%V[,2] =",t(V[,1])%*%V[,2])
-```
-
-This code is included in new function which I called zinb.PCA.svd. Run it on fluidigm data set and check that $U$ and $V$ that we estimated are indeed orthogonal:
-```{r, echo=FALSE}
-source("../R/functions_jp.R")
 library(SummarizedExperiment)
 library(scRNAseq)
-```
-```{r}
 data("fluidigm")
 high.cov.cells=assays(fluidigm)$counts[,which(colData(fluidigm)$Coverage_Type=="High")]
 filter.out=apply(high.cov.cells>10,1,sum)<10
 fluidigm2=t(high.cov.cells[!filter.out,])
 zinb.orthog <- zinb.PCA.svd(fluidigm2,no_cores=7,alt.number=25,verbose=TRUE)
 ```
-Check that U and V that we learned are orthogonal:
-```{r, echo=FALSE}
-cat("t(zinb.orthog$U[,1])%*%zinb.orthog$U[,2] =",t(zinb.orthog$U[,1])%*%zinb.orthog$U[,2])
-cat("t(zinb.orthog$V[,1])%*%zinb.orthog$V[,2] =",t(zinb.orthog$V[,1])%*%zinb.orthog$V[,2])
+Check orthogonality ($U$ has orthogonal columns, but not $V$ or $W$)
+```{r}
+t(U)%*%U
+t(V)%*%V
+t(W)%*%W
 ```
 
 Plot the result:
-
-```{r, echo=FALSE}
-plot(zinb.orthog$U,col=colData(fluidigm)$Cluster2[colData(fluidigm)$Coverage_Type=="High"])
+```{r}
+plot(zinb.orthog$U,col=colData(fluidigm)$Cluster2[colData(fluidigm)$Coverage_Type=="High"],main="U")
+plot(zinb.orthog$V,main="V")
+plot(zinb.orthog$W,main="W")
+plot(zinb.orthog$theta,main="theta")
 ```
 
 

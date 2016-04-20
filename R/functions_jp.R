@@ -232,6 +232,41 @@ gradient.zinb.loglik.regression <- function( alpha , Y, X.mu = NULL, X.pi = NULL
 }
 
 
+#' Orthogonalize U, V, W 
+#' 
+#' Given U, V, W, find U2, V2, W2 such that UV'=U2V2' and
+#' UW'=U2W2' and such that ||U2||^2+||V2||^2+||W||^2 is minimal.
+#' @param U left matrix
+#' @param V first right matrix
+#' @param W second right matrix
+#' @export
+orthogonalizeJointly <- function(U, V, W) {
+    
+    # do QR of U
+    U.qr <- qr (U)
+    U.Q <- qr.Q (U.qr)
+    U.R <- qr.R (U.qr)
+    
+    #do QR of [V;W]
+    VW.qr <- qr (rbind(V,W))
+    VW.Q <- qr.Q (VW.qr)
+    VW.R <- qr.R (VW.qr)
+    
+    # do SVD of the U.R %*% t(V.R) matrix to have orthog %*% diag %*% orthog
+    A <- svd( U.R %*% t(VW.R) )
+    
+    # orthogonalized U
+    U2 <- U.Q %*% A$u %*% sqrt(diag(A$d))
+    
+    # orthogonalized V and W
+    p <- nrow(V)
+    VW <- VW.Q %*% A$v %*% sqrt(diag(A$d))
+    V2 <- VW[1:p,]
+    W2 <- VW[(p+1):(2*p),]
+    
+    list(U=U2, V=V2, W=W2)
+}
+
 #' Estimation of latent factors from a count matrix
 #' @param datamatrix the count data matrix (cells in rows, genes in columns)
 #' @param k number of latent factors (default 2)
@@ -463,21 +498,41 @@ zinb.PCA.correct.for.sf2 = function(datamatrix, k=2, alt.number=25, epsilon=0.1,
     zinb.result <- list(U=U,V=V,W=W,theta=exp(a.theta),atech.mu=atech.mu,atech.pi=atech.pi)
 }
 
-# variant of function zinb.pca using SVD after each step
+#' Same as zinb.PCA but with orthogonalization at each step and better initialization
+#' @param datamatrix the count data matrix (cells in rows, genes in columns)
+#' @param k number of latent factors (default 2)
+#' @param alt.number maximum number of iterations (default 25)
+#' @param epsilon regularization parameter (default 0.1)
+#' @param stop.epsilon stopping criterion, when the relative gain in likelihood is below epsilon (default 0.0001)
+#' @param verbose print information (default FALSE)
+#' @param no_cores number of cores (default to 1)
+#' @export
+#' @importFrom parallel mclapply
 zinb.PCA.svd = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop.epsilon=.0001, verbose=FALSE, no_cores=1){
     
     n <- nrow(datamatrix)
     p <- ncol(datamatrix)
     
     # Initialize U and V by PCA on log(count+1) matrix
-    PCA.init <- prcomp(log(1+datamatrix),center=TRUE,scale.=TRUE)
-    U <- PCA.init$x[,1:k]
-    V <- PCA.init$rotation[,1:k]
+    #PCA.init <- prcomp(log(1+datamatrix),center=TRUE,scale.=TRUE)
+    #U <- PCA.init$x[,1:k]
+    #V <- PCA.init$rotation[,1:k]
+
+    # Initialize U and V by SVD on log(count+1) matrix
+    s <- svd(log(1+datamatrix))
+    U <- s$u[,1:k] %*% sqrt(diag(s$d[1:k]))
+    V <- s$v[,1:k] %*% sqrt(diag(s$d[1:k]))
     
     # Initialize W and theta to 1
     W <- matrix(0,nrow=p,ncol=k)
     a.theta <- numeric(p)
     X.theta <- matrix(1,nrow=n) # the model is theta = exp(X.theta %*% a.theta)
+    
+    # Orthogonalize U, V, W (not needed if we initialize from the SVD)
+    #o <- orthogonalizeJointly(U,V,W)
+    #U <- o$U
+    #V <- o$V
+    #W <- o$W
     
     total.lik=rep(NA,alt.number)
     
@@ -485,7 +540,7 @@ zinb.PCA.svd = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop.epsilo
         if (verbose) {cat("Iteration ",alt,"\n",sep="")}
         
         # Evaluate total likelihood before alternation num alt
-        total.lik[alt] <- zinb.loglik(datamatrix, exp( U %*% t(V) ), exp(X.theta %*% a.theta), U %*% t(W))
+        total.lik[alt] <- zinb.loglik(datamatrix, exp( U %*% t(V) ), exp(X.theta %*% a.theta), U %*% t(W)) - epsilon*(sum(U^2)+sum(V^2)+sum(W^2)+sum(a.theta^2))/2
         if (verbose) {cat("log-likelihood = ",total.lik[alt],"\n",sep="")}
         
         # If the increase in likelihood is smaller than 0.5%, stop maximization
@@ -504,9 +559,14 @@ zinb.PCA.svd = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop.epsilo
         V <- t(estimate[1:k,])
         W <- t(estimate[(k+1):(2*k),])
         a.theta <- estimate[(2*k+1),]
+        # Orthogonalize U, V, W
+        o <- orthogonalizeJointly(U,V,W)
+        U <- o$U
+        V <- o$V
+        W <- o$W
         
         
-        if (verbose) {cat("log-likelihood = ",zinb.loglik(datamatrix, exp( U %*% t(V) ), exp(X.theta %*% a.theta), U %*% t(W)),"\n",sep="")}
+        if (verbose) {cat("log-likelihood = ",zinb.loglik(datamatrix, exp( U %*% t(V) ), exp(X.theta %*% a.theta), U %*% t(W))- epsilon*(sum(U^2)+sum(V^2)+sum(W^2)+sum(a.theta^2))/2,"\n",sep="")}
         
         # Fix V, W, theta, optimize in U
         ptm <- proc.time()
@@ -517,32 +577,11 @@ zinb.PCA.svd = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop.epsilo
         U <- t(estimate)
         if (verbose) {print(proc.time()-ptm)}
         
-        # SVD of U%*%V via QR decomposition
-        
-        # do QR of U
-        U.qr <- qr (U)
-        U.Q <- qr.Q (U.qr)
-        U.R <- qr.R (U.qr)
-        
-        #do QR of V
-        V.qr <- qr (V)
-        V.Q <- qr.Q (V.qr)
-        V.R <- qr.R (V.qr)
-        
-        # U = U.Q %*% U.R with U.Q orthogonal and U.R 2 times 2
-        # U %*% t(V) = U.Q %*% U.R %*% t(V.R) %*% t(V.Q)
-        
-        # do SVD of the 2 times two matrix U.R %*% t(V.R) to have orthog %*% diag %*% orthog
-        A <- svd( U.R %*% t(V.R) )
-        
-        # orthogonalized U
-        U <- U.Q %*% A$u
-        
-        # orthogonalized V
-        V <- V.Q %*% A$v %*% diag(A$d)
-        
-        # U changed -> change W to keep the product U%*%t(W) 
-        W <- W %*% t(U.R) %*% A$u
+        # Orthogonalize U, V, W
+        o <- orthogonalizeJointly(U,V,W)
+        U <- o$U
+        V <- o$V
+        W <- o$W
        
     }
     zinb.result <- list(U=U,V=V,W=W,theta=exp(a.theta))

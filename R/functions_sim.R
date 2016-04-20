@@ -79,6 +79,8 @@ sim.make.matrices <- function( X.mu = NULL, a.mu=NULL , U= NULL , V = NULL , off
     
 }
 
+#' Simulate zero-inflated negative binomial matrices
+#' 
 #' Simulate negative binomial distribution according to the following model:
 #' Mean of the negative binomial: log(mu) = X.mu %*% a.mu + U %*% V + offset.mu
 #' Dispersion of the negative binomial: log(theta) = X.theta %*% a.theta + offset.theta
