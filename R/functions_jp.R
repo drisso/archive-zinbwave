@@ -696,12 +696,20 @@ zinb.PCA.full = function(datamatrix, k=2, size.fact = TRUE, pi.fact = TRUE, cent
     p <- ncol(datamatrix)
     
     # initialize U and V by SVD on log(count+1) matrix
-    logdata <- log(1+datamatrix)
-    gene.means <- colSums(logdata)/n
-    logdata <- logdata-matrix(rep(gene.means,n),ncol=p,byrow=TRUE)
-    s <- svd(logdata)
-    U <- s$u[,1:k] %*% sqrt(diag(s$d[1:k]))
-    V <- s$v[,1:k] %*% sqrt(diag(s$d[1:k]))
+    if (center){
+        logdata <- log(1+datamatrix)
+        gene.means <- colSums(logdata)/n
+        logdata <- logdata-matrix(rep(gene.means,n),ncol=p,byrow=TRUE)
+        s <- svd(logdata)
+        U <- s$u[,1:k] %*% sqrt(diag(s$d[1:k]))
+        V <- s$v[,1:k] %*% sqrt(diag(s$d[1:k]))
+    } else {
+        s <- svd(log(1+datamatrix))
+        U <- s$u[,1:k] %*% sqrt(diag(s$d[1:k]))
+        V <- s$v[,1:k] %*% sqrt(diag(s$d[1:k]))
+    }
+
+
     
     # design vectors of ones
     ones.n <- matrix ( 1, nrow = n , ncol = 1)
