@@ -676,3 +676,188 @@ zinb.PCA.sf.pif.center = function(datamatrix, k=2, alt.number=25, epsilon=0.1, s
 }
 
 
+
+#' Estimation of latent factors from a count matrix
+#' @param datamatrix the count data matrix (cells in rows, genes in columns)
+#' @param k number of latent factors (default 2)
+#' @param size.fact is logical, TRUE if size factors should be estimated
+#' @param pi.fact is logical, TRUE if cell specific zero probability should be estimated (one per cell)
+#' @param center is logical, TRUE if "centering is performed"
+#' @param alt.number maximum number of iterations (default 25)
+#' @param epsilon regularization parameter (default 0.1)
+#' @param stop.epsilon stopping criterion, when the relative gain in likelihood is below epsilon (default 0.0001)
+#' @param verbose print information (default FALSE)
+#' @param no_cores number of cores (default to 1)
+#' @export
+#' @importFrom parallel mclapply
+zinb.PCA.full = function(datamatrix, k=2, size.fact = TRUE, pi.fact = TRUE, center = TRUE, alt.number=25, epsilon=0.1, stop.epsilon=.0001, verbose=FALSE, no_cores=1){
+    
+    n <- nrow(datamatrix)
+    p <- ncol(datamatrix)
+    
+    # initialize U and V by SVD on log(count+1) matrix
+    logdata <- log(1+datamatrix)
+    gene.means <- colSums(logdata)/n
+    logdata <- logdata-matrix(rep(gene.means,n),ncol=p,byrow=TRUE)
+    s <- svd(logdata)
+    U <- s$u[,1:k] %*% sqrt(diag(s$d[1:k]))
+    V <- s$v[,1:k] %*% sqrt(diag(s$d[1:k]))
+    
+    # design vectors of ones
+    ones.n <- matrix ( 1, nrow = n , ncol = 1)
+    ones.J <- matrix ( 1, nrow = 1 , ncol = p)
+    
+    # if library size is to be estimated
+    if ( size.fact ) {
+        SF <- matrix (0, nrow = n, ncol = 1)
+    } else {
+        SF=NULL
+    }
+    
+    # if taking into account heterogeneity of p of zero
+    if (pi.fact) {
+        PiF <- matrix (0, nrow = n, ncol = 1)
+    } else {
+        PiF <- NULL
+    }
+    
+    # if centering data
+    if ( center ){
+        gene.fact <- matrix ( 0, nrow = 1 , ncol = p)
+    } else {
+        gene.fact <- NULL
+    }
+    
+
+    
+    # Initialize W and theta to 1
+    W <- matrix(0,nrow=p,ncol=k)
+    a.theta <- numeric(p)
+    X.theta <- matrix(1,nrow=n) # the model is theta = exp(X.theta %*% a.theta)
+  
+    total.lik=rep(NA,alt.number)
+    
+    for (alt in 1:alt.number){
+        if (verbose) {cat("Iteration ",alt,"\n",sep="")}
+        
+        # matrices to calculate likelihood
+        mu <- U %*% t(V)
+        logitP0 <- U %*% t(W) 
+        
+        if (size.fact){
+            mu <- mu + SF %*% ones.J
+        }
+        if (pi.fact){
+            logitP0 <- logitP0 + + PiF %*% ones.J 
+        }
+        if (center){
+            mu <- mu + ones.n %*% gene.fact
+        }
+        
+        # Evaluate total likelihood before alternation num alt
+        total.lik[alt] <- zinb.loglik(datamatrix, exp( mu ), exp(X.theta %*% a.theta), logitP0) - epsilon*(sum(U^2)+sum(V^2)+sum(W^2)+sum(a.theta^2))/2
+        if (verbose) {cat("log-likelihood = ",total.lik[alt],"\n",sep="")}
+        
+        # If the increase in likelihood is smaller than 0.5%, stop maximization
+        if(alt>1){if(abs((total.lik[alt]-total.lik[alt-1])/total.lik[alt-1])<stop.epsilon)break}
+        
+        
+        # STEP 1 : fix U, optimize in V, W and theta
+        if (size.fact){
+            offset.mu.step1 <- SF 
+        } else {
+            offset.mu.step1 <- 0
+        }
+        if (pi.fact){
+            offset.pi.step1 <- PiF
+        } else {
+            offset.pi.step1 <- 0
+        }
+        
+        if (center == TRUE){
+            X.mu.step1 <- cbind(U,ones.n)
+            par0.step1 <- cbind(V,t(gene.fact),W,a.theta)
+        } else {
+            X.mu.step1 <- U
+            par0.step1 <- cbind(V,W,a.theta)
+        }
+         
+        
+        ptm <- proc.time()
+        estimate <- matrix(unlist( parallel::mclapply(seq(p), function(i) {
+            optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=par0.step1[i,] , Y=datamatrix[,i] , X.mu=X.mu.step1 , X.pi=U , offset.mu=offset.mu.step1, offset.pi=offset.pi.step1, X.theta=X.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=no_cores)) , nrow=2*k+1+as.numeric(center))
+        if (verbose) {print(proc.time()-ptm)}
+        
+        V <- t(estimate[1:k,])
+        
+        if (center){
+            gene.fact[1,] <- estimate[k+1,]
+            W <- t(estimate[(k+2):(2*k+1),])
+            a.theta <- estimate[(2*k+2),]
+        } else {
+            W <- t(estimate[(k+1):(2*k),])
+            a.theta <- estimate[(2*k+1),]          
+        }
+
+        
+        # Orthogonalize U, V, W
+        o <- orthogonalizeJointly(U,V,W)
+        U <- o$U
+        V <- o$V
+        W <- o$W
+        
+        
+     #   if (verbose) {cat("log-likelihood = ",zinb.loglik(datamatrix, exp( U %*% t(V) ), exp(X.theta %*% a.theta), U %*% t(W))- epsilon*(sum(U^2)+sum(V^2)+sum(W^2)+sum(a.theta^2))/2,"\n",sep="")}
+        
+        # STEP 2 : fix V, W, theta, optimize in U
+        
+        par0.step2 <- U
+        
+        if (center){
+            offset.mu.step2 <- t(gene.fact)
+        } else {
+            offset.mu.step2 <- NULL
+        }
+        
+        if (size.fact){
+            X.mu.step2 <- t(ones.J)
+            par0.step2 <- cbind(SF,par0.step2)
+        } else {
+            X.mu.step2 <- NULL
+        }
+ 
+        if (pi.fact){
+            X.pi.step2 <- t(ones.J)
+            par0.step2 <- cbind(par0.step2,PiF)
+        } else {
+            X.pi.step2 <- NULL
+        }
+        
+        ptm <- proc.time()
+        
+        estimate <- matrix(unlist( parallel::mclapply(seq(n), function(i) {
+            optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=par0.step2[i,] , Y=datamatrix[i,] , X.mu=X.mu.step2 , X.pi=X.pi.step2 , Y.mu=V , Y.pi=W , offset.mu=offset.mu.step2 , offset.theta=a.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=no_cores)) , nrow=k+as.numeric(size.fact)+as.numeric(pi.fact))
+  
+        if (size.fact){
+            SF <- estimate[1,]
+            U <- t(estimate[2:(k+1),])
+        } else {
+            U <- t(estimate[1:k,])
+        }
+        
+        if (pi.fact){
+            PiF <- estimate[nrow(estimate),]
+        }
+        
+        
+        if (verbose) {print(proc.time()-ptm)}
+        
+        # Orthogonalize U, V, W
+        o <- orthogonalizeJointly(U,V,W)
+        U <- o$U
+        V <- o$V
+        W <- o$W
+        
+    }
+    zinb.result <- list(U=U,V=V,W=W,SF=SF,PiF=PiF,center=gene.fact, theta=exp(a.theta))
+}
