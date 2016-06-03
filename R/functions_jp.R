@@ -232,8 +232,8 @@ gradient.zinb.loglik.regression <- function( alpha , Y, X.mu = NULL, X.pi = NULL
 }
 
 
-#' Orthogonalize U, V, W 
-#' 
+#' Orthogonalize U, V, W
+#'
 #' Given U, V, W, find U2, V2, W2 such that UV'=U2V2' and
 #' UW'=U2W2' and such that ||U2||^2+||V2||^2+||W||^2 is minimal.
 #' @param U left matrix
@@ -241,29 +241,29 @@ gradient.zinb.loglik.regression <- function( alpha , Y, X.mu = NULL, X.pi = NULL
 #' @param W second right matrix
 #' @export
 orthogonalizeJointly <- function(U, V, W) {
-    
+
     # do QR of U
     U.qr <- qr (U)
     U.Q <- qr.Q (U.qr)
     U.R <- qr.R (U.qr)
-    
+
     #do QR of [V;W]
     VW.qr <- qr (rbind(V,W))
     VW.Q <- qr.Q (VW.qr)
     VW.R <- qr.R (VW.qr)
-    
+
     # do SVD of the U.R %*% t(V.R) matrix to have orthog %*% diag %*% orthog
     A <- svd( U.R %*% t(VW.R) )
-    
+
     # orthogonalized U
     U2 <- U.Q %*% A$u %*% sqrt(diag(A$d))
-    
+
     # orthogonalized V and W
     p <- nrow(V)
     VW <- VW.Q %*% A$v %*% sqrt(diag(A$d))
     V2 <- VW[1:p,]
     W2 <- VW[(p+1):(2*p),]
-    
+
     list(U=U2, V=V2, W=W2)
 }
 
@@ -346,7 +346,7 @@ zinb.PCA.00 = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop.epsilon
 #' @export
 #' @importFrom parallel mclapply
 zinb.PCA = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop.epsilon=.0001, verbose=FALSE, no_cores=1){
-    
+
     n <- nrow(datamatrix)
     p <- ncol(datamatrix)
 
@@ -354,44 +354,44 @@ zinb.PCA = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop.epsilon=.0
     s <- svd(log(1+datamatrix))
     U <- s$u[,1:k] %*% sqrt(diag(s$d[1:k]))
     V <- s$v[,1:k] %*% sqrt(diag(s$d[1:k]))
-    
+
     # Initialize W and theta to 1
     W <- matrix(0,nrow=p,ncol=k)
     a.theta <- numeric(p)
     X.theta <- matrix(1,nrow=n) # the model is theta = exp(X.theta %*% a.theta)
-    
+
     total.lik=rep(NA,alt.number)
-    
+
     for (alt in 1:alt.number){
         if (verbose) {cat("Iteration ",alt,"\n",sep="")}
-        
+
         # Evaluate total likelihood before alternation num alt
         total.lik[alt] <- zinb.loglik(datamatrix, exp( U %*% t(V) ), exp(X.theta %*% a.theta), U %*% t(W)) - epsilon*(sum(U^2)+sum(V^2)+sum(W^2)+sum(a.theta^2))/2
         if (verbose) {cat("log-likelihood = ",total.lik[alt],"\n",sep="")}
-        
+
         # If the increase in likelihood is smaller than 0.5%, stop maximization
         if(alt>1){if(abs((total.lik[alt]-total.lik[alt-1])/total.lik[alt-1])<stop.epsilon)break}
-        
-        
+
+
         # Fix U, optimize in V, W and theta
         ptm <- proc.time()
         estimate <- matrix(unlist( parallel::mclapply(seq(p), function(i) {
             optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(V[i,],W[i,], a.theta[i]) , Y=datamatrix[,i] , X.mu=U , X.pi=U , X.theta=X.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=no_cores)) , nrow=2*k+1)
         if (verbose) {print(proc.time()-ptm)}
-           
+
         V <- t(estimate[1:k,])
         W <- t(estimate[(k+1):(2*k),])
         a.theta <- estimate[(2*k+1),]
-        
+
         # Orthogonalize U, V, W
         o <- orthogonalizeJointly(U,V,W)
         U <- o$U
         V <- o$V
         W <- o$W
-        
-        
+
+
         if (verbose) {cat("log-likelihood = ",zinb.loglik(datamatrix, exp( U %*% t(V) ), exp(X.theta %*% a.theta), U %*% t(W))- epsilon*(sum(U^2)+sum(V^2)+sum(W^2)+sum(a.theta^2))/2,"\n",sep="")}
-        
+
         # Fix V, W, theta, optimize in U
         ptm <- proc.time()
 
@@ -400,13 +400,13 @@ zinb.PCA = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop.epsilon=.0
         U <- t(estimate)
 
         if (verbose) {print(proc.time()-ptm)}
-        
+
         # Orthogonalize U, V, W
         o <- orthogonalizeJointly(U,V,W)
         U <- o$U
         V <- o$V
         W <- o$W
-       
+
     }
     zinb.result <- list(U=U,V=V,W=W,theta=exp(a.theta))
 }
@@ -422,45 +422,45 @@ zinb.PCA = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop.epsilon=.0
 #' @export
 #' @importFrom parallel mclapply
 zinb.PCA.sf = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop.epsilon=.0001, verbose=FALSE, no_cores=1){
-    
+
     n <- nrow(datamatrix)
     p <- ncol(datamatrix)
-    
+
     # Initialize U and V by SVD on log(count+1) matrix
     s <- svd(log(1+datamatrix))
     U <- s$u[,1:k] %*% sqrt(diag(s$d[1:k]))
     V <- s$v[,1:k] %*% sqrt(diag(s$d[1:k]))
-    
+
     #create a vector of size factors initialized as 0
     SF=rep(0,n)
     V.1=rep(1,p)
-    
+
     # Initialize W and theta to 1
     W <- matrix(0,nrow=p,ncol=k)
     a.theta <- numeric(p)
     X.theta <- matrix(1,nrow=n) # the model is theta = exp(X.theta %*% a.theta)
-    
+
     total.lik=rep(NA,alt.number)
-    
+
     for (alt in 1:alt.number){
         if (verbose) {cat("Iteration ",alt,"\n",sep="")}
-        
+
         # Evaluate total likelihood before alternation num alt
         total.lik[alt] <- zinb.loglik(datamatrix, exp( cbind(U,SF) %*% t(cbind(V,V.1)) ), exp(X.theta %*% a.theta), U %*% t(W)) - epsilon*(sum(U^2)+sum(V^2)+sum(W^2)+sum(a.theta^2))/2
         if (verbose) {cat("log-likelihood = ",total.lik[alt],"\n",sep="")}
-        
+
         # If the increase in likelihood is smaller than 0.5%, stop maximization
         if(alt>1){if(abs((total.lik[alt]-total.lik[alt-1])/total.lik[alt-1])<stop.epsilon)break}
-        
-        
+
+
         # Fix U, optimize in V, W and theta
         ptm <- proc.time()
-        
+
         estimate <- matrix(unlist( parallel::mclapply(seq(p), function(i) {
             optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(V[i,],W[i,], a.theta[i]) , Y=datamatrix[,i] , X.mu=U , offset.mu=SF, X.pi=U , X.theta=X.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=no_cores)) , nrow=2*k+1)
-        
+
         if (verbose) {print(proc.time()-ptm)}
-        
+
         V <- t(estimate[1:k,])
         W <- t(estimate[(k+1):(2*k),])
         a.theta <- estimate[(2*k+1),]
@@ -469,27 +469,27 @@ zinb.PCA.sf = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop.epsilon
         U <- o$U
         V <- o$V
         W <- o$W
-        
-        
+
+
         if (verbose) {cat("log-likelihood = ",zinb.loglik(datamatrix, exp( cbind(U,SF) %*% t(cbind(V,V.1)) ), exp(X.theta %*% a.theta), U %*% t(W))- epsilon*(sum(U^2)+sum(V^2)+sum(W^2)+sum(a.theta^2))/2,"\n",sep="")}
-        
+
         # Fix V, W, theta, optimize in U
         ptm <- proc.time()
 
         estimate <- matrix(unlist( parallel::mclapply(seq(n), function(i) {
             optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(SF[i],U[i,]) , Y=datamatrix[i,] , X.mu=matrix(1,nrow=p), Y.mu=V , Y.pi=W , offset.theta=a.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=no_cores)) , nrow=k+1)
-        
+
         U <- t(estimate[2:3,])
         SF <- estimate[1,]
-        
+
         if (verbose) {print(proc.time()-ptm)}
-        
+
         # Orthogonalize U, V, W
         o <- orthogonalizeJointly(U,V,W)
         U <- o$U
         V <- o$V
         W <- o$W
-        
+
     }
     zinb.result <- list(U=U,V=V,W=W,theta=exp(a.theta),SF=SF)
 }
@@ -507,77 +507,77 @@ zinb.PCA.sf = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop.epsilon
 #' @importFrom parallel mclapply
 
 zinb.PCA.sf.pif = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop.epsilon=.0001, verbose=FALSE, no_cores=1){
-    
+
     n <- nrow(datamatrix)
     p <- ncol(datamatrix)
-    
+
     # Initialize U and V by SVD on log(count+1) matrix
     s <- svd(log(1+datamatrix))
     U <- s$u[,1:k] %*% sqrt(diag(s$d[1:k]))
     V <- s$v[,1:k] %*% sqrt(diag(s$d[1:k]))
-    
+
     #create a vector of size factors initialized as 0
     SF=rep(0,n)
     PiF=rep(0,n)
     V.1=rep(1,p)
-    
+
     # Initialize W and theta to 1
     W <- matrix(0,nrow=p,ncol=k)
     a.theta <- numeric(p)
     X.theta <- matrix(1,nrow=n) # the model is theta = exp(X.theta %*% a.theta)
-    
+
     total.lik=rep(NA,alt.number)
-    
+
     for (alt in 1:alt.number){
         if (verbose) {cat("Iteration ",alt,"\n",sep="")}
-        
+
         # Evaluate total likelihood before alternation num alt
         total.lik[alt] <- zinb.loglik(datamatrix, exp( cbind(U,SF) %*% t(cbind(V,V.1)) ), exp(X.theta %*% a.theta), cbind(U,PiF) %*% t(cbind(W,V.1))) - epsilon*(sum(U^2)+sum(V^2)+sum(W^2)+sum(a.theta^2))/2
         if (verbose) {cat("log-likelihood = ",total.lik[alt],"\n",sep="")}
-        
+
         # If the increase in likelihood is smaller than 0.5%, stop maximization
         if(alt>1){if(abs((total.lik[alt]-total.lik[alt-1])/total.lik[alt-1])<stop.epsilon)break}
-        
-        
+
+
         # Fix U, optimize in V, W and theta
         ptm <- proc.time()
-        
+
         estimate <- matrix(unlist( parallel::mclapply(seq(p), function(i) {
             optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(V[i,],W[i,], a.theta[i]) , Y=datamatrix[,i] , X.mu=U , offset.mu=SF, offset.pi=PiF, X.pi=U , X.theta=X.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=no_cores)) , nrow=2*k+1)
-        
+
         if (verbose) {print(proc.time()-ptm)}
-          
+
         V <- t(estimate[1:k,])
         W <- t(estimate[(k+1):(2*k),])
         a.theta <- estimate[(2*k+1),]
-        
+
         # Orthogonalize U, V, W
         o <- orthogonalizeJointly(U,V,W)
         U <- o$U
         V <- o$V
         W <- o$W
-        
-        
+
+
         if (verbose) {cat("log-likelihood = ",zinb.loglik(datamatrix, exp( cbind(U,SF) %*% t(cbind(V,V.1)) ), exp(X.theta %*% a.theta), cbind(U,PiF) %*% t(cbind(W,V.1)))- epsilon*(sum(U^2)+sum(V^2)+sum(W^2)+sum(a.theta^2))/2,"\n",sep="")}
-        
+
         # Fix V, W, theta, optimize in U
         ptm <- proc.time()
-        
+
         estimate <- matrix(unlist( parallel::mclapply(seq(n), function(i) {
             optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(SF[i],U[i,],PiF[i]) , Y=datamatrix[i,] , X.mu=matrix(1,nrow=p), X.pi=matrix(1,nrow=p), Y.mu=V , Y.pi=W , offset.theta=a.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=no_cores)) , nrow=k+2)
-        
+
         U <- t(estimate[2:3,])
         SF <- estimate[1,]
         PiF <-estimate[4,]
-        
+
         if (verbose) {print(proc.time()-ptm)}
-        
+
         # Orthogonalize U, V, W
         o <- orthogonalizeJointly(U,V,W)
         U <- o$U
         V <- o$V
         W <- o$W
-        
+
     }
     zinb.result <- list(U=U,V=V,W=W,theta=exp(a.theta),SF=SF,PiF=PiF)
 }
@@ -594,7 +594,7 @@ zinb.PCA.sf.pif = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop.eps
 #' @importFrom parallel mclapply
 
 zinb.PCA.sf.pif.center = function(datamatrix, k=2, alt.number=25, epsilon=0.1, stop.epsilon=.0001, verbose=FALSE, no_cores=1){
-    
+
     n <- nrow(datamatrix)
     p <- ncol(datamatrix)
 
@@ -604,73 +604,73 @@ zinb.PCA.sf.pif.center = function(datamatrix, k=2, alt.number=25, epsilon=0.1, s
     V.1 <- rep(1,p)
     U.1 <- rep(1,n)
 
-    
+
     # Initialize U and V by SVD on log(count+1) matrix
     s <- svd(log(1+datamatrix))
     U <- cbind ( s$u[,1:k] %*% sqrt(diag(s$d[1:k])) )
     V <- cbind ( s$v[,1:k] %*% sqrt(diag(s$d[1:k])) )
     V.U <- matrix(apply(log(1+datamatrix),2,median),ncol=1)
     W.U <- matrix(0,nrow=p,ncol=1)
-    
+
     # Initialize W and theta to 1
     W <- matrix(0,nrow=p,ncol=k)
     a.theta <- numeric(p)
     X.theta <- matrix(1,nrow=n) # the model is theta = exp(X.theta %*% a.theta)
-    
+
     total.lik=rep(NA,alt.number)
-    
+
     for (alt in 1:alt.number){
         if (verbose) {cat("Iteration ",alt,"\n",sep="")}
-        
+
         # Evaluate total likelihood before alternation num alt
         total.lik[alt] <- zinb.loglik(datamatrix, exp( cbind(U,SF,U.1) %*% t(cbind(V,V.1,V.U)) ), exp(X.theta %*% a.theta), cbind(U,PiF,U.1) %*% t(cbind(W,V.1,W.U))) - epsilon*(sum(U^2)+sum(V^2)+sum(W^2)+sum(a.theta^2))/2
         if (verbose) {cat("log-likelihood = ",total.lik[alt],"\n",sep="")}
-        
+
         # If the increase in likelihood is smaller than 0.5%, stop maximization
         if(alt>1){if(abs((total.lik[alt]-total.lik[alt-1])/total.lik[alt-1])<stop.epsilon)break}
-        
-        
+
+
         # Fix U, optimize in V, W and theta
         ptm <- proc.time()
-        
+
         estimate <- matrix(unlist( parallel::mclapply(seq(p), function(i) {
             optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(V[i,],V.U[i],W[i,],W.U[i], a.theta[i]) , Y=datamatrix[,i] , X.mu=cbind(U,U.1) , offset.mu=SF, offset.pi=PiF, X.pi=cbind(U,U.1) , X.theta=X.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=no_cores)) , nrow=2*k+3)
-        
+
         if (verbose) {print(proc.time()-ptm)}
-        
+
         V <- t(estimate[1:k,])
         V.U[,1] <- estimate[k+1,]
         W <- t(estimate[(k+2):(2*k+1),])
         W.U <- estimate[2*k+2,]
         a.theta <- estimate[(2*k+3),]
-        
+
         # Orthogonalize U, V, W
         o <- orthogonalizeJointly(U,V,W)
         U <- o$U
         V <- o$V
         W <- o$W
-        
-        
+
+
         if (verbose) {cat("log-likelihood = ",zinb.loglik(datamatrix, exp( cbind(U,SF,U.1) %*% t(cbind(V,V.1,V.U)) ), exp(X.theta %*% a.theta), cbind(U,PiF,U.1) %*% t(cbind(W,V.1,W.U)))- epsilon*(sum(U^2)+sum(V^2)+sum(W^2)+sum(a.theta^2))/2,"\n",sep="")}
-        
+
         # Fix V, W, theta, optimize in U
         ptm <- proc.time()
-        
+
         estimate <- matrix(unlist( parallel::mclapply(seq(n), function(i) {
             optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=c(SF[i],U[i,1:k],PiF[i]) , offset.mu=V.U, offset.pi=W.U, Y=datamatrix[i,] , X.mu=matrix(1,nrow=p), X.pi=matrix(1,nrow=p), Y.mu=V , Y.pi=W , offset.theta=a.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=no_cores)) , nrow=k+2)
-        
+
         U <- cbind(t(estimate[2:(k+1),]))
         SF <- estimate[1,]
         PiF <-estimate[k+2,]
-        
+
         if (verbose) {print(proc.time()-ptm)}
-        
+
         # Orthogonalize U, V, W
         o <- orthogonalizeJointly(U,V,W)
         U <- o$U
         V <- o$V
         W <- o$W
-        
+
     }
     zinb.result <- list(U=U,V=V,W=W,theta=exp(a.theta),V.U=V.U,W.U=W.U,SF=SF,PiF=PiF)
 }
@@ -691,88 +691,85 @@ zinb.PCA.sf.pif.center = function(datamatrix, k=2, alt.number=25, epsilon=0.1, s
 #' @export
 #' @importFrom parallel mclapply
 zinb.PCA.full = function(datamatrix, k=2, size.fact = TRUE, pi.fact = TRUE, center = TRUE, alt.number=25, epsilon=0.1, stop.epsilon=.0001, verbose=FALSE, no_cores=1){
-    
+
     n <- nrow(datamatrix)
     p <- ncol(datamatrix)
-    
+
     # initialize U and V by SVD on log(count+1) matrix
+    logdata <- log1p(datamatrix)
+
     if (center){
-        logdata <- log(1+datamatrix)
-        gene.means <- colSums(logdata)/n
-        logdata <- logdata-matrix(rep(gene.means,n),ncol=p,byrow=TRUE)
-        s <- svd(logdata)
-        U <- s$u[,1:k] %*% sqrt(diag(s$d[1:k]))
-        V <- s$v[,1:k] %*% sqrt(diag(s$d[1:k]))
-    } else {
-        s <- svd(log(1+datamatrix))
-        U <- s$u[,1:k] %*% sqrt(diag(s$d[1:k]))
-        V <- s$v[,1:k] %*% sqrt(diag(s$d[1:k]))
+        logdata <- scale(logdata, center = TRUE, scale = FALSE)
     }
 
+    s <- svd(logdata)
+    U <- s$u[,1:k] %*% sqrt(diag(s$d[1:k]))
+    V <- s$v[,1:k] %*% sqrt(diag(s$d[1:k]))
 
-    
     # design vectors of ones
-    ones.n <- matrix ( 1, nrow = n , ncol = 1)
-    ones.J <- matrix ( 1, nrow = 1 , ncol = p)
-    
-    # if library size is to be estimated
-    if ( size.fact ) {
-        SF <- matrix (0, nrow = n, ncol = 1)
+    ones.n <- matrix(1, nrow = n, ncol = 1)
+    ones.J <- matrix(1, nrow = 1, ncol = p)
+
+    # if library size is to be estimated, initialize with total counts
+    if (size.fact) {
+        tc <- scale(rowSums(datamatrix), center=TRUE, scale=TRUE)
+        SF <- matrix (tc, nrow = n, ncol = 1)
     } else {
-        SF=NULL
+        SF <- NULL
     }
-    
-    # if taking into account heterogeneity of p of zero
+
+    # if taking into account heterogeneity of p of zero, initialize with total number of 0 genes?
     if (pi.fact) {
-        PiF <- matrix (0, nrow = n, ncol = 1)
+        PiF <- matrix(0, nrow = n, ncol = 1)
     } else {
         PiF <- NULL
     }
-    
+
     # if centering data
-    if ( center ){
-        gene.fact <- matrix ( 0, nrow = 1 , ncol = p)
+    if (center){
+        gene.fact <- matrix(0, nrow = 1, ncol = p)
     } else {
         gene.fact <- NULL
     }
-    
 
-    
     # Initialize W and theta to 1
     W <- matrix(0,nrow=p,ncol=k)
     a.theta <- numeric(p)
     X.theta <- matrix(1,nrow=n) # the model is theta = exp(X.theta %*% a.theta)
-  
+
     total.lik=rep(NA,alt.number)
-    
+
     for (alt in 1:alt.number){
         if (verbose) {cat("Iteration ",alt,"\n",sep="")}
-        
+
         # matrices to calculate likelihood
-        mu <- U %*% t(V)
-        logitP0 <- U %*% t(W) 
-        
+        logmu <- U %*% t(V)
+        logitP0 <- U %*% t(W)
+
         if (size.fact){
-            mu <- mu + SF %*% ones.J
+            logmu <- logmu + SF %*% ones.J
         }
         if (pi.fact){
-            logitP0 <- logitP0 + + PiF %*% ones.J 
+            logitP0 <- logitP0 + PiF %*% ones.J
         }
         if (center){
-            mu <- mu + ones.n %*% gene.fact
+            logmu <- logmu + ones.n %*% gene.fact
         }
-        
+
         # Evaluate total likelihood before alternation num alt
-        total.lik[alt] <- zinb.loglik(datamatrix, exp( mu ), exp(X.theta %*% a.theta), logitP0) - epsilon*(sum(U^2)+sum(V^2)+sum(W^2)+sum(a.theta^2))/2
+        total.lik[alt] <- zinb.loglik(datamatrix, exp( logmu ), exp(X.theta %*% a.theta), logitP0) - epsilon*(sum(U^2)+sum(V^2)+sum(W^2)+sum(a.theta^2))/2
         if (verbose) {cat("log-likelihood = ",total.lik[alt],"\n",sep="")}
-        
+
         # If the increase in likelihood is smaller than 0.5%, stop maximization
-        if(alt>1){if(abs((total.lik[alt]-total.lik[alt-1])/total.lik[alt-1])<stop.epsilon)break}
-        
-        
+        if(alt>1){
+          if(abs((total.lik[alt]-total.lik[alt-1])/total.lik[alt-1])<stop.epsilon){
+            break
+          }
+        }
+
         # STEP 1 : fix U, optimize in V, W and theta
         if (size.fact){
-            offset.mu.step1 <- SF 
+            offset.mu.step1 <- SF
         } else {
             offset.mu.step1 <- 0
         }
@@ -781,7 +778,7 @@ zinb.PCA.full = function(datamatrix, k=2, size.fact = TRUE, pi.fact = TRUE, cent
         } else {
             offset.pi.step1 <- 0
         }
-        
+
         if (center == TRUE){
             X.mu.step1 <- cbind(U,ones.n)
             par0.step1 <- cbind(V,t(gene.fact),W,a.theta)
@@ -789,83 +786,83 @@ zinb.PCA.full = function(datamatrix, k=2, size.fact = TRUE, pi.fact = TRUE, cent
             X.mu.step1 <- U
             par0.step1 <- cbind(V,W,a.theta)
         }
-         
-        
+
+
         ptm <- proc.time()
         estimate <- matrix(unlist( parallel::mclapply(seq(p), function(i) {
             optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=par0.step1[i,] , Y=datamatrix[,i] , X.mu=X.mu.step1 , X.pi=U , offset.mu=offset.mu.step1, offset.pi=offset.pi.step1, X.theta=X.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=no_cores)) , nrow=2*k+1+as.numeric(center))
         if (verbose) {print(proc.time()-ptm)}
-        
+
         V <- t(estimate[1:k,])
-        
+
         if (center){
             gene.fact[1,] <- estimate[k+1,]
             W <- t(estimate[(k+2):(2*k+1),])
             a.theta <- estimate[(2*k+2),]
         } else {
             W <- t(estimate[(k+1):(2*k),])
-            a.theta <- estimate[(2*k+1),]          
+            a.theta <- estimate[(2*k+1),]
         }
 
-        
+
         # Orthogonalize U, V, W
         o <- orthogonalizeJointly(U,V,W)
         U <- o$U
         V <- o$V
         W <- o$W
-        
-        
+
+
      #   if (verbose) {cat("log-likelihood = ",zinb.loglik(datamatrix, exp( U %*% t(V) ), exp(X.theta %*% a.theta), U %*% t(W))- epsilon*(sum(U^2)+sum(V^2)+sum(W^2)+sum(a.theta^2))/2,"\n",sep="")}
-        
+
         # STEP 2 : fix V, W, theta, optimize in U
-        
+
         par0.step2 <- U
-        
+
         if (center){
             offset.mu.step2 <- t(gene.fact)
         } else {
             offset.mu.step2 <- NULL
         }
-        
+
         if (size.fact){
             X.mu.step2 <- t(ones.J)
             par0.step2 <- cbind(SF,par0.step2)
         } else {
             X.mu.step2 <- NULL
         }
- 
+
         if (pi.fact){
             X.pi.step2 <- t(ones.J)
             par0.step2 <- cbind(par0.step2,PiF)
         } else {
             X.pi.step2 <- NULL
         }
-        
+
         ptm <- proc.time()
-        
+
         estimate <- matrix(unlist( parallel::mclapply(seq(n), function(i) {
             optim( fn=zinb.loglik.regression , gr=gradient.zinb.loglik.regression , par=par0.step2[i,] , Y=datamatrix[i,] , X.mu=X.mu.step2 , X.pi=X.pi.step2 , Y.mu=V , Y.pi=W , offset.mu=offset.mu.step2 , offset.theta=a.theta , epsilon=epsilon, control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=no_cores)) , nrow=k+as.numeric(size.fact)+as.numeric(pi.fact))
-  
+
         if (size.fact){
             SF <- estimate[1,]
             U <- t(estimate[2:(k+1),])
         } else {
             U <- t(estimate[1:k,])
         }
-        
+
         if (pi.fact){
             PiF <- estimate[nrow(estimate),]
         }
-        
-        
+
+
         if (verbose) {print(proc.time()-ptm)}
-        
+
         # Orthogonalize U, V, W
         o <- orthogonalizeJointly(U,V,W)
         U <- o$U
         V <- o$V
         W <- o$W
-        
+
     }
     zinb.result <- list(U=U,V=V,W=W,SF=SF,PiF=PiF,center=gene.fact, theta=exp(a.theta))
 }
