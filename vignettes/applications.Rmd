@@ -1,0 +1,17 @@
+---
+title: "Applications of Zero-inflated Model for Single-cell RNA-seq Data"
+author: "Fanny Perraudeau"
+date: '`r Sys.Date()`'
+output:
+  pdf_document
+---
+
+```{r options, echo=FALSE, results="hide", mesasge=FALSE, error=FALSE,include=FALSE}
+knitr::opts_chunk$set(fig.align="center", cache=FALSE, error=FALSE, message=FALSE, echo=TRUE, warning=FALSE, results="markup")
+```
+
+## Supervised
+
+## Unsupervised
+
+## Imputation
