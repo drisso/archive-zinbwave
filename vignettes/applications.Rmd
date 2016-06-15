@@ -3,15 +3,46 @@ title: "Applications of Zero-inflated Model for Single-cell RNA-seq Data"
 author: "Fanny Perraudeau"
 date: '`r Sys.Date()`'
 output:
-  pdf_document
+  pdf_document: 
+    toc: true
 ---
 
 ```{r options, echo=FALSE, results="hide", mesasge=FALSE, error=FALSE,include=FALSE}
 knitr::opts_chunk$set(fig.align="center", cache=FALSE, error=FALSE, message=FALSE, echo=TRUE, warning=FALSE, results="markup")
 ```
 
-## Supervised
 
-## Unsupervised
+
+## Supervised Differential Expression Analysis
+
+We want to find genes differentially expressed between two cell types.
+Stat: read counts from single cell RNASeq. We know Y and X. Model: ZINB. Parameters of interest $\beta$.    
+Write equation
+
+Steps: 
+\begin{enumerate}
+\item Filter low qv: number of reads $> 15,000$, perc aligner $> 50\%$
+\item Estimate $\beta_\pi$ by fitting ZINB (pscl then team JP zinb)
+\item Estimate $\beta_\mu$ by fitting NB (?)
+\item DE with $\beta_\pi$ and $\beta_\mu$: edgeR?, DESeq?
+\item metric to compare method
+\item Plot MD, heatmaps (look at Sandrine's slides)
+\end{enumerate}
+
+
+## Unsupervised Differential Expression Analysis
+
+We want to identify clusters and find genes differentially expressed between found clusters. Different possibilities: one against all, pairwise, hierarchical (closest to closest). For the moment, limma + voom. We want zinb instead.
+
+
+Steps: 
+\begin{enumerate}
+\item read vignette clusterExperiment
+\item Hierarchical clusters using clusterExperiment. Use function catbestfeatures().
+
+\end{enumerate}
+
 
 ## Imputation
+
+We want a function to impute Y using zinb (equation) from Y. In scone function, arg imputation. For the moment, only possibility is imputation=identity. Then scone would perform normalization and compute metrics to say if normalization worked well
