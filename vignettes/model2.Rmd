@@ -52,7 +52,7 @@ where
 This model deserves a few comments
 \begin{itemize}
 \item The model extends the RUV framework to ZINB variables. It differs in interpretation from RUV in the $W\alpha$ factor, which we do not consider as necessarily unwanted; it generally corresponds to an unknown low-dimensional variations in the data, that could be due to unwanted factors such as technical artifacts (as in RUV), or to biological variations which could be of interest such as cell cycle or cell differentiation, as typically assumed in other factor models such as PCA or ICA.
-\item By default $X$ and $V$ contain a constant column, to account for cell-specific  (e.g., size factors) and gene-specific (e.g., mean expression level) variations. In that case, $X$ and $V$ are of the form $X=[{\bf 1}_n , X^0]$ and $V = [{\bf 1}_J , V^0]$, and we can similarly decompose the corresponding parameters as $\beta = [\beta^1 ; \beta^0]$ and $\gamma = [\gamma^1 ; \gamma^0]$, where $\beta^1 \in \mathbb{R}^{1\times J}$ is the vector of gene-specific offsets, and $\gamma^1 \in \mathbb{R}^{1\times n}$ is the vector of cell-specific offsets. The representation ${\bf 1}_n \beta^1 + ({\bf 1}_J \gamma^1)$ is then not unique, but we could make it unique by adding a constant and constraining $\beta^1$ and $\gamma^1$ to have zero mean.
+\item By default $X$ and $V$ contain a constant column, to account for cell-specific  (e.g., size factors) and gene-specific (e.g., mean expression level) variations. In that case, $X$ and $V$ are of the form $X=[{\bf 1}_n , X^0]$ and $V = [{\bf 1}_J , V^0]$, and we can similarly decompose the corresponding parameters as $\beta = [\beta^1 ; \beta^0]$ and $\gamma = [\gamma^1 ; \gamma^0]$, where $\beta^1 \in \mathbb{R}^{1\times J}$ is the vector of gene-specific offsets, and $\gamma^1 \in \mathbb{R}^{1\times n}$ is the vector of cell-specific offsets. The representation ${\bf 1}_n \beta^1 + ({\bf 1}_J \gamma^1)^\top$ is then not unique, but we could make it unique by adding a constant and constraining $\beta^1$ and $\gamma^1$ to have zero mean.
 \item The $X$ and $V$ matrices could differ in the modelling of $\mu$ and $\pi$ if we assume that some known factors do not affect both $\mu$ and $\pi$; to keep notations simple and consistent we use the same matrices, but will implicitly assume that some parameters may be constrained to be $0$ if needed.
 \item When $X={\bf 1}_n$ and $V={\bf 1}_J$, then the model if a factor model akin to PCA where $W$ is a factor matrix and $(\alpha_\mu, \alpha_\pi)$ are loading matrices.
 \item By allowing the parameters to differ between the models of $\mu$ and $\pi$, we can model and test for differences in NB mean or in ZI probability.
@@ -147,7 +147,7 @@ $$
 Note that this optimization can be performed independently and in parallel for each cell $i$.
 \item Right-factor (gene-specific) optimization:
 $$
-\left(\hat{\beta}, \hat{\alpha}, \right) \leftarrow \arg\max_{\left(\beta, \alpha, \right)} \left\{\ell(\beta, \hat{\gamma},\hat{W}, \alpha, \hat{\phi}) - \epsilon \text{Pen}(\beta, \hat{\gamma}, \hat{W}, \alpha, \hat{\phi}) \right\}\,,
+\left(\hat{\beta}, \hat{\alpha} \right) \leftarrow \arg\max_{\left(\beta, \alpha, \right)} \left\{\ell(\beta, \hat{\gamma},\hat{W}, \alpha, \hat{\phi}) - \epsilon \text{Pen}(\beta, \hat{\gamma}, \hat{W}, \alpha, \hat{\phi}) \right\}\,,
 $$
 Note that this optimization can be performed independently and in parallel for each gene $j$.
 \item Orthogonalization: 
