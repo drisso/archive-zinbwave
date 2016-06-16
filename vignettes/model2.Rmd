@@ -1,10 +1,14 @@
 ---
 title: "Zero-inflated models for single-cell RNA-seq data"
 author: "The ZINB team"
-date: "13 juin 2016"
+date: '`r Sys.Date()`'
 output: 
     pdf_document:
 bibliography: bibli.bib
+header-includes:
+   - \usepackage{bbm}
+   - \usepackage{amsthm}
+   - \newtheorem{lemma}{Lemma}
 ---
 
 ```{r options, echo=FALSE, results="hide", message=FALSE, error=FALSE, include=FALSE}
@@ -70,17 +74,40 @@ The input to the model are the matrices $X, V$ and the integer $K$; the paramete
 
 To infer the parameters we follow a penalized maximum likelihood approach, by trying to solve
 $$
-\max_{\beta,\gamma,W,\alpha,\phi} \left\{\ell(\beta,\gamma,W,\alpha,\phi) - \epsilon \text{Pen}(\beta,\gamma,W,\alpha,\phi) \right\}\,,
+\max_{\beta,\gamma,W,\alpha,\phi} \left\{\ell(\beta,\gamma,W,\alpha,\phi) - \text{Pen}(\beta,\gamma,W,\alpha,\phi) \right\}\,,
 $$
-where $\text{Pen}(\cdot)$ aims at reducing overfitting and improving numerical stability of the optimization problem, when many parameters must be estimated. By default we take
+where $\text{Pen}(\cdot)$ aims at reducing overfitting and improving numerical stability of the optimization problem, when many parameters must be estimated. By default, for a set of regularization parameters $\left( \epsilon_\beta , \epsilon_\gamma, \epsilon_W, \epsilon_\alpha, \epsilon_\phi \right)$, we take
 $$
-\text{Pen}(\beta,\gamma,W,\alpha,\phi) = \frac{1}{2} \left( \|\beta^0\|^2 + \|\gamma^0\|^2 + \|W\|^2 + \|\alpha\|^2 + \text{var}(\phi)^2 \right)\,,
+\text{Pen}(\beta,\gamma,W,\alpha,\phi) = \frac{\epsilon_{\beta}}{2} \|\beta^0\|^2 + \frac{\epsilon_{\gamma}}{2} \|\gamma^0\|^2 + \frac{\epsilon_{W}}{2}\|W\|^2 + \frac{\epsilon_{\alpha}}{2}\|\alpha\|^2 + \frac{\epsilon_{\phi}}{2}\text{var}(\phi)^2 \,,
 $$
-where $\beta^0$ and $\gamma^0$ stand for the matrices $\beta$ and $\gamma$ without the columns corresponding to the offsets, and $\|\cdot\|$ is the Frobenius matrix norm. The penalty tends to shrink the estimated parameters to $0$, except for the cell- and gene-specific effects which are not penalized, and the for the dispersion parameters which are not shrunk towards $0$ but instead towards a constant value across genes. Note also that
+where $\beta^0$ and $\gamma^0$ stand for the matrices $\beta$ and $\gamma$ without the columns corresponding to the offsets if an unpenalized offset is included in the model, and $\|\cdot\|$ is the Frobenius matrix norm. The penalty tends to shrink the estimated parameters to $0$, except for the cell- and gene-specific offsets which are not penalized, and the for the dispersion parameters which are not shrunk towards $0$ but instead towards a constant value across genes. Note also that the likelihood only depends on $W$ and $\alpha$ through their product $R=W\alpha$, and that the penalty ensures that at the optimum $W$ and $\alpha$ have specific structures as described in the following result which generalizes standard results such as [@Srebro2005Maximum, Lemma 1; @Mazumder2010Spectral, Lemma 6]
+\begin{lemma}\label{lem:tracenorm}
+For any matrix $R$ and positive scalars $s$ and $t$, the following holds:
 $$
-\min_{W,\alpha\,:\,W\alpha=R} \frac{1}{2}\left(\|W\|^2 + \|\alpha\|^2\right) = \|R\|_*\,,
+\min_{S,T\,:\,R=ST} \frac{1}{2} \left( s\|S\|^2 + t\|T\|^2\right) = \sqrt{st} \|R\|_* \,,
 $$
-where $\|R\|_*$ is the trace norm (a.k.a. nuclear norm), i.e., the sum of singular values of $R$, and that the minimum is reached when $W$ and $\alpha$ form orthogonal bases of left- and right-singular vectors [@Srebro2005Maximum, Lemma 1]; in particular, this implies that this penalty will enforce orthogonal columns for $W$ and $\alpha$, which is useful for visualization or interpretation of latent factors.
+and if $R=R_L R_\Sigma R_R$ is a SVD decomposition of $R$ then a solution to this optimization problem is:
+$$
+S = \left(\frac{t}{s}\right)^{\frac{1}{4}} R_L R_\Sigma^{\frac{1}{2}} \,,\quad T = \left(\frac{s}{t}\right)^{\frac{1}{4}} R_\Sigma^{\frac{1}{2}} R_R \,.
+$$
+\end{lemma}
+\begin{proof}
+Let $\tilde{S} = \sqrt{s}S$, $\tilde{T} = \sqrt{t}T$ and $\tilde{R} = \sqrt{st}R$. Then $\|\tilde{S}\|^2 = s\|S\|^2$, $\|\tilde{T}\|^2 = t\|T\|^2$ and $\tilde{S}\tilde{T} = \sqrt{st}ST$ so the optimization problem is equivalent to:
+$$
+\min_{\tilde{S}, \tilde{T} \,:\,\tilde{S}\tilde{T}=\tilde{R}} \frac{1}{2} \left( \|\tilde{S}\|^2 + \|\tilde{T}\|^2\right) \,,
+$$
+which by [@Mazumder2010Spectral, Lemma 6] has optimum value $\|\tilde{R}\|_* = \sqrt{st}\|R\|_*$ reached at $\tilde{S} = \tilde{R}_L \tilde{R}_\Sigma^{\frac{1}{2}}$ and $\tilde{T} =  \tilde{R}_\Sigma^{\frac{1}{2}} \tilde{R_R}$, where $\tilde{R}_R \tilde{R}_\Sigma \tilde{R}_R$ is a SVD decomposition of $\tilde{R}$. Observing that $\tilde{R}_L=R_L$,  $\tilde{R}_R=R_R$ and $\tilde{R}_\Sigma=\sqrt{st}\tilde{R}_\Sigma$ gives that a solution of the optimization problem is $S=s^{-1/2} \tilde{S} = s^{-1/2} R_L (st)^{1/4} R_\Sigma^{1/2} = (t/s)^{1/4} R_L R_\Sigma^{1/2}$, and a similar computation for $T$ concludes the proof.
+\end{proof}
+This lemma implies in particular that at any local maximum of the penalized log-likelihood, $W$ and $\alpha^\top$ have orthogonal columns, which is useful for visualization or interpretation of latent factors.
+
+To balance the penalties applied to the different matrices in spite of their different sizes, a natural choice is to fix $\epsilon>0$ and set
+$$
+\epsilon_\beta = \frac{\epsilon}{M_0 J}\,,\quad
+\epsilon_\gamma = \frac{\epsilon}{n L_0}\,,\quad
+\epsilon_W = \frac{\epsilon}{nK}\,,\quad
+\epsilon_\alpha = \frac{\epsilon}{K J}\,,
+$$
+where $M_0$ and $L_0$ are respectively the number of rows in $\beta^0$ and in $\gamma^0$. As for $\epsilon_\phi$, it should probably be considered a specific regularization parameter to control the shrinkage of the dispersion estimates across genes.
 
 The penalized likelihood is however not concave, making its maximization computationally challenging. We instead find a local maximum starting from a smart initialization and iterating a numerical optimization scheme until local convergence, as described below.
 
@@ -92,7 +119,7 @@ To initialize the set of parameters we approximate the count distribution by a l
 \item Set $\hat{Z}_{ij} = 1$ if $(i,j)\in\mathcal{P}$, $\hat{Z}_{ij} =0$ otherwise.
 \item Estimate $\hat{\gamma}_\mu$ and $\hat{\beta}_\mu$ by solving the convex ridge regression problem:
 $$
-\min_{\beta_\mu, \gamma\mu} \sum_{(i,j)\in\mathcal{P}} \left(L_{ij} - (X\beta_{\mu})_{ij} -  (V\gamma_\mu)_{ji} \right)^2 + \frac{\epsilon}{2} \left( \|\beta_\mu^0\|^2 + \|\gamma_\mu^0\|^2\right)\,.
+\min_{\beta_\mu, \gamma\mu} \sum_{(i,j)\in\mathcal{P}} \left(L_{ij} - (X\beta_{\mu})_{ij} -  (V\gamma_\mu)_{ji} \right)^2 +  \frac{\epsilon_\beta}{2} \|\beta_\mu^0\|^2 + \frac{\epsilon_\gamma}{2} \|\gamma_\mu^0\|^2 \,.
 $$
 This is just a ridge regression problem, but with potentially huge design matrix with up to $nJ$ rows and $MJ+nL$ columns. To solve it efficiently, we alternate the estimation of $\hat{\beta}_\mu$ and $\hat{\gamma}_\mu$ by initializing:
 $$
@@ -102,33 +129,41 @@ and repeating a few times (or until convergence):
 \begin{enumerate}
 \item Optimization in $\gamma_\mu$, which can be performed independently an in parallel for each cells:
 $$
-\hat{\gamma}_\mu \in \arg\min_{\gamma\mu} \sum_{(i,j)\in\mathcal{P}} \left(L_{ij} - (X\hat{\beta}_{\mu})_{ij} - (V\gamma_\mu)_{ji} \right)^2 + \frac{\epsilon}{2} \|\gamma_\mu^0\|^2\,.
+\hat{\gamma}_\mu \in \arg\min_{\gamma\mu} \sum_{(i,j)\in\mathcal{P}} \left(L_{ij} - (X\hat{\beta}_{\mu})_{ij} - (V\gamma_\mu)_{ji} \right)^2 + \frac{\epsilon_\gamma}{2} \|\gamma_\mu^0\|^2\,.
 $$
 \item Optimization in $\beta_\mu$, which can be performed independently an in parallel for each gene:
 $$
-\hat{\beta}_\mu \in \arg\min_{\beta\mu} \sum_{(i,j)\in\mathcal{P}} \left(L_{ij} - (V\hat{\gamma}_\mu)_{ji} - (X\beta_{\mu})_{ij} \right)^2 + \frac{\epsilon}{2} \|\beta_\mu^0\|^2\,.
+\hat{\beta}_\mu \in \arg\min_{\beta\mu} \sum_{(i,j)\in\mathcal{P}} \left(L_{ij} - (V\hat{\gamma}_\mu)_{ji} - (X\beta_{\mu})_{ij} \right)^2 + \frac{\epsilon_\beta}{2} \|\beta_\mu^0\|^2\,.
 $$
 \end{enumerate}
 \item Estimate $\hat{W}$ and $\hat{\alpha}$ solving
 $$
-\left(\hat{W},\hat{\alpha}_\mu\right) \in \arg\min_{W,\alpha_\mu} \sum_{(i,j)\in\mathcal{P}} \left(L_{ij} - (V\hat{\gamma}_\mu)_{ji} - (X\hat{\beta}_{\mu})_{ij} - (W\alpha_\mu)_{ij} \right)^2 + \frac{\epsilon}{2} \left(\|W\|^2 + \|\alpha_\mu\|^2\right)\,.
+\left(\hat{W},\hat{\alpha}_\mu\right) \in \arg\min_{W,\alpha_\mu} \sum_{(i,j)\in\mathcal{P}} \left(L_{ij} - (V\hat{\gamma}_\mu)_{ji} - (X\hat{\beta}_{\mu})_{ij} - (W\alpha_\mu)_{ij} \right)^2 + \frac{\epsilon_W}{2} \|W\|^2 + \frac{\epsilon_\alpha}{2} \|\alpha_\mu\|^2\,.
 $$
-Denoting by $D=L-X\hat{\beta}-(V\hat{\gamma})^\top$, this is done by solving the trace-norm and rank-constrained problem
+Denoting by $D=L-X\hat{\beta}-(V\hat{\gamma})^\top$, this problem can be rewritten:
+$$
+\min_{W,\alpha} \|D-W\alpha\|^2_{\mathcal{P}} + \frac{1}{2} \left(\epsilon_W \|W\|^2 + \epsilon_\alpha\|\alpha\|^2\right)\,,
+$$
+where $\|A\|^2_\mathcal{P} = \sum_{(i,j)\in\mathcal{P}}A_{ij}^2$. By Lemma~\ref{lem:tracenorm}, if $K$ is large enough, this can be solved by first solving the convex optimization problem:
 \begin{equation}\label{eq:softimpute}
-\hat{R} \leftarrow \arg\min_{R\,:\,\text{rank}(R)\leq K} \|D - R\|^2_{\mathcal{P}} + \epsilon \|R\|_*\,,
+\hat{R} \in \arg\min_{R\,:\,\text{rank}(R)\leq K} \|D - R\|^2_{\mathcal{P}} + \sqrt{\epsilon_W \epsilon_\alpha} \|R\|_*\,,
 \end{equation}
-where $\|A\|^2_\mathcal{P} = \sum_{(i,j)\in\mathcal{P}}A_{ij}^2$, and setting $\hat{W} = D^{\frac{1}{2}}F$ and $\hat{\alpha} = D^{\frac{1}{2}}G^\top$ where $\hat{R} = FDG^\top$ is the SVD of $\hat{R}$. We solve (\ref{eq:softimpute}) with the \texttt{softImpute::softImpute()} function
-[@Mazumder2010Spectral].
+and setting 
+$$
+W = \left(\frac{\epsilon_\alpha}{\epsilon_W}\right)^{\frac{1}{4}} R_L R_\Sigma^{\frac{1}{2}} \,,\quad \alpha = \left(\frac{\epsilon_W}{\epsilon_\alpha}\right)^{\frac{1}{4}} R_\Sigma^{\frac{1}{2}} R_R \,.
+$$
+where $\hat{R} = R_L R_\Sigma R_R$ is the SVD of $\hat{R}$. This solution is exact when $K$ is at least equal to the rank of the solution of the unconstrained problem (\ref{eq:softimpute}), which we solve  with the \texttt{softImpute::softImpute()} function
+[@Mazumder2010Spectral]. If $K$ is smaller, then (\ref{eq:softimpute}) becomes a non-convex optimization problem whose global optimum may be challenging to find. In that case we also use the rank-constrainted version of \texttt{softImpute::softImpute()} to obtain a good local optimum.
 \item Estimate $\hat{\gamma}_\pi$ by solving the regularized logistic regression problem:
 $$
-\hat{\gamma}_\pi \in \arg\min_{\gamma_\pi} \sum_{(i,j)} \left[-\hat{Z}_{ij} (V\gamma_\pi)_{ji} + \log\left( 1 + e^{(V\gamma_\pi)_{ji}}\right)  \right] + \frac{\epsilon}{2} \|\gamma_\pi^0\|^2 \,.
+\hat{\gamma}_\pi \in \arg\min_{\gamma_\pi} \sum_{(i,j)} \left[-\hat{Z}_{ij} (V\gamma_\pi)_{ji} + \log\left( 1 + e^{(V\gamma_\pi)_{ji}}\right)  \right] + \frac{\epsilon_\gamma}{2} \|\gamma_\pi^0\|^2 \,.
 $$
 Note that this problem can be solved for each cell ($i$) independently and in parallel. When there is no gene covariate besides the constant offset, the problem is easily solved by setting $(\hat{\gamma}_\mu)_i$ to the logit of the proportion of zeros in each cell.
 \item Estimate $\hat{\beta}_\pi$ and $\hat{\alpha}_\pi$ by solving the regularized logistic problem
 \begin{multline}
 \left(\hat{\beta}_\pi, \hat{\alpha}_\pi\right) \in \arg\min_{\left(\beta_\pi,\alpha_\pi\right)} \sum_{(i,j)}
 \Big[-\hat{Z}_{ij} (X\beta_\pi + (V\hat{\gamma}_\pi)^\top + \hat{W}\alpha_\pi)_{ij} \\
-+ \log\left( 1 + e^{(X\beta_\pi + (V\hat{\gamma}_\pi)^\top + \hat{W}\alpha_\pi)_{ij}}\right)  \Big] + \frac{\epsilon}{2} \left(\|\beta_\pi\|^2 +\|\alpha_\pi\|^2 \right)\,.
++ \log\left( 1 + e^{(X\beta_\pi + (V\hat{\gamma}_\pi)^\top + \hat{W}\alpha_\pi)_{ij}}\right)  \Big] + \frac{\epsilon_\beta}{2}\|\beta_\pi\|^2 + \frac{\epsilon_\alpha}{2}\|\alpha_\pi\|^2 \,.
 \end{multline}
 \item Initialize $\hat{\phi}=1$.
 \end{enumerate}
@@ -138,25 +173,25 @@ After initialization, we maximize locally the penalized log-likelihood by altern
 \begin{enumerate}
 \item Dispersion optimization:
 $$
-\hat{\phi} \leftarrow \arg\max_{\phi} \left\{\ell(\hat{\beta}, \hat{\gamma}, \hat{W}, \hat{\alpha}, \phi) - \epsilon \text{Pen}(\hat{\beta}, \hat{\gamma}, \hat{W}, \hat{\alpha}, \phi) \right\}\,,
+\hat{\phi} \leftarrow \arg\max_{\phi} \left\{\ell(\hat{\beta}, \hat{\gamma}, \hat{W}, \hat{\alpha}, \phi) - \frac{\epsilon_\phi}{2} \text{var}(\phi)^2 \right\} \,.
 $$
 \item Left-factor (cell-specific) optimization:
 $$
-\left(\hat{\gamma}, \hat{W} \right) \leftarrow \arg\max_{\left(\gamma, W\right)} \left\{\ell(\hat{\beta}, \gamma, W, \hat{\alpha}, \hat{\phi}) - \epsilon \text{Pen}(\hat{\beta}, \gamma, W, \hat{\alpha}, \hat{\phi}) \right\}\,.
+\left(\hat{\gamma}, \hat{W} \right) \leftarrow \arg\max_{\left(\gamma, W\right)} \left\{\ell(\hat{\beta}, \gamma, W, \hat{\alpha}, \hat{\phi}) - \frac{\epsilon_\gamma}{2} \|\gamma^0\|^2 - \frac{\epsilon_W}{2} \|W\|^2 \right\}\,.
 $$
 Note that this optimization can be performed independently and in parallel for each cell $i$.
 \item Right-factor (gene-specific) optimization:
 $$
-\left(\hat{\beta}, \hat{\alpha} \right) \leftarrow \arg\max_{\left(\beta, \alpha \right)} \left\{\ell(\beta, \hat{\gamma},\hat{W}, \alpha, \hat{\phi}) - \epsilon \text{Pen}(\beta, \hat{\gamma}, \hat{W}, \alpha, \hat{\phi}) \right\}\,,
+\left(\hat{\beta}, \hat{\alpha} \right) \leftarrow \arg\max_{\left(\beta, \alpha \right)} \left\{\ell(\beta, \hat{\gamma},\hat{W}, \alpha, \hat{\phi}) - \frac{\epsilon_\beta}{2} \|\beta^0\|^2 - \frac{\epsilon_\alpha}{2} \|\alpha\|^2\right\}\,,
 $$
 Note that this optimization can be performed independently and in parallel for each gene $j$.
 \item Orthogonalization: 
 $$
-\left(\hat{W}, \hat{\alpha} \right) \leftarrow \arg\min_{(W,\alpha)\,:\,W\alpha = \hat{W}\hat{\alpha}} \left( \|W\|^2 + \|\alpha\|^2 \right)\,.
+\left(\hat{W}, \hat{\alpha} \right) \leftarrow \arg\min_{(W,\alpha)\,:\,W\alpha = \hat{W}\hat{\alpha}} \frac{1}{2} \left( \epsilon_W \|W\|^2 + \epsilon_\alpha \|\alpha\|^2 \right)\,.
 $$
-This is obtained by performing a SDV of $\hat{W}\hat{\alpha} = FDG^\top$, and setting $\hat{W}\leftarrow F D^{\frac{1}{2}}$ and $\hat{\alpha}\leftarrow D^{\frac{1}{2}}G^\top$. Note that this step not only allows to maximize locally the penalized log-likelihood, but also ensures that the columns of $W$ stay orthogonal to each other during optimization.
+This is obtained by applying Lemma~\ref{lem:tracenorm}, starting from a SVD decomposition of the current $\hat{W}\hat{\alpha}$. Note that this step not only allows to maximize locally the penalized log-likelihood, but also ensures that the columns of $W$ stay orthogonal to each other during optimization.
 \end{enumerate}
 
-**TODO: write gradients and explain how steps 1 and 2 are implemented using a single function**
+**TODO: write gradients and explain how steps 1-3 are implemented using a single function**
 
 # References
