@@ -123,7 +123,7 @@ where $\|A\|^2_\mathcal{P} = \sum_{(i,j)\in\mathcal{P}}A_{ij}^2$, and setting $\
 $$
 \hat{\gamma}_\pi \in \arg\min_{\gamma_\pi} \sum_{(i,j)} \left[-\hat{Z}_{ij} (V\gamma_\pi)_{ji} + \log\left( 1 + e^{(V\gamma_\pi)_{ji}}\right)  \right] + \frac{\epsilon}{2} \|\gamma_\pi^0\|^2 \,.
 $$
-Note that this problem can be solved for each cell ($i$) independently and in parallel. When there is no gene covariate besides the constant offset, the problem is easily solved by setting $(\hat{\delta}_\mu)_i$ to the logit of the proportion of zeros in each cell.
+Note that this problem can be solved for each cell ($i$) independently and in parallel. When there is no gene covariate besides the constant offset, the problem is easily solved by setting $(\hat{\gamma}_\mu)_i$ to the logit of the proportion of zeros in each cell.
 \item Estimate $\hat{\beta}_\pi$ and $\hat{\alpha}_\pi$ by solving the regularized logistic problem
 \begin{multline}
 \left(\hat{\beta}_\pi, \hat{\alpha}_\pi\right) \in \arg\min_{\left(\beta_\pi,\alpha_\pi\right)} \sum_{(i,j)}
@@ -142,12 +142,12 @@ $$
 $$
 \item Left-factor (cell-specific) optimization:
 $$
-\left(\hat{\delta}, \hat{W} \right) \leftarrow \arg\max_{\left(\delta, W\right)} \left\{\ell(\hat{\beta}, \hat{\gamma},\delta,W, \hat{\alpha}, \hat{\phi}) - \epsilon \text{Pen}(\hat{\beta}, \hat{\gamma},\delta,W, \hat{\alpha}, \hat{\phi}) \right\}\,,
+\left(\hat{\gamma}, \hat{W} \right) \leftarrow \arg\max_{\left(\gamma, W\right)} \left\{\ell(\hat{\beta}, \gamma, W, \hat{\alpha}, \hat{\phi}) - \epsilon \text{Pen}(\hat{\beta}, \gamma, W, \hat{\alpha}, \hat{\phi}) \right\}\,.
 $$
 Note that this optimization can be performed independently and in parallel for each cell $i$.
 \item Right-factor (gene-specific) optimization:
 $$
-\left(\hat{\beta}, \hat{\alpha} \right) \leftarrow \arg\max_{\left(\beta, \alpha, \right)} \left\{\ell(\beta, \hat{\gamma},\hat{W}, \alpha, \hat{\phi}) - \epsilon \text{Pen}(\beta, \hat{\gamma}, \hat{W}, \alpha, \hat{\phi}) \right\}\,,
+\left(\hat{\beta}, \hat{\alpha} \right) \leftarrow \arg\max_{\left(\beta, \alpha \right)} \left\{\ell(\beta, \hat{\gamma},\hat{W}, \alpha, \hat{\phi}) - \epsilon \text{Pen}(\beta, \hat{\gamma}, \hat{W}, \alpha, \hat{\phi}) \right\}\,,
 $$
 Note that this optimization can be performed independently and in parallel for each gene $j$.
 \item Orthogonalization: 
