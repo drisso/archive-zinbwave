@@ -154,17 +154,32 @@ W = \left(\frac{\epsilon_\alpha}{\epsilon_W}\right)^{\frac{1}{4}} R_L R_\Sigma^{
 $$
 where $\hat{R} = R_L R_\Sigma R_R$ is the SVD of $\hat{R}$. This solution is exact when $K$ is at least equal to the rank of the solution of the unconstrained problem (\ref{eq:softimpute}), which we solve  with the \texttt{softImpute::softImpute()} function
 [@Mazumder2010Spectral]. If $K$ is smaller, then (\ref{eq:softimpute}) becomes a non-convex optimization problem whose global optimum may be challenging to find. In that case we also use the rank-constrainted version of \texttt{softImpute::softImpute()} to obtain a good local optimum.
-\item Estimate $\hat{\gamma}_\pi$ by solving the regularized logistic regression problem:
+\item Estimate $\hat{\beta}_\pi$, $\hat{\gamma}_\pi$ and $\hat{\alpha}_\pi$ by solving the regularized logistic regression problem:
+\begin{multline}
+\min_{\left(\beta_\pi,\alpha_\pi, \gamma_\pi\right)} \sum_{(i,j)}
+\Big[-\hat{Z}_{ij} (X\beta_\pi + (V\gamma_\pi)^\top + \hat{W}\alpha_\pi)_{ij} \\
++ \log\left( 1 + e^{(X\beta_\pi + (V\gamma_\pi)^\top + \hat{W}\alpha_\pi)_{ij}}\right)  \Big] + \frac{\epsilon_\beta}{2}\|\beta_\pi\|^2 + \frac{\epsilon_\gamma}{2}\|\gamma_\pi\|^2 + \frac{\epsilon_\alpha}{2}\|\alpha_\pi\|^2 \,.
+\end{multline}
+This is just a ridge logistic regression problem, but with potentially huge design matrix with up to $nJ$ rows and $MJ+nL$ columns. To solve it efficiently, we alternate the estimation of $\hat{\beta}_\pi$, $\hat{\alpha}_\pi$ and $\hat{\gamma}_\pi$ by initializing:
 $$
-\hat{\gamma}_\pi \in \arg\min_{\gamma_\pi} \sum_{(i,j)} \left[-\hat{Z}_{ij} (V\gamma_\pi)_{ji} + \log\left( 1 + e^{(V\gamma_\pi)_{ji}}\right)  \right] + \frac{\epsilon_\gamma}{2} \|\gamma_\pi^0\|^2 \,.
+\hat{\beta}_\pi \leftarrow 0 \,,\quad\hat{\gamma}_\pi \leftarrow 0\,,\quad\hat{\alpha}_\pi\leftarrow 0\,,
 $$
-Note that this problem can be solved for each cell ($i$) independently and in parallel. When there is no gene covariate besides the constant offset, the problem is easily solved by setting $(\hat{\gamma}_\mu)_i$ to the logit of the proportion of zeros in each cell.
-\item Estimate $\hat{\beta}_\pi$ and $\hat{\alpha}_\pi$ by solving the regularized logistic problem
+and repeating a few times (or until convergence):
+\begin{enumerate}
+\item Optimization in $\gamma_\pi$:
+\begin{multline}
+\hat{\gamma}_\pi \in \arg\min_{\gamma_\pi} \sum_{(i,j)}
+\Big[-\hat{Z}_{ij} (X\hat{\beta}_\pi + (V\gamma_\pi)^\top + \hat{W}\hat{\alpha}_\pi)_{ij} \\
++ \log\left( 1 + e^{(X\hat{\beta}_\pi + (V\gamma_\pi)^\top + \hat{W}\hat{\alpha}_\pi)_{ij}}\right)  \Big] + \frac{\epsilon_\gamma}{2}\|\gamma_\pi\|^2 \,.
+\end{multline}
+Note that this problem can be solved for each cell ($i$) independently and in parallel. When there is no gene covariate besides the constant offset, the problem is easily solved by setting $(\hat{\gamma}_\pi)_i$ to the logit of the proportion of zeros in each cell.
+\item $\hat{\beta}_\pi$ and $\hat{\alpha}_\pi$:
 \begin{multline}
 \left(\hat{\beta}_\pi, \hat{\alpha}_\pi\right) \in \arg\min_{\left(\beta_\pi,\alpha_\pi\right)} \sum_{(i,j)}
 \Big[-\hat{Z}_{ij} (X\beta_\pi + (V\hat{\gamma}_\pi)^\top + \hat{W}\alpha_\pi)_{ij} \\
 + \log\left( 1 + e^{(X\beta_\pi + (V\hat{\gamma}_\pi)^\top + \hat{W}\alpha_\pi)_{ij}}\right)  \Big] + \frac{\epsilon_\beta}{2}\|\beta_\pi\|^2 + \frac{\epsilon_\alpha}{2}\|\alpha_\pi\|^2 \,.
 \end{multline}
+\end{enumerate}
 \item Initialize $\hat{\phi}=1$.
 \end{enumerate}
 
