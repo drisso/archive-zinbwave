@@ -731,7 +731,7 @@ zinb.PCA.full = function(datamatrix, k=2, size.fact = TRUE, pi.fact = TRUE, cent
     
     # if centering data
     if ( center ){
-        gene.fact <- matrix ( 0, nrow = 1 , ncol = p)
+        gene.fact <- matrix ( gene.means, nrow = 1 , ncol = p)
     } else {
         gene.fact <- NULL
     }
