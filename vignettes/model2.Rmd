@@ -41,8 +41,8 @@ In particular the NB distribution boils down to a Poisson distribution when $\ph
 
 The mean, ZI probability and dispersion parameter for the count of the gene $j$ in cell $i$ are modeled as follows:
 \begin{align}
-\log(\mu_{ij}) &= \left( X\beta_\mu + (V\gamma_\mu)^\top + W\alpha_\mu \right)_{ij}\,,\\
-\text{logit}(\pi_{ij}) &= \left(X\beta_\pi + (V\gamma_\pi)^\top + W\alpha_\pi\right)_{ij} \,,\\
+\log(\mu_{ij}) &= \left( X\beta_\mu + (V\gamma_\mu)^\top + W\alpha_\mu + O_\mu\right)_{ij}\,,\\
+\text{logit}(\pi_{ij}) &= \left(X\beta_\pi + (V\gamma_\pi)^\top + W\alpha_\pi + O_\pi\right)_{ij} \,,\\
 \phi_{ij} &= \phi_j \,,
 \end{align}
 where
@@ -50,6 +50,7 @@ where
 \item $X$ is a known $n\times M$ design matrix corresponding to $M$ covariates for each cell, and ${\bf \beta}=(\beta_\mu,\beta_\pi)$ its associated M × J matrices of parameters. $X$ can typically include covariates that induce a variation of interest, such as cell types, or covariates that induce unwanted variations, such as batch or QC measures. It can also include a constant column ${\bf 1}_n$ to account for gene-specific offsets.
 \item $V$ is a known $J \times L$ matrix corresponding to known gene-level covariates, such as gene length or GC-content, and ${\bf \gamma} = (\gamma_\mu , \gamma_\pi)$ its associated $L\times n$ matrices of parameters. It can also include a constant column ${\bf 1}_J$ to account for cell-specific offsets, such as size factors representing differences in library sizes.
 \item $W$ is an unobserved $n \times K$ matrix corresponding to unknown cell covariates, which could be of “unwanted variation” as in RUV or of interest (such as biological variations), and ${\bf \alpha} = (\alpha_\mu,\alpha_{\pi})$ its associated $K \times J$ matrices of parameters.
+\item $O_\mu$ and $O_\pi$ are known $n\times J$ matrices of offsets.
 \item With a slight overload of notation, $\phi\in\mathbb{R}^J$ is a vector of gene-specific dispersion parameters.
 \end{itemize}
 
@@ -64,7 +65,7 @@ This model deserves a few comments
 \end{itemize}
 
 ## Parameter estimation
-The input to the model are the matrices $X, V$ and the integer $K$; the parameters to be inferred $\beta$, $\gamma$, $W$, $\alpha$ and $\phi$. The log-likelihood of the model is
+The input to the model are the matrices $X, V, O_\mu, O_\pi$ and the integer $K$; the parameters to be inferred $\beta$, $\gamma$, $W$, $\alpha$ and $\phi$. The log-likelihood of the model is
 \begin{equation}
 \begin{split}
 \ell(\beta,\gamma,W,\alpha,\phi) & = \sum_{i=1}^n \sum_{j=1}^J \ln \text{Pr}(Y_{i,j}=y_{ij}\,|\,\beta,\gamma,W,\alpha,\phi) \\
@@ -115,7 +116,7 @@ The penalized likelihood is however not concave, making its maximization computa
 To initialize the set of parameters we approximate the count distribution by a log-normal distribution and explicitly separate zero and non-zero values, as follows:
 \begin{enumerate}
 \item Set $\mathcal{P} = \left\{(i,j)\,:\,Y_{ij}>0\right\}$
-\item Set $L_{ij} = \log(Y_{ij})$ for all $(i,j)\in\mathcal{P}$. 
+\item Set $L_{ij} = \log(Y_{ij}) - (O_\mu)_{ij}$ for all $(i,j)\in\mathcal{P}$. 
 \item Set $\hat{Z}_{ij} = 1$ if $(i,j)\in\mathcal{P}$, $\hat{Z}_{ij} =0$ otherwise.
 \item Estimate $\hat{\gamma}_\mu$ and $\hat{\beta}_\mu$ by solving the convex ridge regression problem:
 $$
