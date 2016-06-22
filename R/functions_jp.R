@@ -100,6 +100,7 @@ zinb.make.matrices <- function( alpha , X.mu = NULL, X.pi = NULL , X.theta = NUL
 }
 
 zinb.initialize <- function(datamatrix, X=NULL, V=NULL, epsilon=10){
+    # TODO: add K as input parameter, and correct the function to have K latent factors
     
     n <- nrow(datamatrix)
     J <- ncol(datamatrix)
@@ -135,6 +136,9 @@ zinb.initialize <- function(datamatrix, X=NULL, V=NULL, epsilon=10){
     logdata[P] <- log(datamatrix[P])
     
     for (m in 1:nb.repeat){
+        
+        # TODO: be careful that glmnet standardizes the variables; to be sure we do the correct thing see for example http://stats.stackexchange.com/questions/74206/ridge-regression-results-different-in-using-lm-ridge-and-glmnet
+        
         beta.mu <- matrix(unlist( parallel::mclapply(seq(J), glmnet::glmnet (X[P[,j],], logdata[P[,j],j], offset = tVgamma.mu[,j],alpha=0,lambda=eps.beta,family="gaussian"))),nrow=ncol(X))
         Xbeta.mu <- X%*%beta.mu
         
@@ -147,6 +151,7 @@ zinb.initialize <- function(datamatrix, X=NULL, V=NULL, epsilon=10){
     logdata.rest[!P] <- NA
     
     data.impute <- softImpute::softImpute(logdata.rest,lambda=sqrt(eps.W*eps.alpha))
+    # TODO only keep the top K factors
     W <- (eps.alpha/eps.W)^(1/4)*data.impute$u%*%sqrt(data.impute$d)
     alpha.mu <- (eps.W/eps.alpha)^(1/4)*sqrt(data.impute$d)%*%data.impute$v
     
@@ -156,7 +161,7 @@ zinb.initialize <- function(datamatrix, X=NULL, V=NULL, epsilon=10){
     beta.pi <- matrix(0,nrow=ncol(X),ncol=J)
     
     for (m in 1:nb.repeat){
-        
+        # TODO: in this loop, we can just merge X and W and optimize over betaalpha; we then recover beta and alpha from betaalpha after this loop (no need to retrieve alpha and beta at each iteration)
         gamma.pi <- matrix(unlist( parallel::mclapply(seq(n), glmnet::glmnet (V, Z[i,], offset = Xbeta.pi[i,]+Walpha[i,],alpha=0,lambda=eps.gamma,family="binomial"))),nrow=ncol(V))
         tVgamma.pi <- t(V%*%gamma.pi)
         
