@@ -7,14 +7,10 @@ setClassUnion("matrixOrNULL",members=c("matrix", "NULL"))
 #' data from a zero-inflated negative binomial and to compute the
 #' log-likelihood.
 #' 
-#' @slot n integer. The number of samples.
-#' @slot J integer. The number of genes.
-#' @slot k_mu integer. The number of factors of unwanted variation for mu.
-#' @slot k_pi integer. The number of factors of unwanted variation for pi.
 #' @slot X matrix. The design matrix containing sample-level covariates.
 #' @slot V matrix. The design matrix containing gene-level covariates.
-#' @slot O_mu matrix. The offsets for mu.
-#' @slot O_pi matrix. The offsets for pi.
+#' @slot O_mu matrix. The offset matrix for mu.
+#' @slot O_pi matrix. The offset matrix for pi.
 #' @slot which_X_mu integer. Indeces of which columns of X to use in the
 #'   regression of mu.
 #' @slot which_V_mu integer. Indeces of which columns of V to use in the
@@ -23,7 +19,7 @@ setClassUnion("matrixOrNULL",members=c("matrix", "NULL"))
 #'   regression of pi.
 #' @slot which_V_pi integer. Indeces of which columns of V to use in the
 #'   regression of pi.
-#' @slot W matrix. The factors of unwanted variation.
+#' @slot W matrix. The factors of gene-level latent factors.
 #' @slot beta_mu matrix or NULL. The coefficients of X in the regression of mu.
 #' @slot gamma_mu matrix or NULL. The coefficients of V in the regression of mu.
 #' @slot alpha_mu matrix or NULL. The coefficients of W in the regression of mu.
@@ -39,15 +35,11 @@ setClassUnion("matrixOrNULL",members=c("matrix", "NULL"))
 #' @name zinb_model-class
 #' @aliases zinb_model
 #' @import methods
-#' @export
+#' @exportClass zinb_model
 #' 
 setClass(
     Class = "zinb_model",
-    slots = list(n = "integer",
-                 J = "integer",
-                 k_mu = "integer",
-                 k_pi = "integer",
-                 X = "matrix",
+    slots = list(X = "matrix",
                  V = "matrix",
                  O_mu = "matrix",
                  O_pi = "matrix",
@@ -67,33 +59,82 @@ setClass(
 )
 
 setValidity("zinb_model", function(object){
-    if(k_mu > n | k_pi > n) {
-        return("Cannot have more factors of unwanted variation than samples.")        
+    n = NROW(object@X) # number of samples
+    J = NROW(object@V) # number of genes
+    K = NCOL(object@W) # number of latent factors
+
+    if(K > n) {
+        return("Cannot have more latent factors than samples.")        
     }
-    
-    if(NROW(X) != n) {
-        return("X must have n rows!")
+    if(K > J) {
+        return("Cannot have more latent factors than genes.")        
     }
-    if(NROW(V) != J) {
-        return("V must have J rows!")
+    if(NROW(object@W) != n) {
+        return("W must have n rows!")
     }
-    if(NROW(W) > 0 & NROW(W) != n) {
-        return("If specified, W must have n rows!")
-    }
-    
-    if(max(which_X_mu) > NCOL(X)) {
+    if((length(object@which_X_mu)>0) && (max(object@which_X_mu) > NCOL(object@X))) {
         return("which_X_mu: subscript out of bound!")
     }
-    if(max(which_X_pi) > NCOL(X)) {
+    if((length(object@which_X_pi)>0) && (max(object@which_X_pi) > NCOL(object@X))) {
         return("which_X_pi: subscript out of bound!")
     }
-    if(max(which_V_mu) > NCOL(V)) {
+    if((length(object@which_V_mu)>0) && (max(object@which_V_mu) > NCOL(object@V))) {
         return("which_V_mu: subscript out of bound!")
     }
-    if(max(which_V_pi) > NCOL(V)) {
+    if((length(object@which_V_pi)>0) && (max(object@which_V_pi) > NCOL(object@V))) {
         return("which_V_pi: subscript out of bound!")
     }
-    
+    if(length(object@which_X_mu) != NROW(object@beta_mu)){
+        return("beta_mu must have the same number of rows as there are indices in which_X_mu!")
+    }
+    if(length(object@which_X_pi) != NROW(object@beta_pi)){
+        return("beta_pi must have the same number of rows as there are indices in which_X_pi!")
+    }
+    if(length(object@which_V_mu) != NROW(object@gamma_mu)){
+        return("gamma_mu must have the same number of rows as there are indices in which_V_mu!")
+    }
+    if(length(object@which_V_pi) != NROW(object@gamma_pi)){
+        return("gamma_pi must have the same number of rows as there are indices in which_V_pi!")
+    }
+    if(NCOL(object@beta_mu) != J) {
+        return("beta_mu must have J columns!")
+    }
+    if(NCOL(object@beta_pi) != J) {
+        return("beta_pi must have J columns!")
+    }
+    if(NCOL(object@gamma_mu) != n) {
+        return("gamma_mu must have n columns!")
+    }
+    if(NCOL(object@gamma_pi) != n) {
+        return("gamma_pi must have n columns!")
+    }
+    if(NCOL(object@alpha_mu) != J) {
+        return("alpha_mu must have J columns!")
+    }
+    if(NCOL(object@alpha_pi) != J) {
+        return("alpha_pi must have J columns!")
+    }
+    if(NROW(object@alpha_mu) != K) {
+        return("alpha_mu must have K rows!")
+    }
+    if(NROW(object@alpha_pi) != K) {
+        return("alpha_pi must have K rows!")
+    }
+    if(NROW(object@O_mu) != n) {
+        return("O_mu must have n rows!")
+    }
+    if(NROW(object@O_pi) != n) {
+        return("O_pi must have n rows!")
+    }
+    if(NCOL(object@O_mu) != J) {
+        return("O_mu must have J columns!")
+    }
+    if(NCOL(object@O_pi) != J) {
+        return("O_pi must have J columns!")
+    }
+    if(length(object@phi) != J) {
+        return("phi must have length J!")
+    }
     return(TRUE)
 }
 )
