@@ -58,13 +58,13 @@ regression of pi.}
 
 \item{\code{epsilon}}{numeric. The regularization parameter for penalized maximum likelihood estimation}
 
-\item{\code{penalty.factor.alpha_mu}}{numeric. Separate penalty factors can be applied to each row of alpha_mu. This is a vector that multiplies epsilon to allow differential regularization for the rows of alpha_mu parameters.}
+\item{\code{penalty.factor.alpha_mu}}{numeric. This is a scalar that multiplies epsilon to allow differential regularization for the rows of alpha_mu parameters.}
 
 \item{\code{penalty.factor.beta_mu}}{numeric. This is a vector that multiplies epsilon to allow differential regularization for the rows of beta_mu parameters.}
 
 \item{\code{penalty.factor.gamma_mu}}{numeric. This is a vector that multiplies epsilon to allow differential regularization for the rows of gamma_mu parameters.}
 
-\item{\code{penalty.factor.alpha_pi}}{numeric. This is a vector that multiplies epsilon to allow differential regularization for the rows of alpha_pi parameters.}
+\item{\code{penalty.factor.alpha_pi}}{numeric. This is a scalar that multiplies epsilon to allow differential regularization for the matrix of alpha_pi parameters.}
 
 \item{\code{penalty.factor.beta_pi}}{numeric. This is a vector that multiplies epsilon to allow differential regularization for the rows of beta_pi parameters.}
 

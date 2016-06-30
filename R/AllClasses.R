@@ -26,10 +26,10 @@
 #' @slot alpha_pi matrix or NULL. The coefficients of W in the regression of pi.
 #' @slot logtheta numeric. A vector of log of inverse dispersion parameters.
 #' @slot epsilon numeric. The regularization parameter for penalized maximum likelihood estimation
-#' @slot penalty.factor.alpha_mu numeric. Separate penalty factors can be applied to each row of alpha_mu. This is a vector that multiplies epsilon to allow differential regularization for the rows of alpha_mu parameters.
+#' @slot penalty.factor.alpha_mu numeric. This is a scalar that multiplies epsilon to allow differential regularization for the rows of alpha_mu parameters.
 #' @slot penalty.factor.beta_mu numeric. This is a vector that multiplies epsilon to allow differential regularization for the rows of beta_mu parameters.
 #' @slot penalty.factor.gamma_mu numeric. This is a vector that multiplies epsilon to allow differential regularization for the rows of gamma_mu parameters.
-#' @slot penalty.factor.alpha_pi numeric. This is a vector that multiplies epsilon to allow differential regularization for the rows of alpha_pi parameters.
+#' @slot penalty.factor.alpha_pi numeric. This is a scalar that multiplies epsilon to allow differential regularization for the matrix of alpha_pi parameters.
 #' @slot penalty.factor.beta_pi numeric. This is a vector that multiplies epsilon to allow differential regularization for the rows of beta_pi parameters.
 #' @slot penalty.factor.gamma_pi numeric. This is a vector that multiplies epsilon to allow differential regularization for the rows of gamma_pi parameters.
 #' @slot penalty.factor.W numeric. This is a vector that multiplies epsilon to allow differential regularization for the columns of W parameters.
@@ -150,8 +150,8 @@ setValidity("zinb_model", function(object){
     if(length(object@logtheta) != J) {
         return("logtheta must have length J!")
     }
-    if(length(object@penalty.factor.alpha_mu) != NROW(object@alpha_mu)) {
-        return("The length of penalty.factor.alpha_mu must be the number of rows of alpha_mu !")
+    if(length(object@penalty.factor.alpha_mu) > 1) {
+        return("penalty.factor.alpha_mu must be a scalar !")
     }
     if(length(object@penalty.factor.beta_mu) != NROW(object@beta_mu)) {
         return("The length of penalty.factor.beta_mu must be the number of rows of beta_mu !")
@@ -159,8 +159,8 @@ setValidity("zinb_model", function(object){
     if(length(object@penalty.factor.gamma_mu) != NROW(object@gamma_mu)) {
         return("The length of penalty.factor.gamma_mu must be the number of rows of gamma_mu !")
     }
-    if(length(object@penalty.factor.alpha_pi) != NROW(object@alpha_pi)) {
-        return("The length of penalty.factor.alpha_pi must be the number of rows of alpha_pi !")
+    if(length(object@penalty.factor.alpha_pi) > 1) {
+        return("penalty.factor.alpha_pi can only be a scalar !")
     }
     if(length(object@penalty.factor.beta_pi) != NROW(object@beta_pi)) {
         return("The length of penalty.factor.beta_pi must be the number of rows of beta_pi !")
