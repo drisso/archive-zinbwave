@@ -1,7 +1,7 @@
 setMethod(
     f="initialize",
     signature="zinb_model",
-    definition=function(.Object,X,V,O_mu,O_pi,which_X_mu,which_X_pi,which_V_mu,which_V_pi,W,beta_mu,beta_pi,gamma_mu,gamma_pi,alpha_mu,alpha_pi,phi,n,J,K) {
+    definition=function(.Object,X,V,O_mu,O_pi,which_X_mu,which_X_pi,which_V_mu,which_V_pi,W,beta_mu,beta_pi,gamma_mu,gamma_pi,alpha_mu,alpha_pi,phi,n,J,K,epsilon,penalty.factor.alpha_mu,penalty.factor.beta_mu,penalty.factor.gamma_mu,penalty.factor.alpha_pi,penalty.factor.beta_pi,penalty.factor.gamma_pi,penalty.factor.W,epsilon.varphi) {
         # Find n (default 50), J (default 100), K (default 0)
         if (missing(n)) {
             if (!missing(X)) {
@@ -138,6 +138,59 @@ setMethod(
         } else {
             .Object@logtheta = numeric(J)
         }
+        if (!missing(epsilon)) {
+            .Object@epsilon = epsilon
+        } else {
+            .Object@epsilon = 1e-3
+        }
+        if (!missing(penalty.factor.alpha_mu)) {
+            .Object@penalty.factor.alpha_mu = penalty.factor.alpha_mu
+        } else {
+            val = max(1, NROW(.Object@alpha_mu)*NCOL(.Object@alpha_mu))
+            .Object@penalty.factor.alpha_mu = rep(1/val,NROW(.Object@alpha_mu))
+        }
+        if (!missing(penalty.factor.beta_mu)) {
+            .Object@penalty.factor.beta_mu = penalty.factor.beta_mu
+        } else {
+            val = max(1, NROW(.Object@beta_mu)*NCOL(.Object@beta_mu))
+            .Object@penalty.factor.beta_mu = rep(1/val,NROW(.Object@beta_mu))
+        }
+        if (!missing(penalty.factor.gamma_mu)) {
+            .Object@penalty.factor.gamma_mu = penalty.factor.gamma_mu
+        } else {
+            val = max(1, NROW(.Object@gamma_mu)*NCOL(.Object@gamma_mu))
+            .Object@penalty.factor.gamma_mu = rep(1/val,NROW(.Object@gamma_mu))
+        }
+        if (!missing(penalty.factor.alpha_pi)) {
+            .Object@penalty.factor.alpha_pi = penalty.factor.alpha_pi
+        } else {
+            val = max(1, NROW(.Object@alpha_pi)*NCOL(.Object@alpha_pi))
+            .Object@penalty.factor.alpha_pi = rep(1/val,NROW(.Object@alpha_pi))
+        }
+        if (!missing(penalty.factor.beta_pi)) {
+            .Object@penalty.factor.beta_pi = penalty.factor.beta_pi
+        } else {
+            val = max(1, NROW(.Object@beta_pi)*NCOL(.Object@beta_pi))
+            .Object@penalty.factor.beta_pi = rep(1/val,NROW(.Object@beta_pi))
+        }
+        if (!missing(penalty.factor.gamma_pi)) {
+            .Object@penalty.factor.gamma_pi = penalty.factor.gamma_pi
+        } else {
+            val = max(1, NROW(.Object@gamma_pi)*NCOL(.Object@gamma_pi))
+            .Object@penalty.factor.gamma_pi = rep(1/val,NROW(.Object@gamma_pi))
+        }
+        if (!missing(penalty.factor.W)) {
+            .Object@penalty.factor.W = penalty.factor.W
+        } else {
+            val = max(1, NROW(.Object@W)*NCOL(.Object@W))
+            .Object@penalty.factor.W = rep(1/val,NCOL(.Object@W))
+        }
+        if (!missing(epsilon.varphi)) {
+            .Object@epsilon.varphi = epsilon.varphi
+        } else {
+            .Object@epsilon.varphi = 1
+        }
+        
         validObject(.Object) # call of the inspector
         return(.Object)
     }
@@ -240,5 +293,20 @@ setMethod(
     signature=c("zinb_model","matrix"),
     definition=function(model, x) {
         zinb.loglik(x,getMu(model),getTheta(model),getPi(model))
+    }
+)
+
+setMethod(
+    f="penalty",
+    signature="zinb_model",
+    definition=function(model) {
+        sum(model@epsilon*model@penalty.factor.alpha_mu*(model@alpha_mu)^2)/2
+        + sum(model@epsilon*model@penalty.factor.alpha_pi*(model@alpha_pi)^2)/2
+        + sum(model@epsilon*model@penalty.factor.beta_mu*(model@beta_mu)^2)/2
+        + sum(model@epsilon*model@penalty.factor.beta_pi*(model@beta_pi)^2)/2
+        + sum(model@epsilon*model@penalty.factor.gamma_mu*(model@gamma_mu)^2)/2
+        + sum(model@epsilon*model@penalty.factor.gamma_pi*(model@gamma_pi)^2)/2
+        + sum(model@epsilon*model@penalty.factor.W*(model@W)^2)/2
+        + model@epsilon.varphi*var(getPhi(model))
     }
 )

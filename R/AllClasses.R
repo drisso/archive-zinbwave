@@ -1,5 +1,3 @@
-setClassUnion("matrixOrNULL",members=c("matrix", "NULL"))
-
 #' Class zinb_model
 #' 
 #' Objects of this class store all the values needed to work with a fitted 
@@ -27,7 +25,15 @@ setClassUnion("matrixOrNULL",members=c("matrix", "NULL"))
 #' @slot gamma_pi matrix or NULL. The coefficients of V in the regression of pi.
 #' @slot alpha_pi matrix or NULL. The coefficients of W in the regression of pi.
 #' @slot logtheta numeric. A vector of log of inverse dispersion parameters.
-#' 
+#' @slot epsilon numeric. The regularization parameter for penalized maximum likelihood estimation
+#' @slot penalty.factor.alpha_mu numeric. Separate penalty factors can be applied to each row of alpha_mu. This is a vector that multiplies epsilon to allow differential regularization for the rows of alpha_mu parameters.
+#' @slot penalty.factor.beta_mu numeric. This is a vector that multiplies epsilon to allow differential regularization for the rows of beta_mu parameters.
+#' @slot penalty.factor.gamma_mu numeric. This is a vector that multiplies epsilon to allow differential regularization for the rows of gamma_mu parameters.
+#' @slot penalty.factor.alpha_pi numeric. This is a vector that multiplies epsilon to allow differential regularization for the rows of alpha_pi parameters.
+#' @slot penalty.factor.beta_pi numeric. This is a vector that multiplies epsilon to allow differential regularization for the rows of beta_pi parameters.
+#' @slot penalty.factor.gamma_pi numeric. This is a vector that multiplies epsilon to allow differential regularization for the rows of gamma_pi parameters.
+#' @slot penalty.factor.W numeric. This is a vector that multiplies epsilon to allow differential regularization for the columns of W parameters.
+#' @slot epsilon.varphi numeric. This is the penalty for the variance of the dispersion parameter.
 #' @details For the full description of the model see the model vignette.
 #'   Internally, the slots are checked so that the matrices are of the
 #'   appropriate dimensions: in particular, X, O_mu, O_pi, and W need to have n
@@ -54,72 +60,24 @@ setClass(
                  beta_pi = "matrix",
                  gamma_pi = "matrix",
                  alpha_pi = "matrix",
-                 logtheta = "numeric"
+                 logtheta = "numeric",
+                 epsilon = "numeric",
+                 penalty.factor.alpha_mu = "numeric",
+                 penalty.factor.beta_mu = "numeric",
+                 penalty.factor.gamma_mu = "numeric",
+                 penalty.factor.alpha_pi = "numeric",
+                 penalty.factor.beta_pi = "numeric",
+                 penalty.factor.gamma_pi = "numeric",
+                 penalty.factor.W = "numeric",
+                 epsilon.varphi = "numeric"
                  )
 )
-
-#' Class zinb_model_fit
-#' 
-#' A class that extends zinb_model with additional slots for fitting a ZINB model by penalized maximum likelihood.
-#' 
-#' @slot X matrix. The design matrix containing sample-level covariates.
-#' @slot V matrix. The design matrix containing gene-level covariates.
-#' @slot O_mu matrix. The offset matrix for mu.
-#' @slot O_pi matrix. The offset matrix for pi.
-#' @slot which_X_mu integer. Indeces of which columns of X to use in the
-#'   regression of mu.
-#' @slot which_V_mu integer. Indeces of which columns of V to use in the
-#'   regression of mu.
-#' @slot which_X_pi integer. Indeces of which columns of X to use in the
-#'   regression of pi.
-#' @slot which_V_pi integer. Indeces of which columns of V to use in the
-#'   regression of pi.
-#' @slot W matrix. The factors of gene-level latent factors.
-#' @slot beta_mu matrix or NULL. The coefficients of X in the regression of mu.
-#' @slot gamma_mu matrix or NULL. The coefficients of V in the regression of mu.
-#' @slot alpha_mu matrix or NULL. The coefficients of W in the regression of mu.
-#' @slot beta_pi matrix or NULL. The coefficients of X in the regression of pi.
-#' @slot gamma_pi matrix or NULL. The coefficients of V in the regression of pi.
-#' @slot alpha_pi matrix or NULL. The coefficients of W in the regression of pi.
-#' @slot logtheta numeric. A vector of dispersion parameters.
-#' 
-#' @details For the full description of the model see the model vignette.
-#'   Internally, the slots are checked so that the matrices are of the
-#'   appropriate dimensions: in particular, X, O_mu, O_pi, and W need to have n
-#'   rows, V needs to have J rows, logtheta must be of length J.
-#' @name zinb_model-class
-#' @aliases zinb_model
-#' @import methods
-#' @exportClass zinb_model
-#' 
-setClass(
-    Class = "zinb_model_fit",
-    slots = list(Y = "matrix",
-                 V = "matrix",
-                 O_mu = "matrix",
-                 O_pi = "matrix",
-                 which_X_mu = "integer",
-                 which_V_mu = "integer",
-                 which_X_pi = "integer",
-                 which_V_pi = "integer",
-                 W = "matrix",
-                 beta_mu = "matrix",
-                 gamma_mu = "matrix",
-                 alpha_mu = "matrix",
-                 beta_pi = "matrix",
-                 gamma_pi = "matrix",
-                 alpha_pi = "matrix",
-                 logtheta = "numeric"
-    ),
-    contains="zinb_model"
-)
-
 
 setValidity("zinb_model", function(object){
     n = NROW(object@X) # number of samples
     J = NROW(object@V) # number of genes
     K = NCOL(object@W) # number of latent factors
-
+    
     if(K > n) {
         return("Cannot have more latent factors than samples.")        
     }
@@ -191,6 +149,27 @@ setValidity("zinb_model", function(object){
     }
     if(length(object@logtheta) != J) {
         return("logtheta must have length J!")
+    }
+    if(length(object@penalty.factor.alpha_mu) != NROW(object@alpha_mu)) {
+        return("The length of penalty.factor.alpha_mu must be the number of rows of alpha_mu !")
+    }
+    if(length(object@penalty.factor.beta_mu) != NROW(object@beta_mu)) {
+        return("The length of penalty.factor.beta_mu must be the number of rows of beta_mu !")
+    }
+    if(length(object@penalty.factor.gamma_mu) != NROW(object@gamma_mu)) {
+        return("The length of penalty.factor.gamma_mu must be the number of rows of gamma_mu !")
+    }
+    if(length(object@penalty.factor.alpha_pi) != NROW(object@alpha_pi)) {
+        return("The length of penalty.factor.alpha_pi must be the number of rows of alpha_pi !")
+    }
+    if(length(object@penalty.factor.beta_pi) != NROW(object@beta_pi)) {
+        return("The length of penalty.factor.beta_pi must be the number of rows of beta_pi !")
+    }
+    if(length(object@penalty.factor.gamma_pi) != NROW(object@gamma_pi)) {
+        return("The length of penalty.factor.gamma_pi must be the number of rows of gamma_pi !")
+    }
+    if(length(object@penalty.factor.W) != NCOL(object@W)) {
+        return("The length of penalty.factor.W must be the number of columns of W !")
     }
     return(TRUE)
 }

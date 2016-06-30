@@ -99,3 +99,14 @@ setGeneric("simulateZINB",function(object,seed,...) standardGeneric("simulateZIN
 #' loglik(m,x$counts)
 #' @export
 setGeneric("loglik",function(model,x,...) standardGeneric("loglik"))
+
+#' Compute the penalty of a model
+#' 
+#' Given a statistical model with regularization parameters, compute the penalty.
+#' @param model an object that describes a statistical model with regularization parameters
+#' @return The penalty of the model.
+#' @examples
+#' m=zinb_model(K=2)
+#' penalty(m)
+#' @export
+setGeneric("penalty",function(model) standardGeneric("penalty"))
