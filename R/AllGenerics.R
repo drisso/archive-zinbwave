@@ -55,14 +55,25 @@ setGeneric("getPi",function(object) standardGeneric("getPi"))
 
 #' Returns the vector of dispersion parameters
 #' 
-#' Given an object that describes a matrix of zero-inflated negative binomial distributions, returns the matrix of probabilities of 0
+#' Given an object that describes a matrix of zero-inflated negative binomial distributions, returns the vector of dispersion parameters phi
 #' @param object an object that describes a matrix of zero-inflated distributions.
-#' @return the matrix of probabilities of 0
+#' @return the vector of dispersion parameters
 #' @examples
 #' a=zinb_model(n=5,J=10)
-#' getPi(a) 
+#' getPhi(a) 
 #' @export
 setGeneric("getPhi",function(object) standardGeneric("getPhi"))
+
+#' Returns the vector of inverse dispersion parameters
+#' 
+#' Given an object that describes a matrix of zero-inflated negative binomial distributions, returns the vector of inverse dispersion parameters theta
+#' @param object an object that describes a matrix of zero-inflated distributions.
+#' @return the vector of inverse dispersion parameters theta
+#' @examples
+#' a=zinb_model(n=5,J=10)
+#' getTheta(a) 
+#' @export
+setGeneric("getTheta",function(object) standardGeneric("getTheta"))
 
 #' Simulate counts from a zero-inflated negative binomial model
 #' 
@@ -75,3 +86,16 @@ setGeneric("getPhi",function(object) standardGeneric("getPhi"))
 #' simulateZINB(a) 
 #' @export
 setGeneric("simulateZINB",function(object,seed,...) standardGeneric("simulateZINB"))
+
+#' Compute the log-likelihood of a model given some data
+#' 
+#' Given a statistical model and some data, this function computes the log-likelihood of the model given the data, i.e., the log-probability of the data under the model.
+#' @param model an object that describes a statistical model
+#' @param x an object that describes data
+#' @return The log-likelihood of the model given the data.
+#' @examples
+#' m=zinb_model(n=5,J=10)
+#' x=simulateZINB(m)
+#' loglik(m,x$counts)
+#' @export
+setGeneric("loglik",function(model,x,...) standardGeneric("loglik"))

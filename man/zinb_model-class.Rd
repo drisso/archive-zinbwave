@@ -10,12 +10,19 @@ Objects of this class store all the values needed to work with a fitted
 model. Starting with an object of this class, one should be able to simulate 
 data from a zero-inflated negative binomial and to compute the
 log-likelihood.
+
+A class that extends zinb_model with additional slots for fitting a ZINB model by penalized maximum likelihood.
 }
 \details{
 For the full description of the model see the model vignette.
   Internally, the slots are checked so that the matrices are of the
   appropriate dimensions: in particular, X, O_mu, O_pi, and W need to have n
-  rows, V needs to have J rows, phi must be of length J.
+  rows, V needs to have J rows, logtheta must be of length J.
+
+For the full description of the model see the model vignette.
+  Internally, the slots are checked so that the matrices are of the
+  appropriate dimensions: in particular, X, O_mu, O_pi, and W need to have n
+  rows, V needs to have J rows, logtheta must be of length J.
 }
 \section{Slots}{
 
@@ -54,6 +61,42 @@ regression of pi.}
 
 \item{\code{alpha_pi}}{matrix or NULL. The coefficients of W in the regression of pi.}
 
-\item{\code{phi}}{numeric. A vector of dispersion parameters.}
+\item{\code{logtheta}}{numeric. A vector of log of inverse dispersion parameters.}
+
+\item{\code{X}}{matrix. The design matrix containing sample-level covariates.}
+
+\item{\code{V}}{matrix. The design matrix containing gene-level covariates.}
+
+\item{\code{O_mu}}{matrix. The offset matrix for mu.}
+
+\item{\code{O_pi}}{matrix. The offset matrix for pi.}
+
+\item{\code{which_X_mu}}{integer. Indeces of which columns of X to use in the
+regression of mu.}
+
+\item{\code{which_V_mu}}{integer. Indeces of which columns of V to use in the
+regression of mu.}
+
+\item{\code{which_X_pi}}{integer. Indeces of which columns of X to use in the
+regression of pi.}
+
+\item{\code{which_V_pi}}{integer. Indeces of which columns of V to use in the
+regression of pi.}
+
+\item{\code{W}}{matrix. The factors of gene-level latent factors.}
+
+\item{\code{beta_mu}}{matrix or NULL. The coefficients of X in the regression of mu.}
+
+\item{\code{gamma_mu}}{matrix or NULL. The coefficients of V in the regression of mu.}
+
+\item{\code{alpha_mu}}{matrix or NULL. The coefficients of W in the regression of mu.}
+
+\item{\code{beta_pi}}{matrix or NULL. The coefficients of X in the regression of pi.}
+
+\item{\code{gamma_pi}}{matrix or NULL. The coefficients of V in the regression of pi.}
+
+\item{\code{alpha_pi}}{matrix or NULL. The coefficients of W in the regression of pi.}
+
+\item{\code{logtheta}}{numeric. A vector of dispersion parameters.}
 }}
 

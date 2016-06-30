@@ -41,11 +41,15 @@ In particular the NB distribution boils down to a Poisson distribution when $\ph
 
 The mean, ZI probability and dispersion parameter for the count of the gene $j$ in cell $i$ are modeled as follows:
 \begin{align}
-\log(\mu_{ij}) &= \left( X\beta_\mu + (V\gamma_\mu)^\top + W\alpha_\mu + O_\mu\right)_{ij}\,,\\
+\ln(\mu_{ij}) &= \left( X\beta_\mu + (V\gamma_\mu)^\top + W\alpha_\mu + O_\mu\right)_{ij}\,,\\
 \text{logit}(\pi_{ij}) &= \left(X\beta_\pi + (V\gamma_\pi)^\top + W\alpha_\pi + O_\pi\right)_{ij} \,,\\
 \phi_{ij} &= \phi_j \,,
 \end{align}
 where
+$$
+\text{logit}(\pi) = \ln\left(\frac{\pi}{1-\pi}\right)\,,
+$$
+and:
 \begin{itemize}
 \item $X$ is a known $n\times M$ design matrix corresponding to $M$ covariates for each cell, and ${\bf \beta}=(\beta_\mu,\beta_\pi)$ its associated M × J matrices of parameters. $X$ can typically include covariates that induce a variation of interest, such as cell types, or covariates that induce unwanted variations, such as batch or QC measures. It can also include a constant column ${\bf 1}_n$ to account for gene-specific offsets.
 \item $V$ is a known $J \times L$ matrix corresponding to known gene-level covariates, such as gene length or GC-content, and ${\bf \gamma} = (\gamma_\mu , \gamma_\pi)$ its associated $L\times n$ matrices of parameters. It can also include a constant column ${\bf 1}_J$ to account for cell-specific offsets, such as size factors representing differences in library sizes.
@@ -116,7 +120,7 @@ The penalized likelihood is however not concave, making its maximization computa
 To initialize the set of parameters we approximate the count distribution by a log-normal distribution and explicitly separate zero and non-zero values, as follows:
 \begin{enumerate}
 \item Set $\mathcal{P} = \left\{(i,j)\,:\,Y_{ij}>0\right\}$
-\item Set $L_{ij} = \log(Y_{ij}) - (O_\mu)_{ij}$ for all $(i,j)\in\mathcal{P}$. 
+\item Set $L_{ij} = \ln(Y_{ij}) - (O_\mu)_{ij}$ for all $(i,j)\in\mathcal{P}$. 
 \item Set $\hat{Z}_{ij} = 1$ if $(i,j)\in\mathcal{P}$, $\hat{Z}_{ij} =0$ otherwise.
 \item Estimate $\hat{\gamma}_\mu$ and $\hat{\beta}_\mu$ by solving the convex ridge regression problem:
 $$
@@ -159,7 +163,7 @@ where $\hat{R} = R_L R_\Sigma R_R$ is the SVD of $\hat{R}$. This solution is exa
 \begin{multline}
 \min_{\left(\beta_\pi,\alpha_\pi, \gamma_\pi\right)} \sum_{(i,j)}
 \Big[-\hat{Z}_{ij} (X\beta_\pi + (V\gamma_\pi)^\top + \hat{W}\alpha_\pi)_{ij} \\
-+ \log\left( 1 + e^{(X\beta_\pi + (V\gamma_\pi)^\top + \hat{W}\alpha_\pi)_{ij}}\right)  \Big] + \frac{\epsilon_\beta}{2}\|\beta_\pi\|^2 + \frac{\epsilon_\gamma}{2}\|\gamma_\pi\|^2 + \frac{\epsilon_\alpha}{2}\|\alpha_\pi\|^2 \,.
++ \ln\left( 1 + e^{(X\beta_\pi + (V\gamma_\pi)^\top + \hat{W}\alpha_\pi)_{ij}}\right)  \Big] + \frac{\epsilon_\beta}{2}\|\beta_\pi\|^2 + \frac{\epsilon_\gamma}{2}\|\gamma_\pi\|^2 + \frac{\epsilon_\alpha}{2}\|\alpha_\pi\|^2 \,.
 \end{multline}
 This is just a ridge logistic regression problem, but with potentially huge design matrix with up to $nJ$ rows and $MJ+nL$ columns. To solve it efficiently, we alternate the estimation of $\hat{\beta}_\pi$, $\hat{\alpha}_\pi$ and $\hat{\gamma}_\pi$ by initializing:
 $$
@@ -171,14 +175,14 @@ and repeating a few times (or until convergence):
 \begin{multline}
 \hat{\gamma}_\pi \in \arg\min_{\gamma_\pi} \sum_{(i,j)}
 \Big[-\hat{Z}_{ij} (X\hat{\beta}_\pi + (V\gamma_\pi)^\top + \hat{W}\hat{\alpha}_\pi)_{ij} \\
-+ \log\left( 1 + e^{(X\hat{\beta}_\pi + (V\gamma_\pi)^\top + \hat{W}\hat{\alpha}_\pi)_{ij}}\right)  \Big] + \frac{\epsilon_\gamma}{2}\|\gamma_\pi\|^2 \,.
++ \ln\left( 1 + e^{(X\hat{\beta}_\pi + (V\gamma_\pi)^\top + \hat{W}\hat{\alpha}_\pi)_{ij}}\right)  \Big] + \frac{\epsilon_\gamma}{2}\|\gamma_\pi\|^2 \,.
 \end{multline}
 Note that this problem can be solved for each cell ($i$) independently and in parallel. When there is no gene covariate besides the constant offset, the problem is easily solved by setting $(\hat{\gamma}_\pi)_i$ to the logit of the proportion of zeros in each cell.
 \item $\hat{\beta}_\pi$ and $\hat{\alpha}_\pi$:
 \begin{multline}
 \left(\hat{\beta}_\pi, \hat{\alpha}_\pi\right) \in \arg\min_{\left(\beta_\pi,\alpha_\pi\right)} \sum_{(i,j)}
 \Big[-\hat{Z}_{ij} (X\beta_\pi + (V\hat{\gamma}_\pi)^\top + \hat{W}\alpha_\pi)_{ij} \\
-+ \log\left( 1 + e^{(X\beta_\pi + (V\hat{\gamma}_\pi)^\top + \hat{W}\alpha_\pi)_{ij}}\right)  \Big] + \frac{\epsilon_\beta}{2}\|\beta_\pi\|^2 + \frac{\epsilon_\alpha}{2}\|\alpha_\pi\|^2 \,.
++ \ln\left( 1 + e^{(X\beta_\pi + (V\hat{\gamma}_\pi)^\top + \hat{W}\alpha_\pi)_{ij}}\right)  \Big] + \frac{\epsilon_\beta}{2}\|\beta_\pi\|^2 + \frac{\epsilon_\alpha}{2}\|\alpha_\pi\|^2 \,.
 \end{multline}
 \end{enumerate}
 \item Initialize $\hat{\phi}=1$.

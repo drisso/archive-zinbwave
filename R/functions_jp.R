@@ -12,8 +12,9 @@ zinb.loglik <- function(Y, mu, theta, logitP0) {
     logPnb <- suppressWarnings(dnbinom(Y, size = theta, mu = mu, log = TRUE))
 
     # contribution of zero inflation
-    lognorm <- -logitP0 - copula::log1pexp(-logitP0)
-
+    #lognorm <- -logitP0 - copula::log1pexp(-logitP0)
+    lognorm <- - copula::log1pexp(logitP0)
+    
     # log-likelihood
     sum(logPnb[Y>0]) + sum(logPnb[Y==0] + copula::log1pexp(logitP0[Y==0]-logPnb[Y==0])) + sum(lognorm)
 }

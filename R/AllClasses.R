@@ -26,12 +26,12 @@ setClassUnion("matrixOrNULL",members=c("matrix", "NULL"))
 #' @slot beta_pi matrix or NULL. The coefficients of X in the regression of pi.
 #' @slot gamma_pi matrix or NULL. The coefficients of V in the regression of pi.
 #' @slot alpha_pi matrix or NULL. The coefficients of W in the regression of pi.
-#' @slot phi numeric. A vector of dispersion parameters.
+#' @slot logtheta numeric. A vector of log of inverse dispersion parameters.
 #' 
 #' @details For the full description of the model see the model vignette.
 #'   Internally, the slots are checked so that the matrices are of the
 #'   appropriate dimensions: in particular, X, O_mu, O_pi, and W need to have n
-#'   rows, V needs to have J rows, phi must be of length J.
+#'   rows, V needs to have J rows, logtheta must be of length J.
 #' @name zinb_model-class
 #' @aliases zinb_model
 #' @import methods
@@ -48,15 +48,72 @@ setClass(
                  which_X_pi = "integer",
                  which_V_pi = "integer",
                  W = "matrix",
-                 beta_mu = "matrixOrNULL",
-                 gamma_mu = "matrixOrNULL",
-                 alpha_mu = "matrixOrNULL",
-                 beta_pi = "matrixOrNULL",
-                 gamma_pi = "matrixOrNULL",
-                 alpha_pi = "matrixOrNULL",
-                 phi = "numeric"
+                 beta_mu = "matrix",
+                 gamma_mu = "matrix",
+                 alpha_mu = "matrix",
+                 beta_pi = "matrix",
+                 gamma_pi = "matrix",
+                 alpha_pi = "matrix",
+                 logtheta = "numeric"
                  )
 )
+
+#' Class zinb_model_fit
+#' 
+#' A class that extends zinb_model with additional slots for fitting a ZINB model by penalized maximum likelihood.
+#' 
+#' @slot X matrix. The design matrix containing sample-level covariates.
+#' @slot V matrix. The design matrix containing gene-level covariates.
+#' @slot O_mu matrix. The offset matrix for mu.
+#' @slot O_pi matrix. The offset matrix for pi.
+#' @slot which_X_mu integer. Indeces of which columns of X to use in the
+#'   regression of mu.
+#' @slot which_V_mu integer. Indeces of which columns of V to use in the
+#'   regression of mu.
+#' @slot which_X_pi integer. Indeces of which columns of X to use in the
+#'   regression of pi.
+#' @slot which_V_pi integer. Indeces of which columns of V to use in the
+#'   regression of pi.
+#' @slot W matrix. The factors of gene-level latent factors.
+#' @slot beta_mu matrix or NULL. The coefficients of X in the regression of mu.
+#' @slot gamma_mu matrix or NULL. The coefficients of V in the regression of mu.
+#' @slot alpha_mu matrix or NULL. The coefficients of W in the regression of mu.
+#' @slot beta_pi matrix or NULL. The coefficients of X in the regression of pi.
+#' @slot gamma_pi matrix or NULL. The coefficients of V in the regression of pi.
+#' @slot alpha_pi matrix or NULL. The coefficients of W in the regression of pi.
+#' @slot logtheta numeric. A vector of dispersion parameters.
+#' 
+#' @details For the full description of the model see the model vignette.
+#'   Internally, the slots are checked so that the matrices are of the
+#'   appropriate dimensions: in particular, X, O_mu, O_pi, and W need to have n
+#'   rows, V needs to have J rows, logtheta must be of length J.
+#' @name zinb_model-class
+#' @aliases zinb_model
+#' @import methods
+#' @exportClass zinb_model
+#' 
+setClass(
+    Class = "zinb_model_fit",
+    slots = list(Y = "matrix",
+                 V = "matrix",
+                 O_mu = "matrix",
+                 O_pi = "matrix",
+                 which_X_mu = "integer",
+                 which_V_mu = "integer",
+                 which_X_pi = "integer",
+                 which_V_pi = "integer",
+                 W = "matrix",
+                 beta_mu = "matrix",
+                 gamma_mu = "matrix",
+                 alpha_mu = "matrix",
+                 beta_pi = "matrix",
+                 gamma_pi = "matrix",
+                 alpha_pi = "matrix",
+                 logtheta = "numeric"
+    ),
+    contains="zinb_model"
+)
+
 
 setValidity("zinb_model", function(object){
     n = NROW(object@X) # number of samples
@@ -132,8 +189,8 @@ setValidity("zinb_model", function(object){
     if(NCOL(object@O_pi) != J) {
         return("O_pi must have J columns!")
     }
-    if(length(object@phi) != J) {
-        return("phi must have length J!")
+    if(length(object@logtheta) != J) {
+        return("logtheta must have length J!")
     }
     return(TRUE)
 }

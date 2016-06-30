@@ -7,7 +7,6 @@ Attach package scRNAseq, select high quality cells, filter out those which do no
 ```{r, eval=TRUE}
 library(SummarizedExperiment)
 library(scRNAseq)
-source("../R/functions_jp.R")
 data("fluidigm")
 high.cov.cells=assays(fluidigm)$counts[,which(colData(fluidigm)$Coverage_Type=="High")]
 filter.out=apply(high.cov.cells>10,1,sum)<10

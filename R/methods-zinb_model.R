@@ -134,9 +134,9 @@ setMethod(
             .Object@alpha_pi = matrix(0, nrow=K , ncol=J)
         }
         if (!missing(phi)) {
-            .Object@phi = phi
+            .Object@logtheta = -log(phi)
         } else {
-            .Object@phi = rep(1,J)
+            .Object@logtheta = numeric(J)
         }
         validObject(.Object) # call of the inspector
         return(.Object)
@@ -181,7 +181,13 @@ setMethod("getPi", "zinb_model",
 
 setMethod("getPhi", "zinb_model",
           function(object) {
-              return(object@phi)
+              return(exp(-object@logtheta))
+          }
+)
+
+setMethod("getTheta", "zinb_model",
+          function(object) {
+              return(exp(object@logtheta))
           }
 )
 
@@ -204,13 +210,13 @@ setMethod(
         }
         mu = getMu(object)
         pi = getPi(object)
-        phi = getPhi(object)
+        theta = getTheta(object)
         n = getN(object)
         J = getJ(object)
         
         # Simulate negative binomial with the mean matrix and dispersion
         # parameters
-        data.nb <- matrix(unlist( parallel::mclapply(seq(n*J), function(i) { rnbinom(1, mu = mu[i] , size = phi[ceiling(i/n)]) }, mc.cores = no_cores) ), nrow = n )
+        data.nb <- matrix(unlist( parallel::mclapply(seq(n*J), function(i) { rnbinom(1, mu = mu[i] , size = theta[ceiling(i/n)]) }, mc.cores = no_cores) ), nrow = n )
         
         # Simulate the binary dropout matrix. "1" means that a dropout (zero) is
         # observed instead of the value
@@ -225,5 +231,14 @@ setMethod(
         ret = list ( counts = counts , data.nb = data.nb , data.dropouts = data.dropout , zero.fraction = zero.fraction )
         attr(ret, "seed") <- RNGstate
         ret
+    }
+)
+
+
+setMethod(
+    f="loglik",
+    signature=c("zinb_model","matrix"),
+    definition=function(model, x) {
+        zinb.loglik(x,getMu(model),getTheta(model),getPi(model))
     }
 )
