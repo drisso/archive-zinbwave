@@ -95,7 +95,7 @@ setGeneric("simulateZinb",function(object, seed, ...) standardGeneric("simulateZ
 #' @return The log-likelihood of the model given the data.
 #' @examples
 #' m <- zinbModel(n=5, J=10)
-#' x <- simulateZINB(m)
+#' x <- simulateZinb(m)
 #' loglik(m, x$counts)
 #' @export
 setGeneric("loglik", function(model, x, ...) standardGeneric("loglik"))

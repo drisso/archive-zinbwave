@@ -216,7 +216,7 @@ setMethod(
 #'   \code{n}, \code{J}, and \code{K}.
 #'   
 #' @details A call with no argument has the following default values: \code{n =
-#'   50}, \code{J = 100}, \code{K = 2}.
+#'   50}, \code{J = 100}, \code{K = 0}.
 #'   
 #' @details Although it is possible to create new instances of the class by 
 #'   calling this function, this is not the most common way of creating
