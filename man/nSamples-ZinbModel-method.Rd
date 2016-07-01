@@ -3,7 +3,7 @@
 \docType{methods}
 \name{nSamples,ZinbModel-method}
 \alias{nSamples,ZinbModel-method}
-\title{Returns the number of samples}
+\title{Return the number of samples}
 \usage{
 \S4method{nSamples}{ZinbModel}(x)
 }

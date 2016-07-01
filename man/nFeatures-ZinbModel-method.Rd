@@ -3,7 +3,7 @@
 \docType{methods}
 \name{nFeatures,ZinbModel-method}
 \alias{nFeatures,ZinbModel-method}
-\title{Returns the number of features}
+\title{Return the number of features}
 \usage{
 \S4method{nFeatures}{ZinbModel}(x)
 }

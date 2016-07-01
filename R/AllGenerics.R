@@ -1,15 +1,12 @@
-#' Returns the number of latent factors
+#' Generic function that returns the number of latent factors
 #' 
 #' Given an object that describes a dataset or a model involving latent factors,
 #' this function returns the number of latent factors.
-#' @param object an object that describes a dataset or a model involving latent
+#' @param x an object that describes a dataset or a model involving latent
 #'   factors
 #' @return the number of latent factors
-#' @examples
-#' a <- zinbModel()
-#' getK(a) 
 #' @export
-setGeneric("getK", function(object) standardGeneric("getK"))
+setGeneric("nFactors", function(x) standardGeneric("nFactors"))
 
 #' Returns the matrix of mean parameters
 #' 

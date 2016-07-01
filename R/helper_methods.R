@@ -225,15 +225,15 @@ setMethod(
 #' 
 #' @examples
 #' a <- zinbModel()
-#' getN(a)
-#' getJ(a)
-#' getK(a)
+#' nSamples(a)
+#' nFeatures(a)
+#' nFactors(a)
 #' 
 zinbModel <- function(...) {
     new(Class="ZinbModel", ...)
 }
 
-#' Returns the number of samples
+#' Return the number of samples
 #' 
 #' Given an object that describes a ZINB model, this function returns the number
 #' of samples.
@@ -250,7 +250,7 @@ setMethod("nSamples", "ZinbModel",
           }
 )
 
-#' Returns the number of features
+#' Return the number of features
 #' 
 #' Given an object that describes a ZINB model, this
 #' function returns the number of genes.
@@ -267,11 +267,19 @@ setMethod("nFeatures", "ZinbModel",
           }
 )
 
+#' Return the number of latent factors
+#' 
+#' Given an object that describes a ZINB model involving latent factors,
+#' this function returns the number of latent factors.
+#' @param x an object of class \code{ZinbModel}.
+#' @return the number of latent factors.
 #' @export
-#' @describeIn getK return the number of latent factors.
-setMethod("getK", "ZinbModel",
-          function(object) {
-              return(NCOL(object@W))
+#' @examples 
+#' a <- zinbModel()
+#' nFactors(a)
+setMethod("nFactors", "ZinbModel",
+          function(x) {
+              return(NCOL(x@W))
           }
 )
 
@@ -335,8 +343,8 @@ setMethod(
         mu <- getMu(object)
         pi <- getPi(object)
         theta <- getTheta(object)
-        n <- getN(object)
-        J <- getJ(object)
+        n <- nSamples(object)
+        J <- nFeatures(object)
         
         # Simulate negative binomial with the mean matrix and dispersion
         # parameters

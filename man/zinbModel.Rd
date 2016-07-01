@@ -31,9 +31,9 @@ Although it is possible to create new instances of the class by
 }
 \examples{
 a <- zinbModel()
-getN(a)
-getJ(a)
-getK(a)
+nSamples(a)
+nFeatures(a)
+nFactors(a)
 
 }
 
