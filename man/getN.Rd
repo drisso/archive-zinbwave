@@ -13,10 +13,11 @@ getN(object)
 the number of samples
 }
 \description{
-Given an object that describes a dataset or a model involving samples, this function returns the number of samples
+Given an object that describes a dataset or a model involving samples, this
+function returns the number of samples.
 }
 \examples{
-a=zinb_model()
+a <- zinb_model()
 getN(a) 
 }
 

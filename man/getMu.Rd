@@ -7,16 +7,18 @@
 getMu(object)
 }
 \arguments{
-\item{object}{an object that describes a matrix of zero-inflated distributions.}
+\item{object}{an object that describes a matrix of zero-inflated
+distributions.}
 }
 \value{
 the matrix of mean parameters
 }
 \description{
-Given an object that describes a matrix of zero-inflated distributions, returns the matrix of mean parameters
+Given an object that describes a matrix of zero-inflated distributions,
+returns the matrix of mean parameters.
 }
 \examples{
-a=zinb_model(n=5,J=10)
+a <- zinb_model(n=5, J=10)
 getMu(a) 
 }
 

@@ -7,16 +7,19 @@
 getTheta(object)
 }
 \arguments{
-\item{object}{an object that describes a matrix of zero-inflated distributions.}
+\item{object}{an object that describes a matrix of zero-inflated
+distributions.}
 }
 \value{
 the vector of inverse dispersion parameters theta
 }
 \description{
-Given an object that describes a matrix of zero-inflated negative binomial distributions, returns the vector of inverse dispersion parameters theta
+Given an object that describes a matrix of zero-inflated negative binomial 
+distributions, returns the vector of inverse dispersion parameters
+\code{theta}.
 }
 \examples{
-a=zinb_model(n=5,J=10)
+a <- zinb_model(n=5, J=10)
 getTheta(a) 
 }
 

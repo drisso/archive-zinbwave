@@ -7,16 +7,18 @@
 getPhi(object)
 }
 \arguments{
-\item{object}{an object that describes a matrix of zero-inflated distributions.}
+\item{object}{an object that describes a matrix of zero-inflated.
+distributions.}
 }
 \value{
 the vector of dispersion parameters
 }
 \description{
-Given an object that describes a matrix of zero-inflated negative binomial distributions, returns the vector of dispersion parameters phi
+Given an object that describes a matrix of zero-inflated negative binomial
+distributions, returns the vector of dispersion parameters \code{phi}.
 }
 \examples{
-a=zinb_model(n=5,J=10)
+a <- zinb_model(n=5, J=10)
 getPhi(a) 
 }
 

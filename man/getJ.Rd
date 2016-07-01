@@ -13,10 +13,11 @@ getJ(object)
 the number of genes.
 }
 \description{
-Given an object that describes a dataset or a model involving genes, this function returns the number of genes.
+Given an object that describes a dataset or a model involving genes, this
+function returns the number of genes.
 }
 \examples{
-a=zinb_model()
+a <- zinb_model()
 getJ(a) 
 }
 

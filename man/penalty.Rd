@@ -7,16 +7,18 @@
 penalty(model)
 }
 \arguments{
-\item{model}{an object that describes a statistical model with regularization parameters}
+\item{model}{an object that describes a statistical model with regularization
+parameters.}
 }
 \value{
 The penalty of the model.
 }
 \description{
-Given a statistical model with regularization parameters, compute the penalty.
+Given a statistical model with regularization parameters, compute the
+penalty.
 }
 \examples{
-m=zinb_model(K=2)
+m <- zinb_model(K=2)
 penalty(m)
 }
 

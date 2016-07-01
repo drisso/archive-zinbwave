@@ -7,16 +7,18 @@
 getPi(object)
 }
 \arguments{
-\item{object}{an object that describes a matrix of zero-inflated distributions.}
+\item{object}{an object that describes a matrix of zero-inflated
+distributions.}
 }
 \value{
 the matrix of probabilities of 0
 }
 \description{
-Given an object that describes a matrix of zero-inflated distributions, returns the matrix of probabilities of 0
+Given an object that describes a matrix of zero-inflated distributions,
+returns the matrix of probabilities of 0.
 }
 \examples{
-a=zinb_model(n=5,J=10)
+a <- zinb_model(n=5, J=10)
 getPi(a) 
 }
 

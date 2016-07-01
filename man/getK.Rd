@@ -7,16 +7,18 @@
 getK(object)
 }
 \arguments{
-\item{object}{an object that describes a dataset or a model involving latent factors}
+\item{object}{an object that describes a dataset or a model involving latent
+factors}
 }
 \value{
 the number of latent factors
 }
 \description{
-Given an object that describes a dataset or a model involving latent factors, this function returns the number of latent factors
+Given an object that describes a dataset or a model involving latent factors,
+this function returns the number of latent factors.
 }
 \examples{
-a=zinb_model()
+a <- zinb_model()
 getK(a) 
 }
 

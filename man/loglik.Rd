@@ -7,19 +7,21 @@
 loglik(model, x, ...)
 }
 \arguments{
-\item{model}{an object that describes a statistical model}
+\item{model}{an object that describes a statistical model.}
 
-\item{x}{an object that describes data}
+\item{x}{an object that describes data.}
 }
 \value{
 The log-likelihood of the model given the data.
 }
 \description{
-Given a statistical model and some data, this function computes the log-likelihood of the model given the data, i.e., the log-probability of the data under the model.
+Given a statistical model and some data, this function computes the
+log-likelihood of the model given the data, i.e., the log-probability of the
+data under the model.
 }
 \examples{
-m=zinb_model(n=5,J=10)
-x=simulateZINB(m)
-loglik(m,x$counts)
+m <- zinb_model(n=5, J=10)
+x <- simulateZINB(m)
+loglik(m, x$counts)
 }
 
