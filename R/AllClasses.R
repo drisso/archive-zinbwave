@@ -56,7 +56,6 @@
 #'   and \code{W} need to have \code{n} rows, \code{V} needs to have \code{J}
 #'   rows, \code{logtheta} must be of length \code{J}.
 #' @name zinb_model-class
-#' @aliases zmc
 #' @import methods
 #' @exportClass zinb_model
 #' @docType Class

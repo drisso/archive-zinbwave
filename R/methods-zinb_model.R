@@ -234,48 +234,63 @@ zinb_model <- function(...) {
 }
 
 #' @export
+#' @describeIn getN return the number of samples.
 setMethod("getN", "zinb_model",
           function(object) {
               return(NROW(object@X))
           }
 )
 
+#' @export
+#' @describeIn getJ return the number of genes.
 setMethod("getJ", "zinb_model",
           function(object) {
               return(NROW(object@V))
           }
 )
 
+#' @export
+#' @describeIn getK return the number of latent factors.
 setMethod("getK", "zinb_model",
           function(object) {
               return(NCOL(object@W))
           }
 )
 
+#' @export
+#' @describeIn getMu return the mean of the non-zero component.
 setMethod("getMu", "zinb_model",
           function(object) {
               return(exp(object@X[,object@which_X_mu] %*% object@beta_mu + t(object@V[,object@which_V_mu] %*% object@gamma_mu) + object@O_mu))
           }
 )
 
+#' @export
+#' @describeIn getPi return the probability of zero.
 setMethod("getPi", "zinb_model",
           function(object) {
               return(binomial()$linkinv(object@X[,object@which_X_mu] %*% object@beta_mu + t(object@V[,object@which_V_mu] %*% object@gamma_mu) + object@O_mu))
           }
 )
 
+#' @export
+#' @describeIn getPhi return the dispersion parameter.
 setMethod("getPhi", "zinb_model",
           function(object) {
               return(exp(-object@logtheta))
           }
 )
 
+#' @export
+#' @describeIn getTheta return the inverse of the dispersion parameter.
 setMethod("getTheta", "zinb_model",
           function(object) {
               return(exp(object@logtheta))
           }
 )
 
+#' @export
+#' @describeIn simulateZINB simulate from a ZINB distribution.
 setMethod(
     f="simulateZINB",
     signature="zinb_model",
@@ -319,7 +334,8 @@ setMethod(
     }
 )
 
-
+#' @export
+#' @describeIn loglik return the log-likelihood of the ZINB model.
 setMethod(
     f="loglik",
     signature=c("zinb_model","matrix"),
@@ -328,6 +344,8 @@ setMethod(
     }
 )
 
+#' @export
+#' @describeIn penalty return the penalization.
 setMethod(
     f="penalty",
     signature="zinb_model",

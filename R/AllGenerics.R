@@ -97,12 +97,13 @@ setGeneric("getTheta", function(object) standardGeneric("getTheta"))
 #' @param seed an optional integer to specify how the random number generator
 #'   should be initialized with a call to \code{set.seed}. If missing, the
 #'   random generator state is not changed.
+#' @param ... additional arguments.
 #' @return the matrix of probabilities of 0.
 #' @examples
 #' a <- zinb_model(n=5, J=10)
 #' simulateZINB(a) 
 #' @export
-setGeneric("simulateZINB",function(object,seed,...) standardGeneric("simulateZINB"))
+setGeneric("simulateZINB",function(object, seed, ...) standardGeneric("simulateZINB"))
 
 #' Compute the log-likelihood of a model given some data
 #' 
@@ -111,13 +112,14 @@ setGeneric("simulateZINB",function(object,seed,...) standardGeneric("simulateZIN
 #' data under the model.
 #' @param model an object that describes a statistical model.
 #' @param x an object that describes data.
+#' @param ... additional arguments.
 #' @return The log-likelihood of the model given the data.
 #' @examples
 #' m <- zinb_model(n=5, J=10)
 #' x <- simulateZINB(m)
 #' loglik(m, x$counts)
 #' @export
-setGeneric("loglik", function(model,x,...) standardGeneric("loglik"))
+setGeneric("loglik", function(model, x, ...) standardGeneric("loglik"))
 
 #' Compute the penalty of a model
 #' 

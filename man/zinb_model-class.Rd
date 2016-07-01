@@ -3,7 +3,6 @@
 \docType{Class}
 \name{zinb_model-class}
 \alias{zinb_model-class}
-\alias{zmc}
 \title{Class zinb_model}
 \description{
 Objects of this class store all the values needed to work with a fitted 
