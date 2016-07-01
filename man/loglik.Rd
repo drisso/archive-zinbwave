@@ -31,7 +31,7 @@ data under the model.
 }}
 \examples{
 m <- zinbModel(n=5, J=10)
-x <- simulateZINB(m)
+x <- simulateZinb(m)
 loglik(m, x$counts)
 }
 

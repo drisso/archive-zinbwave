@@ -22,7 +22,7 @@ If any of the related matrices are passed, \code{n}, \code{J}, and
   \code{n}, \code{J}, and \code{K}.
 
 A call with no argument has the following default values: \code{n =
-  50}, \code{J = 100}, \code{K = 2}.
+  50}, \code{J = 100}, \code{K = 0}.
 
 Although it is possible to create new instances of the class by 
   calling this function, this is not the most common way of creating
