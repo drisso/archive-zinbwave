@@ -3,12 +3,12 @@
 \docType{methods}
 \name{simulateZINB}
 \alias{simulateZINB}
-\alias{simulateZINB,zinb_model-method}
+\alias{simulateZINB,ZinbModel-method}
 \title{Simulate counts from a zero-inflated negative binomial model}
 \usage{
 simulateZINB(object, seed, ...)
 
-\S4method{simulateZINB}{zinb_model}(object, seed, no_cores = 1)
+\S4method{simulateZINB}{ZinbModel}(object, seed, no_cores = 1)
 }
 \arguments{
 \item{object}{an object that describes a matrix of zero-inflated negative
@@ -35,10 +35,10 @@ simulate counts from the distribution.
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{zinb_model}: simulate from a ZINB distribution.
+\item \code{ZinbModel}: simulate from a ZINB distribution.
 }}
 \examples{
-a <- zinb_model(n=5, J=10)
+a <- zinbModel(n=5, J=10)
 simulateZINB(a) 
 }
 

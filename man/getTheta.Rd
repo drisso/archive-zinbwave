@@ -3,12 +3,12 @@
 \docType{methods}
 \name{getTheta}
 \alias{getTheta}
-\alias{getTheta,zinb_model-method}
+\alias{getTheta,ZinbModel-method}
 \title{Returns the vector of inverse dispersion parameters}
 \usage{
 getTheta(object)
 
-\S4method{getTheta}{zinb_model}(object)
+\S4method{getTheta}{ZinbModel}(object)
 }
 \arguments{
 \item{object}{an object that describes a matrix of zero-inflated
@@ -24,10 +24,10 @@ distributions, returns the vector of inverse dispersion parameters
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{zinb_model}: return the inverse of the dispersion parameter.
+\item \code{ZinbModel}: return the inverse of the dispersion parameter.
 }}
 \examples{
-a <- zinb_model(n=5, J=10)
+a <- zinbModel(n=5, J=10)
 getTheta(a) 
 }
 

@@ -1,6 +1,6 @@
 setMethod(
     f="initialize",
-    signature="zinb_model",
+    signature="ZinbModel",
     definition=function(.Object, X, V, O_mu, O_pi, which_X_mu,
                         which_X_pi, which_V_mu, which_V_pi, W,beta_mu, beta_pi,
                         gamma_mu, gamma_pi, alpha_mu, alpha_pi, phi,epsilon,
@@ -202,14 +202,14 @@ setMethod(
     }
 )
 
-#' Initialize an object of class zinb_model
+#' Initialize an object of class ZinbModel
 #' @export
 #' 
 #' @param ... arguments passed to \code{new()}. See the \code{slots} section in 
-#'   \code{\link{`zinb_model-class`}}.
+#'   \code{\link{`ZinbModel-class`}}.
 #'   
 #' @details This is a light wrapper around the new() function to create an 
-#'   instance of class \code{zinb_model}.
+#'   instance of class \code{ZinbModel}.
 #'   
 #' @details If any of the related matrices are passed, \code{n}, \code{J}, and
 #'   \code{K} are inferred. Alternatively, the user can specify one or more of
@@ -220,38 +220,56 @@ setMethod(
 #'   
 #' @details Although it is possible to create new instances of the class by 
 #'   calling this function, this is not the most common way of creating
-#'   \code{zinb_model} objects. The main use of the class is within the
+#'   \code{ZinbModel} objects. The main use of the class is within the
 #'   \code{\link{zinbFit}} function.
 #' 
 #' @examples
-#' a <- zinb_model()
+#' a <- zinbModel()
 #' getN(a)
 #' getJ(a)
 #' getK(a)
 #' 
-zinb_model <- function(...) {
-    new(Class="zinb_model", ...)
+zinbModel <- function(...) {
+    new(Class="ZinbModel", ...)
 }
 
+#' Returns the number of samples
+#' 
+#' Given an object that describes a ZINB model, this function returns the number
+#' of samples.
+#' @param x an object of class \code{ZinbModel}.
+#' @return the number of samples
 #' @export
-#' @describeIn getN return the number of samples.
-setMethod("getN", "zinb_model",
-          function(object) {
-              return(NROW(object@X))
+#' @importFrom clusterExperiment nSamples
+#' @examples
+#' a <- zinbModel()
+#' nSamples(a) 
+setMethod("nSamples", "ZinbModel",
+          function(x) {
+              return(NROW(x@X))
           }
 )
 
+#' Returns the number of features
+#' 
+#' Given an object that describes a ZINB model, this
+#' function returns the number of genes.
+#' @param x an object of class \code{ZinbModel}.
+#' @return the number of genes.
+#' @examples
+#' a <- zinbModel()
+#' nFeatures(a)
 #' @export
-#' @describeIn getJ return the number of genes.
-setMethod("getJ", "zinb_model",
-          function(object) {
-              return(NROW(object@V))
+#' @importFrom clusterExperiment nFeatures
+setMethod("nFeatures", "ZinbModel",
+          function(x) {
+              return(NROW(x@V))
           }
 )
 
 #' @export
 #' @describeIn getK return the number of latent factors.
-setMethod("getK", "zinb_model",
+setMethod("getK", "ZinbModel",
           function(object) {
               return(NCOL(object@W))
           }
@@ -259,7 +277,7 @@ setMethod("getK", "zinb_model",
 
 #' @export
 #' @describeIn getMu return the mean of the non-zero component.
-setMethod("getMu", "zinb_model",
+setMethod("getMu", "ZinbModel",
     function(object) {
         return(exp(object@X[,object@which_X_mu] %*% object@beta_mu +
                        t(object@V[,object@which_V_mu] %*% object@gamma_mu) + 
@@ -270,7 +288,7 @@ setMethod("getMu", "zinb_model",
 #' @export
 #' @describeIn getPi return the probability of zero.
 #' @importFrom stats binomial
-setMethod("getPi", "zinb_model",
+setMethod("getPi", "ZinbModel",
     function(object) {
       return(stats::binomial()$linkinv(object@X[,object@which_X_mu] %*% object@beta_mu + 
                t(object@V[,object@which_V_mu] %*% object@gamma_mu) + object@O_mu))
@@ -279,7 +297,7 @@ setMethod("getPi", "zinb_model",
 
 #' @export
 #' @describeIn getPhi return the dispersion parameter.
-setMethod("getPhi", "zinb_model",
+setMethod("getPhi", "ZinbModel",
           function(object) {
               return(exp(-object@logtheta))
           }
@@ -287,7 +305,7 @@ setMethod("getPhi", "zinb_model",
 
 #' @export
 #' @describeIn getTheta return the inverse of the dispersion parameter.
-setMethod("getTheta", "zinb_model",
+setMethod("getTheta", "ZinbModel",
           function(object) {
               return(exp(object@logtheta))
           }
@@ -298,7 +316,7 @@ setMethod("getTheta", "zinb_model",
 #' @importFrom parallel mclapply
 setMethod(
     f="simulateZINB",
-    signature="zinb_model",
+    signature="ZinbModel",
     definition=function(object, seed, no_cores=1) {
         
         if (!exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
@@ -355,7 +373,7 @@ setMethod(
 #' @describeIn loglik return the log-likelihood of the ZINB model.
 setMethod(
     f="loglik",
-    signature=c("zinb_model","matrix"),
+    signature=c("ZinbModel","matrix"),
     definition=function(model, x) {
         zinb.loglik(x, getMu(model), getTheta(model), getPi(model))
     }
@@ -365,7 +383,7 @@ setMethod(
 #' @describeIn penalty return the penalization.
 setMethod(
     f="penalty",
-    signature="zinb_model",
+    signature="ZinbModel",
     definition=function(model) {
         sum(model@epsilon*model@penalty_alpha_mu*(model@alpha_mu)^2)/2
         + sum(model@epsilon*model@penalty_alpha_pi*(model@alpha_pi)^2)/2

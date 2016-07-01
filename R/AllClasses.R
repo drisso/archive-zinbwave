@@ -1,4 +1,4 @@
-#' Class zinb_model
+#' Class ZinbModel
 #' 
 #' Objects of this class store all the values needed to work with a fitted 
 #' model. Starting with an object of this class, one should be able to simulate 
@@ -55,13 +55,13 @@
 #'   appropriate dimensions: in particular, \code{X}, \code{O_mu}, \code{O_pi},
 #'   and \code{W} need to have \code{n} rows, \code{V} needs to have \code{J}
 #'   rows, \code{logtheta} must be of length \code{J}.
-#' @name zinb_model-class
+#' @name ZinbModel-class
 #' @import methods
-#' @exportClass zinb_model
+#' @exportClass ZinbModel
 #' @docType Class
 #' 
 setClass(
-    Class = "zinb_model",
+    Class = "ZinbModel",
     slots = list(X = "matrix",
                  V = "matrix",
                  O_mu = "matrix",
@@ -90,7 +90,7 @@ setClass(
                  )
 )
 
-setValidity("zinb_model", function(object){
+setValidity("ZinbModel", function(object){
     n <- NROW(object@X) # number of samples
     J <- NROW(object@V) # number of genes
     K <- NCOL(object@W) # number of latent factors

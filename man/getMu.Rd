@@ -3,12 +3,12 @@
 \docType{methods}
 \name{getMu}
 \alias{getMu}
-\alias{getMu,zinb_model-method}
+\alias{getMu,ZinbModel-method}
 \title{Returns the matrix of mean parameters}
 \usage{
 getMu(object)
 
-\S4method{getMu}{zinb_model}(object)
+\S4method{getMu}{ZinbModel}(object)
 }
 \arguments{
 \item{object}{an object that describes a matrix of zero-inflated
@@ -23,10 +23,10 @@ returns the matrix of mean parameters.
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{zinb_model}: return the mean of the non-zero component.
+\item \code{ZinbModel}: return the mean of the non-zero component.
 }}
 \examples{
-a <- zinb_model(n=5, J=10)
+a <- zinbModel(n=5, J=10)
 getMu(a) 
 }
 

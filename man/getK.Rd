@@ -3,12 +3,12 @@
 \docType{methods}
 \name{getK}
 \alias{getK}
-\alias{getK,zinb_model-method}
+\alias{getK,ZinbModel-method}
 \title{Returns the number of latent factors}
 \usage{
 getK(object)
 
-\S4method{getK}{zinb_model}(object)
+\S4method{getK}{ZinbModel}(object)
 }
 \arguments{
 \item{object}{an object that describes a dataset or a model involving latent
@@ -23,10 +23,10 @@ this function returns the number of latent factors.
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{zinb_model}: return the number of latent factors.
+\item \code{ZinbModel}: return the number of latent factors.
 }}
 \examples{
-a <- zinb_model()
+a <- zinbModel()
 getK(a) 
 }
 

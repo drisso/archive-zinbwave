@@ -7,19 +7,19 @@
 zinb_initialize(m, Y)
 }
 \arguments{
-\item{m}{The model of class zinb_model}
+\item{m}{The model of class ZinbModel}
 
 \item{Y}{The matrix of counts.}
 }
 \value{
-An object of class zinb_model similar to the one given as argument with modified parameters alpha_mu, alpha_pi, beta_mu, beta_pi, gamma_mu, gamma_pi, W.
+An object of class ZinbModel similar to the one given as argument with modified parameters alpha_mu, alpha_pi, beta_mu, beta_pi, gamma_mu, gamma_pi, W.
 }
 \description{
 The initialization performs quick optimization of the parameters with several simplifying assumptions compared to the true model: non-zero counts are models as log-Gaussian, zeros are modeled as dropouts. The dispersion parameter is not modified.
 }
 \examples{
 Y = matrix(10,3,5)
-m = zinb_model(n=NROW(Y),J=NCOL(Y))
+m = zinbModel(n=NROW(Y),J=NCOL(Y))
 m = zinb_initialize(m,Y)
 }
 

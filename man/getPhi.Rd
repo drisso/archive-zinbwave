@@ -3,12 +3,12 @@
 \docType{methods}
 \name{getPhi}
 \alias{getPhi}
-\alias{getPhi,zinb_model-method}
+\alias{getPhi,ZinbModel-method}
 \title{Returns the vector of dispersion parameters}
 \usage{
 getPhi(object)
 
-\S4method{getPhi}{zinb_model}(object)
+\S4method{getPhi}{ZinbModel}(object)
 }
 \arguments{
 \item{object}{an object that describes a matrix of zero-inflated.
@@ -23,10 +23,10 @@ distributions, returns the vector of dispersion parameters \code{phi}.
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{zinb_model}: return the dispersion parameter.
+\item \code{ZinbModel}: return the dispersion parameter.
 }}
 \examples{
-a <- zinb_model(n=5, J=10)
+a <- zinbModel(n=5, J=10)
 getPhi(a) 
 }
 

@@ -1,27 +1,3 @@
-#' Returns the number of samples
-#' 
-#' Given an object that describes a dataset or a model involving samples, this
-#' function returns the number of samples.
-#' @param object an object that describes a dataset or a model involving samples.
-#' @return the number of samples
-#' @examples
-#' a <- zinb_model()
-#' getN(a) 
-#' @export
-setGeneric("getN", function(object) standardGeneric("getN"))
-
-#' Returns the number of genes
-#' 
-#' Given an object that describes a dataset or a model involving genes, this
-#' function returns the number of genes.
-#' @param object an object that describes a dataset or a model involving genes.
-#' @return the number of genes.
-#' @examples
-#' a <- zinb_model()
-#' getJ(a) 
-#' @export
-setGeneric("getJ", function(object) standardGeneric("getJ"))
-
 #' Returns the number of latent factors
 #' 
 #' Given an object that describes a dataset or a model involving latent factors,
@@ -30,7 +6,7 @@ setGeneric("getJ", function(object) standardGeneric("getJ"))
 #'   factors
 #' @return the number of latent factors
 #' @examples
-#' a <- zinb_model()
+#' a <- zinbModel()
 #' getK(a) 
 #' @export
 setGeneric("getK", function(object) standardGeneric("getK"))
@@ -43,7 +19,7 @@ setGeneric("getK", function(object) standardGeneric("getK"))
 #'   distributions.
 #' @return the matrix of mean parameters
 #' @examples
-#' a <- zinb_model(n=5, J=10)
+#' a <- zinbModel(n=5, J=10)
 #' getMu(a) 
 #' @export
 setGeneric("getMu", function(object) standardGeneric("getMu"))
@@ -56,7 +32,7 @@ setGeneric("getMu", function(object) standardGeneric("getMu"))
 #'   distributions.
 #' @return the matrix of probabilities of 0
 #' @examples
-#' a <- zinb_model(n=5, J=10)
+#' a <- zinbModel(n=5, J=10)
 #' getPi(a) 
 #' @export
 setGeneric("getPi", function(object) standardGeneric("getPi"))
@@ -69,7 +45,7 @@ setGeneric("getPi", function(object) standardGeneric("getPi"))
 #'   distributions.
 #' @return the vector of dispersion parameters
 #' @examples
-#' a <- zinb_model(n=5, J=10)
+#' a <- zinbModel(n=5, J=10)
 #' getPhi(a) 
 #' @export
 setGeneric("getPhi", function(object) standardGeneric("getPhi"))
@@ -83,7 +59,7 @@ setGeneric("getPhi", function(object) standardGeneric("getPhi"))
 #'   distributions.
 #' @return the vector of inverse dispersion parameters theta
 #' @examples
-#' a <- zinb_model(n=5, J=10)
+#' a <- zinbModel(n=5, J=10)
 #' getTheta(a) 
 #' @export
 setGeneric("getTheta", function(object) standardGeneric("getTheta"))
@@ -106,7 +82,7 @@ setGeneric("getTheta", function(object) standardGeneric("getTheta"))
 #'   \item{zeroFraction}{the fraction of zeros.}
 #'   }
 #' @examples
-#' a <- zinb_model(n=5, J=10)
+#' a <- zinbModel(n=5, J=10)
 #' simulateZINB(a) 
 #' @export
 setGeneric("simulateZINB",function(object, seed, ...) standardGeneric("simulateZINB"))
@@ -121,7 +97,7 @@ setGeneric("simulateZINB",function(object, seed, ...) standardGeneric("simulateZ
 #' @param ... additional arguments.
 #' @return The log-likelihood of the model given the data.
 #' @examples
-#' m <- zinb_model(n=5, J=10)
+#' m <- zinbModel(n=5, J=10)
 #' x <- simulateZINB(m)
 #' loglik(m, x$counts)
 #' @export
@@ -135,7 +111,7 @@ setGeneric("loglik", function(model, x, ...) standardGeneric("loglik"))
 #'   parameters.
 #' @return The penalty of the model.
 #' @examples
-#' m <- zinb_model(K=2)
+#' m <- zinbModel(K=2)
 #' penalty(m)
 #' @export
 setGeneric("penalty", function(model) standardGeneric("penalty"))

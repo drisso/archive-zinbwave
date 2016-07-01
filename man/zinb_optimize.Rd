@@ -7,19 +7,19 @@
 zinb_optimize(m, Y)
 }
 \arguments{
-\item{m}{The model of class zinb_model}
+\item{m}{The model of class ZinbModel}
 
 \item{Y}{The matrix of counts.}
 }
 \value{
-An object of class zinb_model similar to the one given as argument with modified parameters alpha_mu, alpha_pi, beta_mu, beta_pi, gamma_mu, gamma_pi, W.
+An object of class ZinbModel similar to the one given as argument with modified parameters alpha_mu, alpha_pi, beta_mu, beta_pi, gamma_mu, gamma_pi, W.
 }
 \description{
 The parameters of the model given as argument are optimized by penalized maximum likelihood on the count matrix given as argument. It is recommended to call zinb_initialize before this function to have good starting point for optimization, since the optimization problem is not convex and can only converge to a local minimum.
 }
 \examples{
 Y = matrix(10,3,5)
-m = zinb_model(n=NROW(Y),J=NCOL(Y))
+m = zinbModel(n=NROW(Y),J=NCOL(Y))
 m = zinb_initialize(m,Y)
 m = zinb_optimize(m,Y)
 }

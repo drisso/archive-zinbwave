@@ -3,12 +3,12 @@
 \docType{methods}
 \name{penalty}
 \alias{penalty}
-\alias{penalty,zinb_model-method}
+\alias{penalty,ZinbModel-method}
 \title{Compute the penalty of a model}
 \usage{
 penalty(model)
 
-\S4method{penalty}{zinb_model}(model)
+\S4method{penalty}{ZinbModel}(model)
 }
 \arguments{
 \item{model}{an object that describes a statistical model with regularization
@@ -23,10 +23,10 @@ penalty.
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{zinb_model}: return the penalization.
+\item \code{ZinbModel}: return the penalization.
 }}
 \examples{
-m <- zinb_model(K=2)
+m <- zinbModel(K=2)
 penalty(m)
 }
 

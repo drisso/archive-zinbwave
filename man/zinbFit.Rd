@@ -12,7 +12,7 @@ zinbFit(Y, ...)
 \item{...}{Additional parameters to describe the model}
 }
 \value{
-An object of class zinb_model that has been fitted by penalized maximum likelihood on the count matrix.
+An object of class ZinbModel that has been fitted by penalized maximum likelihood on the count matrix.
 }
 \description{
 Fit a ZINB regression model

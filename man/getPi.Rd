@@ -3,12 +3,12 @@
 \docType{methods}
 \name{getPi}
 \alias{getPi}
-\alias{getPi,zinb_model-method}
+\alias{getPi,ZinbModel-method}
 \title{Returns the matrix of probabilities of zero}
 \usage{
 getPi(object)
 
-\S4method{getPi}{zinb_model}(object)
+\S4method{getPi}{ZinbModel}(object)
 }
 \arguments{
 \item{object}{an object that describes a matrix of zero-inflated
@@ -23,10 +23,10 @@ returns the matrix of probabilities of 0.
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{zinb_model}: return the probability of zero.
+\item \code{ZinbModel}: return the probability of zero.
 }}
 \examples{
-a <- zinb_model(n=5, J=10)
+a <- zinbModel(n=5, J=10)
 getPi(a) 
 }
 
