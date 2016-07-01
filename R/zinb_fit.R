@@ -1,27 +1,42 @@
-#' Fit a ZINB regression model
-#'
-#' @param Y The matrix of counts.
-#' @param ... Additional parameters to describe the model
-#' @return An object of class ZinbModel that has been fitted by penalized maximum likelihood on the count matrix.
-#' @examples 
-#' m=zinbFit(matrix(10,3,5))
+#' @describeIn zinbFit Y is a matrix of counts (genes in rows).
 #' @export
-zinbFit <- function(Y, ...) {
-    
-    n = NROW(Y) # number of samples
-    J = NCOL(Y) # number of genes
+#' 
+#' @details By default, i.e., if no arguments other than \code{Y} are passed,
+#' the model is fitted with an intercept for the regression across-samples and
+#' one intercept for the regression across genes, both for mu and for pi.
+#' 
+#' @details This means that by default the model is fitted with \code{X_mu = X_pi = 1_n}
+#' and \code{V_mu = V_pi = 1_J}. If the user explicitly passes the design matrices,
+#' this behavior is overwritten, i.e., the user needs to explicitly include the intercept
+#' in the design matrices.
+#' 
+#' @seealso \code{\link[stats]{model.matrix}}. 
+#' 
+#' @examples 
+#' bio <- gl(2, 3)
+#' m <- zinbFit(matrix(10, 10, 6), X=model.matrix(~bio))
+setMethod("zinbFit", "matrix",
+          function(Y, X=matrix(1, ncol=1, nrow=NCOL(Y)), 
+                   V=matrix(1, ncol=1, nrow=NROW(Y)), 
+                   which_X_mu=1L, which_V_mu=1L,
+                   which_X_pi=1L, which_V_pi=1L, ...) {
+
+    J = NROW(Y) # number of genes
+    n = NCOL(Y) # number of samples
     
     # Create a ZinbModel object
-    m = zinbModel(n=n, J=J, ...)
+    m <- zinbModel(n=n, J=J, X=X, V=V, which_X_mu=which_X_mu,
+                   which_X_pi=which_X_pi, which_V_mu=which_V_mu,
+                   which_V_pi=which_V_pi, ...)
     
     # Initialize the parameters
-    m = zinb_initialize(m,Y)
+    m <- zinbInitialize(m, Y)
     
     # Optimize parameters
-    m = zinb_optimize(m,Y)
+    m <- zinbOptimize(m, Y)
     
     m
-}
+})
 
 #' Initialize the parameters of a ZINB regression model
 #'
@@ -32,9 +47,9 @@ zinbFit <- function(Y, ...) {
 #' @examples
 #' Y = matrix(10,3,5)
 #' m = zinbModel(n=NROW(Y),J=NCOL(Y))
-#' m = zinb_initialize(m,Y)
+#' m = zinbInitialize(m,Y)
 #' @export
-zinb_initialize <- function(m, Y) {
+zinbInitialize <- function(m, Y) {
 
     # TODO: write this function    
     m
@@ -49,10 +64,10 @@ zinb_initialize <- function(m, Y) {
 #' @examples
 #' Y = matrix(10,3,5)
 #' m = zinbModel(n=NROW(Y),J=NCOL(Y))
-#' m = zinb_initialize(m,Y)
-#' m = zinb_optimize(m,Y)
+#' m = zinbInitialize(m,Y)
+#' m = zinbOptimize(m,Y)
 #' @export
-zinb_optimize <- function(m, Y) {
+zinbOptimize <- function(m, Y) {
     
     # TODO: write this function    
     m
