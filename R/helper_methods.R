@@ -260,17 +260,21 @@ setMethod("getK", "zinb_model",
 #' @export
 #' @describeIn getMu return the mean of the non-zero component.
 setMethod("getMu", "zinb_model",
-          function(object) {
-              return(exp(object@X[,object@which_X_mu] %*% object@beta_mu + t(object@V[,object@which_V_mu] %*% object@gamma_mu) + object@O_mu))
-          }
+    function(object) {
+        return(exp(object@X[,object@which_X_mu] %*% object@beta_mu +
+                       t(object@V[,object@which_V_mu] %*% object@gamma_mu) + 
+                       object@O_mu))
+    }
 )
 
 #' @export
 #' @describeIn getPi return the probability of zero.
+#' @importFrom stats binomial
 setMethod("getPi", "zinb_model",
-          function(object) {
-              return(binomial()$linkinv(object@X[,object@which_X_mu] %*% object@beta_mu + t(object@V[,object@which_V_mu] %*% object@gamma_mu) + object@O_mu))
-          }
+    function(object) {
+      return(stats::binomial()$linkinv(object@X[,object@which_X_mu] %*% object@beta_mu + 
+               t(object@V[,object@which_V_mu] %*% object@gamma_mu) + object@O_mu))
+    }
 )
 
 #' @export
@@ -291,23 +295,25 @@ setMethod("getTheta", "zinb_model",
 
 #' @export
 #' @describeIn simulateZINB simulate from a ZINB distribution.
+#' @importFrom parallel mclapply
 setMethod(
     f="simulateZINB",
     signature="zinb_model",
-    definition=function(object, seed, no_cores) {
-        if (!exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) 
+    definition=function(object, seed, no_cores=1) {
+        
+        if (!exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
             runif(1)
-        if (missing(seed)) 
+        }
+        
+        if (missing(seed)) {
             RNGstate <- get(".Random.seed", envir = .GlobalEnv)
-        else {
+        } else {
             R.seed <- get(".Random.seed", envir = .GlobalEnv)
             set.seed(seed)
             RNGstate <- structure(seed, kind = as.list(RNGkind()))
             on.exit(assign(".Random.seed", R.seed, envir = .GlobalEnv))
         }
-        if (missing(no_cores)) {
-            no_cores=1
-        }
+        
         mu <- getMu(object)
         pi <- getPi(object)
         theta <- getTheta(object)
@@ -316,19 +322,30 @@ setMethod(
         
         # Simulate negative binomial with the mean matrix and dispersion
         # parameters
-        data.nb <- matrix(unlist( parallel::mclapply(seq(n*J), function(i) { rnbinom(1, mu = mu[i] , size = theta[ceiling(i/n)]) }, mc.cores = no_cores) ), nrow = n )
+        datanb <- parallel::mclapply(seq(n*J), 
+                      function(i) { 
+                          rnbinom(1, mu = mu[i] , size = theta[ceiling(i/n)])
+                          }, mc.cores = no_cores)
+        
+        data.nb <- matrix(unlist(datanb), nrow = n )
         
         # Simulate the binary dropout matrix. "1" means that a dropout (zero) is
         # observed instead of the value
-        data.dropout <- matrix(unlist( parallel::mclapply(seq(n*J), function(i) { rbinom( 1 , size =1 , prob = pi[i] ) }, mc.cores = no_cores) ), nrow = n )
+        datado <- parallel::mclapply(seq(n*J), 
+                      function(i) { 
+                          rbinom(1, size =1, prob = pi[i])
+                          }, mc.cores = no_cores)
+        
+        data.dropout <- matrix(unlist(datado), nrow = n)
         
         # Matrix of zero-inflated counts
         counts <- data.nb * (1 - data.dropout)
         
         # Fraction of zeros in the matrix
-        zero.fraction <- sum ( counts == 0) / (n*J)    
+        zero.fraction <- sum(counts == 0) / (n*J)    
         
-        ret <- list ( counts = counts , data.nb = data.nb , data.dropouts = data.dropout , zero.fraction = zero.fraction )
+        ret <- list(counts = counts, data.nb = data.nb, 
+                    data.dropouts = data.dropout, zero.fraction = zero.fraction)
         attr(ret, "seed") <- RNGstate
         ret
     }
@@ -340,7 +357,7 @@ setMethod(
     f="loglik",
     signature=c("zinb_model","matrix"),
     definition=function(model, x) {
-        zinb.loglik(x,getMu(model),getTheta(model),getPi(model))
+        zinb.loglik(x, getMu(model), getTheta(model), getPi(model))
     }
 )
 
