@@ -21,7 +21,13 @@ random generator state is not changed.}
 \item{...}{additional arguments.}
 }
 \value{
-the matrix of probabilities of 0.
+A list with the following elements.
+  \itemize{
+  \item{counts}{the matrix with the simulated counts.}
+  \item{dataNB}{the data simulated from the negative binomial.}
+  \item{dataDropouts}{the data simulated from the binomial process.}
+  \item{zeroFraction}{the fraction of zeros.}
+  }
 }
 \description{
 Given an object that describes zero-inflated negative binomial distribution,
