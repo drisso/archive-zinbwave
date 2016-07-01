@@ -320,10 +320,10 @@ setMethod("getTheta", "ZinbModel",
 )
 
 #' @export
-#' @describeIn simulateZinb simulate from a ZINB distribution.
+#' @describeIn zinbSim simulate from a ZINB distribution.
 #' @importFrom parallel mclapply
 setMethod(
-    f="simulateZinb",
+    f="zinbSim",
     signature="ZinbModel",
     definition=function(object, seed, no_cores=1) {
         

@@ -80,9 +80,9 @@ setGeneric("getTheta", function(object) standardGeneric("getTheta"))
 #'   }
 #' @examples
 #' a <- zinbModel(n=5, J=10)
-#' simulateZinb(a) 
+#' zinbSim(a) 
 #' @export
-setGeneric("simulateZinb",function(object, seed, ...) standardGeneric("simulateZinb"))
+setGeneric("zinbSim",function(object, seed, ...) standardGeneric("zinbSim"))
 
 #' Compute the log-likelihood of a model given some data
 #' 
@@ -95,7 +95,7 @@ setGeneric("simulateZinb",function(object, seed, ...) standardGeneric("simulateZ
 #' @return The log-likelihood of the model given the data.
 #' @examples
 #' m <- zinbModel(n=5, J=10)
-#' x <- simulateZinb(m)
+#' x <- zinbSim(m)
 #' loglik(m, x$counts)
 #' @export
 setGeneric("loglik", function(model, x, ...) standardGeneric("loglik"))
