@@ -153,7 +153,7 @@ setMethod(
             .Object@penalty_alpha_mu <- penalty_alpha_mu
         } else {
             val <- max(1, NROW(.Object@alpha_mu)*NCOL(.Object@alpha_mu))
-            .Object@penalty_alpha_mu <- rep(1/val,NROW(.Object@alpha_mu))
+            .Object@penalty_alpha_mu <- 1/val
         }
         if (!missing(penalty_beta_mu)) {
             .Object@penalty_beta_mu <- penalty_beta_mu
@@ -171,7 +171,7 @@ setMethod(
             .Object@penalty_alpha_pi <- penalty_alpha_pi
         } else {
             val <- max(1, NROW(.Object@alpha_pi)*NCOL(.Object@alpha_pi))
-            .Object@penalty_alpha_pi <- rep(1/val,NROW(.Object@alpha_pi))
+            .Object@penalty_alpha_pi <- 1/val
         }
         if (!missing(penalty_beta_pi)) {
             .Object@penalty_beta_pi <- penalty_beta_pi
