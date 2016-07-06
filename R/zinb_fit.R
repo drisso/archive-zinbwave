@@ -23,11 +23,38 @@ setMethod("zinbFit", "matrix",
 
     J = NROW(Y) # number of genes
     n = NCOL(Y) # number of samples
+
+    ## Identify intercept and put its penalty to 0
+    if(missing(penalty_beta_mu)) {
+        val <- max(1, length(which_X_mu)*NROW(X))
+        penalty_beta_mu <- rep(1/val, length(which_X_mu))
+        penalty_beta_mu[which(colSums(X[, which_X_mu, drop=FALSE]==rep(1, n))==n)] <- 0
+    }
+
+    if(missing(penalty_beta_pi)) {
+        val <- max(1, length(which_X_pi)*NROW(X))
+        penalty_beta_pi <- rep(1/val, length(which_X_pi))
+        penalty_beta_pi[which(colSums(X[, which_X_pi, drop=FALSE]==rep(1, n))==n)] <- 0
+    }
     
+    if(missing(penalty_gamma_mu)) {
+        val <- max(1, length(which_V_mu)*NROW(V))
+        penalty_gamma_mu <- rep(1/val, length(which_V_mu))
+        penalty_gamma_mu[which(colSums(V[, which_V_mu, drop=FALSE]==rep(1, J))==J)] <- 0
+    }
+
+    if(missing(penalty_gamma_pi)) {
+        val <- max(1, length(which_V_pi)*NROW(V))
+        penalty_gamma_pi <- rep(1/val, length(which_V_pi))
+        penalty_gamma_pi[which(colSums(V[, which_V_pi, drop=FALSE]==rep(1, J))==J)] <- 0
+    }
+
     # Create a ZinbModel object
     m <- zinbModel(n=n, J=J, X=X, V=V, which_X_mu=which_X_mu,
                    which_X_pi=which_X_pi, which_V_mu=which_V_mu,
-                   which_V_pi=which_V_pi, ...)
+                   which_V_pi=which_V_pi, penalty_beta_mu=penalty_beta_mu,
+                   penalty_beta_pi=penalty_beta_pi, penalty_gamma_mu=penalty_gamma_mu,
+                   penalty_gamma_pi=penalty_gamma_pi, ...)
     
     # Initialize the parameters
     m <- zinbInitialize(m, Y)
