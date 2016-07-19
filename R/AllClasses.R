@@ -62,7 +62,7 @@
 #' @name ZinbModel-class
 #' @import methods
 #' @exportClass ZinbModel
-#' @docType Class
+#' @aliases ZinbModel
 #' 
 setClass(
     Class = "ZinbModel",

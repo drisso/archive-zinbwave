@@ -262,50 +262,26 @@ zinbModel <- function(...) {
     new(Class="ZinbModel", ...)
 }
 
-#' Return the number of samples
-#' 
-#' Given an object that describes a ZINB model, this function returns the number
-#' of samples.
-#' @param x an object of class \code{ZinbModel}.
-#' @return the number of samples
 #' @export
 #' @importFrom clusterExperiment nSamples
-#' @examples
-#' a <- zinbModel()
-#' nSamples(a) 
+#' @describeIn ZinbModel returns the number of samples.
 setMethod("nSamples", "ZinbModel",
           function(x) {
               return(NROW(x@X))
           }
 )
 
-#' Return the number of features
-#' 
-#' Given an object that describes a ZINB model, this
-#' function returns the number of genes.
-#' @param x an object of class \code{ZinbModel}.
-#' @return the number of genes.
-#' @examples
-#' a <- zinbModel()
-#' nFeatures(a)
 #' @export
 #' @importFrom clusterExperiment nFeatures
+#' @describeIn ZinbModel returns the number of features.
 setMethod("nFeatures", "ZinbModel",
           function(x) {
               return(NROW(x@V))
           }
 )
 
-#' Return the number of latent factors
-#' 
-#' Given an object that describes a ZINB model involving latent factors,
-#' this function returns the number of latent factors.
-#' @param x an object of class \code{ZinbModel}.
-#' @return the number of latent factors.
 #' @export
-#' @examples 
-#' a <- zinbModel()
-#' nFactors(a)
+#' @describeIn ZinbModel returns the number of latent factors.
 setMethod("nFactors", "ZinbModel",
           function(x) {
               return(NCOL(x@W))
@@ -490,5 +466,17 @@ setMethod("getV_pi", "ZinbModel",
                   which_V_pi <- object@which_V_pi
               }
               return(object@V[, which_V_pi, drop=FALSE])
+          }
+)
+
+#' @export
+#' @describeIn ZinbModel show useful info on the object.
+setMethod("show", "ZinbModel",
+          function(object) {
+              cat(paste0("Object of class ZinbModel.\n",
+                         NROW(object@X), " samples; ", NROW(object@V), " genes.\n",
+                         NCOL(object@X), " sample-level covariates; ",
+                         NCOL(object@V), " gene-level covariates; ",
+                         NCOL(object@W), " latent factors.\n"))
           }
 )
