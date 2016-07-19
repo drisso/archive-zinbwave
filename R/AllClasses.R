@@ -70,6 +70,8 @@ setClass(
                  which_V_mu = "integer",
                  which_X_pi = "integer",
                  which_V_pi = "integer",
+                 X_intercept = "logical",
+                 V_intercept = "logical",
                  W = "matrix",
                  beta_mu = "matrix",
                  gamma_mu = "matrix",

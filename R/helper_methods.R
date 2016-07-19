@@ -59,13 +59,26 @@ setMethod(
         if (!missing(X)) {
             .Object@X <- X
         } else {
-            .Object@X <- matrix(nrow=n, ncol=0)
+            .Object@X <- matrix(1, nrow=n, ncol=1)
         }
         if (!missing(V)) {
             .Object@V <- V
         } else {
-            .Object@V <- matrix(nrow=J, ncol=0)
+            .Object@V <- matrix(1, nrow=J, ncol=1)
         }
+        
+        if (all(.Object@X[,1]==1)) {
+            .Object@X_intercept <- TRUE
+        } else {
+            .Object@X_intercept <- FALSE
+        }
+        
+        if (all(.Object@V[,1]==1)) {
+            .Object@V_intercept <- TRUE
+        } else {
+            .Object@V_intercept <- FALSE
+        }
+        
         if (!missing(O_mu)) {
             .Object@O_mu <- O_mu
         } else {
@@ -402,4 +415,64 @@ setMethod(
         + sum(model@epsilon*model@penalty_W*(model@W)^2)/2
         + model@epsilon_varphi*var(getPhi(model))
     }
+)
+
+#' @export
+#' @describeIn getX_mu return the sample-level design matrix for mu.
+#' @param intercept logical. Whether to return the intercept (ignored if X has
+#'   no intercept).
+setMethod("getX_mu", "ZinbModel",
+          function(object, intercept=TRUE) {
+              if(object@X_intercept && !intercept) {
+                  which_X_mu <- object@which_X_mu[-1]
+              } else {
+                  which_X_mu <- object@which_X_mu
+              }
+              return(object@X[, which_X_mu, drop=FALSE])
+          }
+)
+
+#' @export
+#' @describeIn getX_pi return the sample-level design matrix for pi.
+#' @param intercept logical. Whether to return the intercept (ignored if X has
+#'   no intercept).
+setMethod("getX_pi", "ZinbModel",
+          function(object, intercept=TRUE) {
+              if(object@X_intercept && !intercept) {
+                  which_X_pi <- object@which_X_pi[-1]
+              } else {
+                  which_X_pi <- object@which_X_pi
+              }
+              return(object@X[, which_X_pi, drop=FALSE])
+          }
+)
+
+#' @export
+#' @describeIn getV_mu return the gene-level design matrix for mu.
+#' @param intercept logical. Whether to return the intercept (ignored if V has
+#'   no intercept).
+setMethod("getV_mu", "ZinbModel",
+          function(object, intercept=TRUE) {
+              if(object@V_intercept && !intercept) {
+                  which_V_mu <- object@which_V_mu[-1]
+              } else {
+                  which_V_mu <- object@which_V_mu
+              }
+              return(object@V[, which_V_mu, drop=FALSE])
+          }
+)
+
+#' @export
+#' @describeIn getV_pi return the sample-level design matrix for pi.
+#' @param intercept logical. Whether to return the intercept (ignored if V has
+#'   no intercept).
+setMethod("getV_pi", "ZinbModel",
+          function(object, intercept=TRUE) {
+              if(object@V_intercept && !intercept) {
+                  which_V_pi <- object@which_V_pi[-1]
+              } else {
+                  which_V_pi <- object@which_V_pi
+              }
+              return(object@V[, which_V_pi, drop=FALSE])
+          }
 )

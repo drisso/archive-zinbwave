@@ -123,3 +123,47 @@ setGeneric("penalty", function(model) standardGeneric("penalty"))
 #'   maximum likelihood on the data.
 #' @export
 setGeneric("zinbFit", function(Y, ...) standardGeneric("zinbFit"))
+
+#' Returns the sample-level design matrix for mu
+#' 
+#' Given an object that describes a matrix of zero-inflated distributions,
+#' returns the sample-level design matrix for mu
+#' @param object an object that describes a matrix of zero-inflated
+#'   distributions.
+#' @param ... Additional parameters.
+#' @return the sample-level design matrix for mu
+#' @export
+setGeneric("getX_mu", function(object, ...) standardGeneric("getX_mu"))
+
+#' Returns the sample-level design matrix for pi
+#' 
+#' Given an object that describes a matrix of zero-inflated distributions,
+#' returns the sample-level design matrix for pi
+#' @param object an object that describes a matrix of zero-inflated
+#'   distributions.
+#' @param ... Additional parameters.
+#' @return the sample-level design matrix for pi
+#' @export
+setGeneric("getX_pi", function(object, ...) standardGeneric("getX_pi"))
+
+#' Returns the gene-level design matrix for mu
+#' 
+#' Given an object that describes a matrix of zero-inflated distributions,
+#' returns the gene-level design matrix for mu
+#' @param object an object that describes a matrix of zero-inflated
+#'   distributions.
+#' @param ... Additional parameters.
+#' @return the gene-level design matrix for mu
+#' @export
+setGeneric("getV_mu", function(object, ...) standardGeneric("getV_mu"))
+
+#' Returns the gene-level design matrix for pi
+#' 
+#' Given an object that describes a matrix of zero-inflated distributions,
+#' returns the gene-level design matrix for pi
+#' @param object an object that describes a matrix of zero-inflated
+#'   distributions.
+#' @param ... Additional parameters.
+#' @return the gene-level design matrix for pi
+#' @export
+setGeneric("getV_pi", function(object, ...) standardGeneric("getV_pi"))
