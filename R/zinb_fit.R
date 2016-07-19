@@ -105,8 +105,11 @@ setMethod("zinbFit", "matrix",
 #'   with modified parameters alpha_mu, alpha_pi, beta_mu, beta_pi, gamma_mu, 
 #'   gamma_pi, W.
 #' @examples
-#' Y <- matrix(rpois(15, lambda=1), 3, 5)
-#' m <- zinbModel(n=NCOL(Y), J=NROW(Y))
+#' Y <- matrix(rpois(60, lambda=1), 10, 6)
+#' bio <- gl(2, 3)
+#' gc <- rnorm(10)
+#' m <- zinbFit(matrix(10, 10, 6), X=model.matrix(~bio), V=model.matrix(~gc),
+#'              which_X_pi=1L, which_V_mu=1L)
 #' m <- zinbInitialize(m, Y)
 #' @export
 #' @importFrom glmnet glmnet
@@ -118,7 +121,15 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
     
     n <- NROW(Y)
     J <- NCOL(Y)
+    
+    if(n != nSamples(m)) {
+        stop(paste0("Y needs to have ", nSamples(m), " rows (genes)"))
+    }
 
+    if(J != nFeatures(m)) {
+        stop(paste0("Y needs to have ", nFeatures(m), " columns (samples)"))
+    }
+    
     P <- Y > 0
     
     if(any(rowSums(P) == 0)) {
@@ -133,56 +144,67 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
     L <- matrix(nrow=n, ncol=J)
     L[P] <- log(Y[P]) - m@O_mu[P]
     
-    # for(mm in seq_len(nb.repeat)) {
-    #     
-    #     ## optimize gamma_mu (in parallel for each sample)
-    #     if(NCOL(m@V) == 0) {
-    #         ## what to do if no V?
-    #     } else if(NCOL(m@V) == 1) { 
-    #         ## parcor::lm.ridge.univariate adds an intercept, we don't want that
-    #         ## so I re-wrote it
-    #         gamma_mu <- parallel::mclapply(seq(n), function(i) {
-    #             if(any(P[i,])) {
-    #                 as.vector(ridge_one(x=m@V[P[i,],], y=L[i,P[i,]], 
-    #                                     epsilon = m@penalty_gamma_mu))
-    #             } else {
-    #                 return(0)
-    #             }
-    #         }, mc.cores = ncores)
-    #     } else {
-    #         gamma_mu <- parallel::mclapply(seq(n), function(i) {
-    #             as.vector(coef(glmnet::glmnet(m@V[P[i,],],
-    #                                           L[i,P[i,]], 
-    #                                           offset=tVgamma.mu[i,P[i,]],
-    #                                           lambda=m@penalty_gamma_mu,
-    #                                           intercept=FALSE,
-    #                                           standardize=FALSE,
-    #                                           family="gaussian")))})
-    #     } 
-    #     gamma.mu <- matrix(unlist(coefs), nrow=NCOL(m@V)+1)
-    #     
-    #     tVgamma.mu <- t(V1%*%gamma.mu)
-    #     
-    #     if(NCOL(m@X) > 1){
-    #         coefs <- parallel::mclapply(seq(J), function(j) {
-    #             as.vector(coef(glmnet::glmnet(X[P[,j],],
-    #                                           logdata[P[,j],j], 
-    #                                           offset=tVgamma.mu[P[,j],j],
-    #                                           lambda=eps.beta,
-    #                                           intercept=TRUE,
-    #                                           standardize=FALSE,
-    #                                           family="gaussian")))})
-    #     } else if(NCOL(m@X) == 1) {
-    #         coefs <- parallel::mclapply(seq(J), function(j) {
-    #             parcor::lm.ridge.univariate(x=X[P[,j],j], 
-    #                                         y=logdata[P[,j],j]-tVgamma.mu[P[,j],j],
-    #                                         lambda=eps.beta,scale=FALSE)})
-    #     }
-    #     beta.mu <- matrix(unlist(coefs),nrow=NCOL(m@X)+1)
-    #     
-    #     Xbeta.mu <- X1%*%beta.mu
-    #         
-    # }
+    for(mm in seq_len(nb.repeat)) {
+        offset_matrix <- getX_mu(m) %*% m@beta_mu
+        ## optimize gamma_mu (in parallel for each sample)
+        if(NCOL(getV_mu(m)) == 0) {
+            ## do nothing: no need to estimate gamma_mu
+        } else if(NCOL(getV_mu(m)) == 1) {
+            if(m@V_mu_intercept) {
+                ## if only intercept, regular regression
+                gamma_mu <- lapply(seq(n), function(i) {
+                    coef(lm.fit(x = getV_mu(m)[P[i,], , drop=FALSE], 
+                                y = L[i,P[i,]], 
+                                offset = offset_matrix[i, P[i,]]))
+                })
+            } else {
+                ## if no intercept parcor::lm.ridge.univariate adds an intercept, 
+                ## we don't want that so I re-wrote it
+                gamma_mu <- lapply(seq(n), function(i) {
+                    as.vector(ridge_one(x=getV_mu(m)[P[i,], , drop=FALSE],
+                                        y=L[i,P[i,]] - offset_matrix[i, P[i,]],
+                                        epsilon = m@penalty_gamma_mu))
+                })
+            }
+            ## I'm not sure if we need this if statement.
+            ## In principle, when we have an intercept, its penalty will be 0.
+            ## So ridge_one should accomodate all cases. But lm may be faster?
+        } else {
+            ## use glmnet: this should be fine, because if there is an intercept
+            ## the penalty will be 0 in penalty_gamma_mu.
+            gamma_mu <- lapply(seq(n), function(i) {
+                as.vector(coef(glmnet::glmnet(x = getV_mu(m)[P[i,], , drop=FALSE],
+                                              y = L[i,P[i,]],
+                                              offset=offset_matrix[i, P[i,]],
+                                              lambda=m@penalty_gamma_mu,
+                                              intercept=FALSE,
+                                              standardize=FALSE,
+                                              family="gaussian")))})
+        }
+        gamma.mu <- matrix(unlist(gamma_mu), nrow=NCOL(m@V)+1) ## check
+        
+        tVgamma.mu <- t(V1%*%gamma.mu)
+        
+        if(NCOL(m@X) > 1){
+            coefs <- parallel::mclapply(seq(J), function(j) {
+                as.vector(coef(glmnet::glmnet(X[P[,j],],
+                                              logdata[P[,j],j],
+                                              offset=tVgamma.mu[P[,j],j],
+                                              lambda=eps.beta,
+                                              intercept=TRUE,
+                                              standardize=FALSE,
+                                              family="gaussian")))})
+        } else if(NCOL(m@X) == 1) {
+            coefs <- parallel::mclapply(seq(J), function(j) {
+                parcor::lm.ridge.univariate(x=X[P[,j],j],
+                                            y=logdata[P[,j],j]-tVgamma.mu[P[,j],j],
+                                            lambda=eps.beta,scale=FALSE)})
+        }
+        beta.mu <- matrix(unlist(coefs),nrow=NCOL(m@X)+1)
+        
+        Xbeta.mu <- X1%*%beta.mu
+        
+    }
     m
 }
 
@@ -202,4 +224,9 @@ zinbOptimize <- function(m, Y) {
     
     # TODO: write this function    
     m
+}
+
+## helper functions
+ridge_one <- function(x, y, epsilon=rep(0, NCOL(x))) {
+    solve(crossprod(x) + tcrossprod(epsilon)) %*% crossprod(x, y)
 }
