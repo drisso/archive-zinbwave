@@ -9,11 +9,13 @@
 zinbFit(Y, ...)
 
 \S4method{zinbFit}{matrix}(Y, X = matrix(1, ncol = 1, nrow = NCOL(Y)),
-  V = matrix(1, ncol = 1, nrow = NROW(Y)), which_X_mu = 1L,
-  which_V_mu = 1L, which_X_pi = 1L, which_V_pi = 1L, ...)
+  V = matrix(1, ncol = 1, nrow = NROW(Y)), which_X_mu = seq_len(NCOL(X)),
+  which_V_mu = seq_len(NCOL(V)), which_X_pi = seq_len(NCOL(X)),
+  which_V_pi = seq_len(NCOL(V)), penalty_beta_mu, penalty_beta_pi,
+  penalty_gamma_mu, penalty_gamma_pi, ncores = 1, ...)
 }
 \arguments{
-\item{Y}{The data.}
+\item{Y}{The data (genes in rows, samples in columns).}
 
 \item{...}{Additional parameters to describe the model.}
 }
@@ -25,14 +27,14 @@ An object of class \code{ZinbModel} that has been fitted by penalized
 Given an object with the data, it fits a ZINB model.
 }
 \details{
-By default, i.e., if no arguments other than \code{Y} are passed,
-the model is fitted with an intercept for the regression across-samples and
-one intercept for the regression across genes, both for mu and for pi.
+By default, i.e., if no arguments other than \code{Y} are passed, 
+  the model is fitted with an intercept for the regression across-samples and
+  one intercept for the regression across genes, both for mu and for pi.
 
-This means that by default the model is fitted with \code{X_mu = X_pi = 1_n}
-and \code{V_mu = V_pi = 1_J}. If the user explicitly passes the design matrices,
-this behavior is overwritten, i.e., the user needs to explicitly include the intercept
-in the design matrices.
+This means that by default the model is fitted with \code{X_mu = 
+  X_pi = 1_n} and \code{V_mu = V_pi = 1_J}. If the user explicitly passes the
+  design matrices, this behavior is overwritten, i.e., the user needs to 
+  explicitly include the intercept in the design matrices.
 }
 \section{Methods (by class)}{
 \itemize{

@@ -67,28 +67,6 @@ setMethod(
             .Object@V <- matrix(1, nrow=J, ncol=1)
         }
         
-        if (all(.Object@X[,1]==1)) {
-            .Object@X_intercept <- TRUE
-        } else {
-            .Object@X_intercept <- FALSE
-        }
-        
-        if (all(.Object@V[,1]==1)) {
-            .Object@V_intercept <- TRUE
-        } else {
-            .Object@V_intercept <- FALSE
-        }
-        
-        if (!missing(O_mu)) {
-            .Object@O_mu <- O_mu
-        } else {
-            .Object@O_mu <- matrix(0, nrow=n, ncol=J)
-        }
-        if (!missing(O_pi)) {
-            .Object@O_pi <- O_pi
-        } else {
-            .Object@O_pi <- matrix(0, nrow=n, ncol=J)
-        }
         if (!missing(which_X_mu)) {
             .Object@which_X_mu <- which_X_mu
         } else if (NCOL(.Object@X)>0) {
@@ -117,11 +95,48 @@ setMethod(
         } else {
             .Object@which_V_pi <- integer(0)
         }
+        
+        
+        if (all(.Object@X[,.Object@which_X_mu[1]]==1)) {
+            .Object@X_mu_intercept <- TRUE
+        } else {
+            .Object@X_mu_intercept <- FALSE
+        }
+        
+        if (all(.Object@V[,.Object@which_V_mu[1]]==1)) {
+            .Object@V_mu_intercept <- TRUE
+        } else {
+            .Object@V_mu_intercept <- FALSE
+        }
+        if (all(.Object@X[,.Object@which_X_pi[1]]==1)) {
+            .Object@X_pi_intercept <- TRUE
+        } else {
+            .Object@X_pi_intercept <- FALSE
+        }
+        
+        if (all(.Object@V[,.Object@which_V_pi[1]]==1)) {
+            .Object@V_pi_intercept <- TRUE
+        } else {
+            .Object@V_pi_intercept <- FALSE
+        }
+        
+        if (!missing(O_mu)) {
+            .Object@O_mu <- O_mu
+        } else {
+            .Object@O_mu <- matrix(0, nrow=n, ncol=J)
+        }
+        if (!missing(O_pi)) {
+            .Object@O_pi <- O_pi
+        } else {
+            .Object@O_pi <- matrix(0, nrow=n, ncol=J)
+        }
+        
         if (!missing(W)) {
             .Object@W <- W
         } else {
             .Object@W <- matrix(0, nrow=n , ncol=K)
         }
+        
         if (!missing(beta_mu)) {
             .Object@beta_mu <- beta_mu
         } else {
@@ -157,6 +172,7 @@ setMethod(
         } else {
             .Object@logtheta <- numeric(J)
         }
+        
         if (!missing(epsilon)) {
             .Object@epsilon <- epsilon
         } else {
@@ -419,11 +435,11 @@ setMethod(
 
 #' @export
 #' @describeIn getX_mu return the sample-level design matrix for mu.
-#' @param intercept logical. Whether to return the intercept (ignored if X has
+#' @param intercept logical. Whether to return the intercept (ignored if X_mu has
 #'   no intercept).
 setMethod("getX_mu", "ZinbModel",
           function(object, intercept=TRUE) {
-              if(object@X_intercept && !intercept) {
+              if(object@X_mu_intercept && !intercept) {
                   which_X_mu <- object@which_X_mu[-1]
               } else {
                   which_X_mu <- object@which_X_mu
@@ -434,11 +450,11 @@ setMethod("getX_mu", "ZinbModel",
 
 #' @export
 #' @describeIn getX_pi return the sample-level design matrix for pi.
-#' @param intercept logical. Whether to return the intercept (ignored if X has
+#' @param intercept logical. Whether to return the intercept (ignored if X_pi has
 #'   no intercept).
 setMethod("getX_pi", "ZinbModel",
           function(object, intercept=TRUE) {
-              if(object@X_intercept && !intercept) {
+              if(object@X_pi_intercept && !intercept) {
                   which_X_pi <- object@which_X_pi[-1]
               } else {
                   which_X_pi <- object@which_X_pi
@@ -449,11 +465,11 @@ setMethod("getX_pi", "ZinbModel",
 
 #' @export
 #' @describeIn getV_mu return the gene-level design matrix for mu.
-#' @param intercept logical. Whether to return the intercept (ignored if V has
+#' @param intercept logical. Whether to return the intercept (ignored if V_mu has
 #'   no intercept).
 setMethod("getV_mu", "ZinbModel",
           function(object, intercept=TRUE) {
-              if(object@V_intercept && !intercept) {
+              if(object@V_mu_intercept && !intercept) {
                   which_V_mu <- object@which_V_mu[-1]
               } else {
                   which_V_mu <- object@which_V_mu
@@ -464,11 +480,11 @@ setMethod("getV_mu", "ZinbModel",
 
 #' @export
 #' @describeIn getV_pi return the sample-level design matrix for pi.
-#' @param intercept logical. Whether to return the intercept (ignored if V has
+#' @param intercept logical. Whether to return the intercept (ignored if V_pi has
 #'   no intercept).
 setMethod("getV_pi", "ZinbModel",
           function(object, intercept=TRUE) {
-              if(object@V_intercept && !intercept) {
+              if(object@V_pi_intercept && !intercept) {
                   which_V_pi <- object@which_V_pi[-1]
               } else {
                   which_V_pi <- object@which_V_pi

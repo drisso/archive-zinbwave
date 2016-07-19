@@ -40,6 +40,14 @@ regression of pi.}
 \item{\code{which_V_pi}}{integer. Indeces of which columns of V to use in the 
 regression of pi.}
 
+\item{\code{X_mu_intercept}}{logical. TRUE if X_mu contains an intercept.}
+
+\item{\code{X_pi_intercept}}{logical. TRUE if X_pi contains an intercept.}
+
+\item{\code{V_mu_intercept}}{logical. TRUE if V_mu contains an intercept.}
+
+\item{\code{V_pi_intercept}}{logical. TRUE if V_pi contains an intercept.}
+
 \item{\code{W}}{matrix. The factors of gene-level latent factors.}
 
 \item{\code{beta_mu}}{matrix or NULL. The coefficients of X in the regression of mu.}

@@ -17,6 +17,10 @@
 #'   regression of pi.
 #' @slot which_V_pi integer. Indeces of which columns of V to use in the 
 #'   regression of pi.
+#' @slot X_mu_intercept logical. TRUE if X_mu contains an intercept.
+#' @slot X_pi_intercept logical. TRUE if X_pi contains an intercept.
+#' @slot V_mu_intercept logical. TRUE if V_mu contains an intercept.
+#' @slot V_pi_intercept logical. TRUE if V_pi contains an intercept.
 #' @slot W matrix. The factors of gene-level latent factors.
 #' @slot beta_mu matrix or NULL. The coefficients of X in the regression of mu.
 #' @slot gamma_mu matrix or NULL. The coefficients of V in the regression of mu.
@@ -70,8 +74,10 @@ setClass(
                  which_V_mu = "integer",
                  which_X_pi = "integer",
                  which_V_pi = "integer",
-                 X_intercept = "logical",
-                 V_intercept = "logical",
+                 X_mu_intercept = "logical",
+                 V_mu_intercept = "logical",
+                 X_pi_intercept = "logical",
+                 V_pi_intercept = "logical",
                  W = "matrix",
                  beta_mu = "matrix",
                  gamma_mu = "matrix",
