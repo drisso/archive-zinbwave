@@ -117,7 +117,7 @@ setGeneric("penalty", function(model) standardGeneric("penalty"))
 #' 
 #' Given an object with the data, it fits a ZINB model.
 #' 
-#' @param Y The data.
+#' @param Y The data (genes in rows, samples in columns).
 #' @param ... Additional parameters to describe the model.
 #' @return An object of class \code{ZinbModel} that has been fitted by penalized
 #'   maximum likelihood on the data.
