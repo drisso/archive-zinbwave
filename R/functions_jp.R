@@ -18,10 +18,6 @@ zinb.loglik <- function(Y, mu, theta, logitP0) {
     sum(logPnb[Y>0]) + sum(logPnb[Y==0] + copula::log1pexp(logitP0[Y==0]-logPnb[Y==0])) + sum(lognorm)
 }
 
-
-
-
-
 zinb.make.matrices <- function( alpha , X.mu = NULL, X.pi = NULL , X.theta = NULL , Y.mu = NULL , Y.pi = NULL , offset.mu = NULL , offset.pi = NULL , offset.theta = NULL ) {
 
     # Parse the model (not very clean but it works)
@@ -99,20 +95,6 @@ zinb.make.matrices <- function( alpha , X.mu = NULL, X.pi = NULL , X.theta = NUL
     return(list( logM=logM , logtheta=logtheta , logitPi=logitPi , dim.alpha=dim.alpha , start.alpha=start.alpha))
 }
 
-X <- matrix(c(rep(1,n/2),rep(2,n/2)),ncol=1)
-X <-cbind(c(rep(1,J/2),rep(2,J/2))+rnorm(J),c(rep(1,J/2),rep(2,J/2))+rnorm(J))
-V <- c(rep(1,J/2),rep(2,J/2))
-V <-cbind(c(rep(1,J/2),rep(2,J/2)),c(rep(1,J/2),rep(2,J/2))+rnorm(J))
-
-xx <- matrix(c(1:20,2:40),ncol=2)
-yy <- 3*xx[,1]+7*xx[,2]+6
-lm.ridge(yy~xx)
-
-n=100
-J=100
-datamatrix <- matrix(rnbinom(n*J, mu = 4 , size = 1.5),nrow=n)
-xx <- which(colSums(datamatrix==0)==0)
-xx2 <- which(rowSums(datamatrix==0)==0)
 
 zinb.initialize <- function(datamatrix, X=NULL, V=NULL, K=2, epsilon=10, nb.repeat=2){
     # TODO: add K as input parameter, and correct the function to have K latent factors
@@ -143,30 +125,36 @@ zinb.initialize <- function(datamatrix, X=NULL, V=NULL, K=2, epsilon=10, nb.repe
 #    tVgamma.mu <- t(V%*%gamma.mu)
  #   Xbeta.mu <- X%*%beta.mu
     
-       
+
+    
+    #    tVgamma.mu <- t(V%*%gamma.mu)
+    #   Xbeta.mu <- X%*%beta.mu
+    
+    
     for (m in 1:nb.repeat){
         
         # TODO: be careful that glmnet standardizes the variables; to be sure we do the correct thing see for example http://stats.stackexchange.com/questions/74206/ridge-regression-results-different-in-using-lm-ridge-and-glmnet
-            if (ncol(X)>1){
-                beta.mu <- matrix(unlist( parallel::mclapply(seq(J), function(j){as.vector(coef(glmnet::glmnet (X[P[,j],],logdata[P[,j],j], offset = tVgamma.mu[P[,j],j],lambda=eps.beta,intercept=TRUE,standardize=FALSE,family="gaussian")))})),nrow=ncol(X)+1)
-            }        
-            
-            if (ncol(X)==1){
-                beta.mu <- matrix(unlist( parallel::mclapply(seq(J), function(j){parcor::lm.ridge.univariate (x=X[P[,j],j], y=logdata[P[,j],j]-tVgamma.mu[P[,j],j],lambda=eps.beta,scale=FALSE)})), nrow=ncol(X)+1)
-            } 
-                        
-            Xbeta.mu <- X1%*%beta.mu
-            
-            if (ncol(V)>1){
-                gamma.mu <- matrix(unlist( parallel::mclapply(seq(J), function(j){as.vector(coef(glmnet::glmnet (V[P[i,],],logdata[i,P[i,]], offset = tVgamma.mu[i,P[i,]],lambda=eps.beta,intercept=TRUE,standardize=FALSE,family="gaussian")))})),nrow=ncol(V)+1)
-            }        
-            
-            
-            if (ncol(V)==1){
-                gamma.mu <- matrix(unlist( parallel::mclapply(seq(n), function(j){parcor::lm.ridge.univariate (x=V[P[i,],], y=logdata[P[,j],j]-Xbeta.mu[i,P[i,]],lambda=eps.gamma,scale=FALSE)})), nrow=ncol(V)+1)
-            } 
-            
-            tVgamma.mu <- t(V1%*%gamma.mu)
+        if (ncol(X)>1){
+            beta.mu <- matrix(unlist( parallel::mclapply(seq(J), function(j){as.vector(coef(glmnet::glmnet (X[P[,j],],logdata[P[,j],j], offset = tVgamma.mu[P[,j],j],lambda=eps.beta,intercept=TRUE,standardize=FALSE,family="gaussian")))})),nrow=ncol(X)+1)
+        }        
+        
+        if (ncol(X)==1){
+            beta.mu <- matrix(unlist( parallel::mclapply(seq(J), function(j){parcor::lm.ridge.univariate (x=X[P[,j],j], y=logdata[P[,j],j]-tVgamma.mu[P[,j],j],lambda=eps.beta,scale=FALSE)})), nrow=ncol(X)+1)
+        } 
+        
+        Xbeta.mu <- X1%*%beta.mu
+        
+        if (ncol(V)>1){
+            gamma.mu <- matrix(unlist( parallel::mclapply(seq(J), function(j){as.vector(coef(glmnet::glmnet (V[P[i,],],logdata[i,P[i,]], offset = tVgamma.mu[i,P[i,]],lambda=eps.beta,intercept=TRUE,standardize=FALSE,family="gaussian")))})),nrow=ncol(V)+1)
+        }        
+        
+        
+        if (ncol(V)==1){
+            gamma.mu <- matrix(unlist( parallel::mclapply(seq(n), function(j){parcor::lm.ridge.univariate (x=V[P[i,],], y=logdata[P[,j],j]-Xbeta.mu[i,P[i,]],lambda=eps.gamma,scale=FALSE)})), nrow=ncol(V)+1)
+        } 
+        
+        tVgamma.mu <- t(V1%*%gamma.mu)
+
     }
     
     logdata.rest <- logdata
@@ -182,6 +170,7 @@ zinb.initialize <- function(datamatrix, X=NULL, V=NULL, K=2, epsilon=10, nb.repe
     alpha.pi <- matrix(0,nrow=ncol(W),ncol=J)
     gamma.pi <- matrix(0,nrow=ncol(V)+1,ncol=n)
     beta.pi <- matrix(0,nrow=ncol(X)+1,ncol=J)
+
     
     XW <- cbind(X1,W)
     betaalpha <- matrix(0,nrow=ncol(XW),ncol=J)
