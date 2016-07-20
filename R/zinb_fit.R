@@ -107,8 +107,9 @@ setMethod("zinbFit", "matrix",
 #' @examples
 #' Y <- matrix(rpois(60, lambda=1), 10, 6)
 #' bio <- gl(2, 3)
+#' time <- rnorm(6)
 #' gc <- rnorm(10)
-#' m <- zinbFit(matrix(10, 10, 6), X=model.matrix(~bio), V=model.matrix(~gc),
+#' m <- zinbFit(matrix(10, 10, 6), X=model.matrix(~bio + time), V=model.matrix(~gc),
 #'              which_X_pi=1L, which_V_mu=1L)
 #' m <- zinbInitialize(m, Y)
 #' @export
@@ -145,7 +146,9 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
     L[P] <- log(Y[P]) - m@O_mu[P]
     
     for(mm in seq_len(nb.repeat)) {
-        offset_matrix <- getX_mu(m) %*% m@beta_mu
+        
+        Xbeta_mu <- getX_mu(m) %*% m@beta_mu
+        
         ## optimize gamma_mu (in parallel for each sample)
         if(NCOL(getV_mu(m)) == 0) {
             ## do nothing: no need to estimate gamma_mu
@@ -155,55 +158,67 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
                 gamma_mu <- lapply(seq(n), function(i) {
                     coef(lm.fit(x = getV_mu(m)[P[i,], , drop=FALSE], 
                                 y = L[i,P[i,]], 
-                                offset = offset_matrix[i, P[i,]]))
+                                offset = Xbeta_mu[i, P[i,]]))
                 })
             } else {
-                ## if no intercept parcor::lm.ridge.univariate adds an intercept, 
+                ## if no intercept parcor::lm.ridge.univariate adds an intercept
                 ## we don't want that so I re-wrote it
                 gamma_mu <- lapply(seq(n), function(i) {
                     as.vector(ridge_one(x=getV_mu(m)[P[i,], , drop=FALSE],
-                                        y=L[i,P[i,]] - offset_matrix[i, P[i,]],
+                                        y=L[i,P[i,]] - Xbeta_mu[i, P[i,]],
                                         epsilon = m@penalty_gamma_mu))
                 })
             }
-            ## I'm not sure if we need this if statement.
+            ## I'm not sure if we need the previous if statement.
             ## In principle, when we have an intercept, its penalty will be 0.
             ## So ridge_one should accomodate all cases. But lm may be faster?
         } else {
-            ## use glmnet: this should be fine, because if there is an intercept
-            ## the penalty will be 0 in penalty_gamma_mu.
-            gamma_mu <- lapply(seq(n), function(i) {
-                as.vector(coef(glmnet::glmnet(x = getV_mu(m)[P[i,], , drop=FALSE],
-                                              y = L[i,P[i,]],
-                                              offset=offset_matrix[i, P[i,]],
-                                              lambda=m@penalty_gamma_mu,
-                                              intercept=FALSE,
-                                              standardize=FALSE,
-                                              family="gaussian")))})
+            ## use glmnet: we don't want to penalize the intercept, so we need
+            ## to treat differently the case with / without it.
+            # fit <- glmnet::glmnet(x = getV_mu(m)[P[i,], , drop=FALSE],
+            #                       y = L[i,P[i,]],
+            #                       offset=Xbeta_mu[i, P[i,]],
+            #                       intercept=m@V_mu_intercept,
+            #                       standardize=FALSE,
+            #                       family="gaussian")
+            # gamma_mu <- lapply(seq(n), function(i) {
+            #     as.vector(coef())})
         }
-        gamma.mu <- matrix(unlist(gamma_mu), nrow=NCOL(m@V)+1) ## check
+        m@gamma_mu <- matrix(unlist(gamma_mu), nrow=NCOL(getV_mu(m)))
         
-        tVgamma.mu <- t(V1%*%gamma.mu)
-        
-        if(NCOL(m@X) > 1){
-            coefs <- parallel::mclapply(seq(J), function(j) {
-                as.vector(coef(glmnet::glmnet(X[P[,j],],
-                                              logdata[P[,j],j],
-                                              offset=tVgamma.mu[P[,j],j],
-                                              lambda=eps.beta,
-                                              intercept=TRUE,
-                                              standardize=FALSE,
-                                              family="gaussian")))})
-        } else if(NCOL(m@X) == 1) {
-            coefs <- parallel::mclapply(seq(J), function(j) {
-                parcor::lm.ridge.univariate(x=X[P[,j],j],
-                                            y=logdata[P[,j],j]-tVgamma.mu[P[,j],j],
-                                            lambda=eps.beta,scale=FALSE)})
+        tVgamma_mu <- t(getV_mu(m) %*% m@gamma_mu)
+
+        ## optimize beta_mu (in parallel for each gene)
+        if(NCOL(getX_mu(m)) == 0) {
+            ## do nothing: no need to estimate beta_mu
+        } else if(NCOL(getX_mu(m)) == 1) {
+            beta_mu <- lapply(seq(J), function(j) {
+                as.vector(ridge_one(x=getX_mu(m)[P[,j], , drop=FALSE],
+                                    y=L[P[,j],j] - tVgamma_mu[P[,j], j],
+                                    epsilon = m@penalty_beta_mu))
+            })
+        } else if(NCOL(getX_mu(m, intecept=FALSE)) == 1) {
+            beta_mu <- lapply(seq(J), function(j) {
+                ## lm.ridge.univariate assumes intercept
+                as.vector(parcor::lm.ridge.univariate(x=getX_mu(m, intercept=FALSE)[P[,j], , drop=FALSE],
+                                              y=L[P[,j],j] - tVgamma_mu[P[,j], j],
+                                              lambda=m@penalty_beta_mu[-1],
+                                              scale=FALSE))
+            })
+        } else {
+            beta_mu <- lapply(seq(J), function(j) {
+                fit <- glmnet::glmnet(x = getX_mu(m, intercept=FALSE)[P[,j], , drop=FALSE],
+                                      y = L[P[,j],j],
+                                      alpha=0,
+                                      offset=tVgamma_mu[P[,j], j],
+                                      intercept=m@X_mu_intercept,
+                                      standardize=FALSE,
+                                      family="gaussian")
+
+                ## for now, assuming all penalty_beta_mu are the same                
+            })
         }
-        beta.mu <- matrix(unlist(coefs),nrow=NCOL(m@X)+1)
-        
-        Xbeta.mu <- X1%*%beta.mu
-        
+        m@beta_mu <- matrix(unlist(beta_mu),nrow=NCOL(getX_mu(m)))
     }
     m
 }

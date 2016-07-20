@@ -28,8 +28,12 @@ models as log-Gaussian, zeros are modeled as dropouts. The dispersion
 parameter is not modified.
 }
 \examples{
-Y <- matrix(rpois(15, lambda=1), 3, 5)
-m <- zinbModel(n=NCOL(Y), J=NROW(Y))
+Y <- matrix(rpois(60, lambda=1), 10, 6)
+bio <- gl(2, 3)
+time <- rnorm(6)
+gc <- rnorm(10)
+m <- zinbFit(matrix(10, 10, 6), X=model.matrix(~bio + time), V=model.matrix(~gc),
+             which_X_pi=1L, which_V_mu=1L)
 m <- zinbInitialize(m, Y)
 }
 
