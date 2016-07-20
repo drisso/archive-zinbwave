@@ -167,3 +167,66 @@ setGeneric("getV_mu", function(object, ...) standardGeneric("getV_mu"))
 #' @return the gene-level design matrix for pi
 #' @export
 setGeneric("getV_pi", function(object, ...) standardGeneric("getV_pi"))
+
+#' Returns the regularization parameter for alpha_mu
+#' 
+#' The regularization parameter is given by epsilon multiplied by
+#' penalty_alpha_mu
+#' @param object an object that describes a matrix of zero-inflated
+#'   distributions.
+#' @export
+setGeneric("getEpsilon_alpha_mu", function(object) standardGeneric("getEpsilon_alpha_mu"))
+
+#' Returns the regularization parameter for beta_mu
+#' 
+#' The regularization parameter is given by epsilon multiplied by
+#' penalty_beta_mu
+#' @param object an object that describes a matrix of zero-inflated
+#'   distributions.
+#' @export
+setGeneric("getEpsilon_beta_mu", function(object) standardGeneric("getEpsilon_beta_mu"))
+
+#' Returns the regularization parameter for gamma_mu
+#' 
+#' The regularization parameter is given by epsilon multiplied by
+#' penalty_gamma_mu
+#' @param object an object that describes a matrix of zero-inflated
+#'   distributions.
+#' @export
+setGeneric("getEpsilon_gamma_mu", function(object) standardGeneric("getEpsilon_gamma_mu"))
+
+#' Returns the regularization parameter for alpha_pi
+#' 
+#' The regularization parameter is given by epsilon multiplied by
+#' penalty_alpha_pi
+#' @param object an object that describes a matrix of zero-inflated
+#'   distributions.
+#' @export
+setGeneric("getEpsilon_alpha_pi", function(object) standardGeneric("getEpsilon_alpha_pi"))
+
+#' Returns the regularization parameter for beta_pi
+#' 
+#' The regularization parameter is given by epsilon multiplied by
+#' penalty_beta_pi
+#' @param object an object that describes a matrix of zero-inflated
+#'   distributions.
+#' @export
+setGeneric("getEpsilon_beta_pi", function(object) standardGeneric("getEpsilon_beta_pi"))
+
+#' Returns the regularization parameter for gamma_pi
+#' 
+#' The regularization parameter is given by epsilon multiplied by
+#' penalty_gamma_pi
+#' @param object an object that describes a matrix of zero-inflated
+#'   distributions.
+#' @export
+setGeneric("getEpsilon_gamma_pi", function(object) standardGeneric("getEpsilon_gamma_pi"))
+
+#' Returns the regularization parameter for W
+#' 
+#' The regularization parameter is given by epsilon multiplied by
+#' penalty_W
+#' @param object an object that describes a matrix of zero-inflated
+#'   distributions.
+#' @export
+setGeneric("getEpsilon_W", function(object) standardGeneric("getEpsilon_W"))

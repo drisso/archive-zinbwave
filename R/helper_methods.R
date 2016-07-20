@@ -480,3 +480,59 @@ setMethod("show", "ZinbModel",
                          NCOL(object@W), " latent factors.\n"))
           }
 )
+
+#' @export
+#' @describeIn getEpsilon_alpha_mu method for ZinbModel.
+setMethod("getEpsilon_alpha_mu", "ZinbModel",
+          function(object) {
+              object@epsilon * object@penalty_alpha_mu
+          }
+)
+
+#' @export
+#' @describeIn getEpsilon_beta_mu method for ZinbModel.
+setMethod("getEpsilon_beta_mu", "ZinbModel",
+          function(object) {
+              object@epsilon * object@penalty_beta_mu
+          }
+)
+
+#' @export
+#' @describeIn getEpsilon_gamma_mu method for ZinbModel.
+setMethod("getEpsilon_gamma_mu", "ZinbModel",
+          function(object) {
+              object@epsilon * object@penalty_gamma_mu
+          }
+)
+
+#' @export
+#' @describeIn getEpsilon_alpha_pi method for ZinbModel.
+setMethod("getEpsilon_alpha_pi", "ZinbModel",
+          function(object) {
+              object@epsilon * object@penalty_alpha_pi
+          }
+)
+
+#' @export
+#' @describeIn getEpsilon_beta_pi method for ZinbModel.
+setMethod("getEpsilon_beta_pi", "ZinbModel",
+          function(object) {
+              object@epsilon * object@penalty_beta_pi
+          }
+)
+
+#' @export
+#' @describeIn getEpsilon_gamma_pi method for ZinbModel.
+setMethod("getEpsilon_gamma_pi", "ZinbModel",
+          function(object) {
+              object@epsilon * object@penalty_gamma_pi
+          }
+)
+
+#' @export
+#' @describeIn getEpsilon_W method for ZinbModel.
+setMethod("getEpsilon_W", "ZinbModel",
+          function(object) {
+              object@epsilon * object@penalty_W
+          }
+)
