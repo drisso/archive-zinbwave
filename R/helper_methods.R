@@ -303,8 +303,8 @@ setMethod("getMu", "ZinbModel",
 #' @importFrom stats binomial
 setMethod("getPi", "ZinbModel",
     function(object) {
-      return(stats::binomial()$linkinv(object@X[,object@which_X_mu] %*% object@beta_mu + 
-               t(object@V[,object@which_V_mu] %*% object@gamma_mu) + object@O_mu))
+      return(stats::binomial()$linkinv(object@X[,object@which_X_pi] %*% object@beta_pi + 
+               t(object@V[,object@which_V_pi] %*% object@gamma_pi) + object@O_pi))
     }
 )
 
