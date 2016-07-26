@@ -21,7 +21,7 @@
 #' @slot X_pi_intercept logical. TRUE if X_pi contains an intercept.
 #' @slot V_mu_intercept logical. TRUE if V_mu contains an intercept.
 #' @slot V_pi_intercept logical. TRUE if V_pi contains an intercept.
-#' @slot W matrix. The factors of gene-level latent factors.
+#' @slot W matrix. The factors of sample-level latent factors.
 #' @slot beta_mu matrix or NULL. The coefficients of X in the regression of mu.
 #' @slot gamma_mu matrix or NULL. The coefficients of V in the regression of mu.
 #' @slot alpha_mu matrix or NULL. The coefficients of W in the regression of mu.
