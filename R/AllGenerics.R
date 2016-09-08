@@ -21,6 +21,32 @@ setGeneric("nFactors", function(x) standardGeneric("nFactors"))
 #' @export
 setGeneric("getMu", function(object) standardGeneric("getMu"))
 
+#' Returns the matrix of logarithm of mean parameters
+#' 
+#' Given an object that describes a matrix of zero-inflated distributions,
+#' returns the matrix of logarithm of mean parameters.
+#' @param object an object that describes a matrix of zero-inflated
+#'   distributions.
+#' @return the matrix of logarithms of mean parameters
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getLogMu(a) 
+#' @export
+setGeneric("getLogMu", function(object) standardGeneric("getLogMu"))
+
+#' Returns the matrix of logit of probabilities of zero
+#' 
+#' Given an object that describes a matrix of zero-inflated distributions,
+#' returns the matrix of logit of probabilities of 0.
+#' @param object an object that describes a matrix of zero-inflated
+#'   distributions.
+#' @return the matrix of logit-probabilities of 0
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getLogitPi(a) 
+#' @export
+setGeneric("getLogitPi", function(object) standardGeneric("getLogitPi"))
+
 #' Returns the matrix of probabilities of zero
 #' 
 #' Given an object that describes a matrix of zero-inflated distributions,
@@ -33,6 +59,7 @@ setGeneric("getMu", function(object) standardGeneric("getMu"))
 #' getPi(a) 
 #' @export
 setGeneric("getPi", function(object) standardGeneric("getPi"))
+
 
 #' Returns the vector of dispersion parameters
 #' 
@@ -60,6 +87,20 @@ setGeneric("getPhi", function(object) standardGeneric("getPhi"))
 #' getTheta(a) 
 #' @export
 setGeneric("getTheta", function(object) standardGeneric("getTheta"))
+
+#' Returns the vector of log of inverse dispersion parameters
+#' 
+#' Given an object that describes a matrix of zero-inflated negative binomial 
+#' distributions, returns the vector \code{zeta} of log of inverse dispersion 
+#' parameters
+#' @param object an object that describes a matrix of zero-inflated
+#'   distributions.
+#' @return the vector \code{zeta} of log of inverse dispersion parameters
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getZeta(a) 
+#' @export
+setGeneric("getZeta", function(object) standardGeneric("getZeta"))
 
 #' Simulate counts from a zero-inflated negative binomial model
 #' 
@@ -118,7 +159,7 @@ setGeneric("penalty", function(model) standardGeneric("penalty"))
 #' Given an object with the data, it fits a ZINB model.
 #' 
 #' @param Y The data (genes in rows, samples in columns).
-#' @param ... Additional parameters to describe the model.
+#' @param ... Additional parameters to describe the model, see \link{zinbModel}.
 #' @return An object of class \code{ZinbModel} that has been fitted by penalized
 #'   maximum likelihood on the data.
 #' @export
@@ -168,65 +209,72 @@ setGeneric("getV_mu", function(object, ...) standardGeneric("getV_mu"))
 #' @export
 setGeneric("getV_pi", function(object, ...) standardGeneric("getV_pi"))
 
-#' Returns the regularization parameter for alpha_mu
+#' Returns the vector of regularization parameter for beta_mu
 #' 
-#' The regularization parameter is given by epsilon multiplied by
-#' penalty_alpha_mu
-#' @param object an object that describes a matrix of zero-inflated
-#'   distributions.
-#' @export
-setGeneric("getEpsilon_alpha_mu", function(object) standardGeneric("getEpsilon_alpha_mu"))
-
-#' Returns the regularization parameter for beta_mu
-#' 
-#' The regularization parameter is given by epsilon multiplied by
-#' penalty_beta_mu
+#' Given an object describing a ZINB model, returns a vector of size the number
+#' of rows in the parameter \code{beta_mu} with the regularization parameters
+#' associated to each row.
 #' @param object an object that describes a matrix of zero-inflated
 #'   distributions.
 #' @export
 setGeneric("getEpsilon_beta_mu", function(object) standardGeneric("getEpsilon_beta_mu"))
 
-#' Returns the regularization parameter for gamma_mu
+#' Returns the vector of regularization parameter for gamma_mu
 #' 
-#' The regularization parameter is given by epsilon multiplied by
-#' penalty_gamma_mu
-#' @param object an object that describes a matrix of zero-inflated
+#' Given an object describing a ZINB model, returns a vector of size the number 
+#' of columns in the parameter \code{alpha_mu} with the regularization
+#' parameters associated to each row.
+#' @param object an object that describes a matrix of zero-inflated 
 #'   distributions.
 #' @export
 setGeneric("getEpsilon_gamma_mu", function(object) standardGeneric("getEpsilon_gamma_mu"))
 
-#' Returns the regularization parameter for alpha_pi
+#' Returns the vector of regularization parameter for beta_pi
 #' 
-#' The regularization parameter is given by epsilon multiplied by
-#' penalty_alpha_pi
-#' @param object an object that describes a matrix of zero-inflated
-#'   distributions.
-#' @export
-setGeneric("getEpsilon_alpha_pi", function(object) standardGeneric("getEpsilon_alpha_pi"))
-
-#' Returns the regularization parameter for beta_pi
-#' 
-#' The regularization parameter is given by epsilon multiplied by
-#' penalty_beta_pi
+#' Given an object describing a ZINB model, returns a vector of size the number
+#' of rows in the parameter \code{beta_pi} with the regularization parameters
+#' associated to each row.
 #' @param object an object that describes a matrix of zero-inflated
 #'   distributions.
 #' @export
 setGeneric("getEpsilon_beta_pi", function(object) standardGeneric("getEpsilon_beta_pi"))
 
-#' Returns the regularization parameter for gamma_pi
+#' Returns the vector of regularization parameter for gamma_pi
 #' 
-#' The regularization parameter is given by epsilon multiplied by
-#' penalty_gamma_pi
-#' @param object an object that describes a matrix of zero-inflated
+#' Given an object describing a ZINB model, returns a vector of size the number 
+#' of columns in the parameter \code{gamma_pi} with the regularization
+#' parameters associated to each column.
+#' @param object an object that describes a matrix of zero-inflated 
 #'   distributions.
 #' @export
 setGeneric("getEpsilon_gamma_pi", function(object) standardGeneric("getEpsilon_gamma_pi"))
 
-#' Returns the regularization parameter for W
+#' Returns the vector of regularization parameter for W
 #' 
-#' The regularization parameter is given by epsilon multiplied by
-#' penalty_W
+#' Given an object describing a ZINB model, returns a vector of size the number 
+#' of columns in the parameter \code{W} with the regularization
+#' parameters associated to each column.
 #' @param object an object that describes a matrix of zero-inflated
 #'   distributions.
 #' @export
 setGeneric("getEpsilon_W", function(object) standardGeneric("getEpsilon_W"))
+
+#' Returns the vector of regularization parameter for alpha
+#' 
+#' Given an object describing a ZINB model, returns a vector of size the number
+#' of rows in the parameter \code{alpha} with the regularization parameters
+#' associated to each row. Here \code{alpha} refers to both \code{alpha_mu} and
+#' \code{alpha_pi}, which have the same size and have the same regularization.
+#' @param object an object that describes a matrix of zero-inflated
+#'   distributions.
+#' @export
+setGeneric("getEpsilon_alpha", function(object) standardGeneric("getEpsilon_alpha"))
+
+#' Returns the regularization parameter for the dispersion parameter
+#' 
+#' The regularization parameter penalizes the variance of zeta, the log of 
+#' the dispersion parameters across samples.
+#' @param object an object that describes a matrix of zero-inflated
+#'   distributions.
+#' @export
+setGeneric("getEpsilon_zeta", function(object) standardGeneric("getEpsilon_zeta"))

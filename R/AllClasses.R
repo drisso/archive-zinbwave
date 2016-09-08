@@ -1,12 +1,14 @@
 #' Class ZinbModel
 #' 
-#' Objects of this class store all the values needed to work with a fitted 
-#' model. Starting with an object of this class, one should be able to simulate 
-#' data from a zero-inflated negative binomial and to compute the 
-#' log-likelihood.
+#' Objects of this class store all the values needed to work with a 
+#' zero-inflated negative binomial (ZINB) model, as described in the vignette. 
+#' They contain all information to fit a model by penalized maximum likelihood 
+#' or simulate data from a model.
 #' 
-#' @slot X matrix. The design matrix containing sample-level covariates.
-#' @slot V matrix. The design matrix containing gene-level covariates.
+#' @slot X matrix. The design matrix containing sample-level covariates, one 
+#'   sample per row.
+#' @slot V matrix. The design matrix containing gene-level covariates, one gene 
+#'   per row.
 #' @slot O_mu matrix. The offset matrix for mu.
 #' @slot O_pi matrix. The offset matrix for pi.
 #' @slot which_X_mu integer. Indeces of which columns of X to use in the 
@@ -28,42 +30,32 @@
 #' @slot beta_pi matrix or NULL. The coefficients of X in the regression of pi.
 #' @slot gamma_pi matrix or NULL. The coefficients of V in the regression of pi.
 #' @slot alpha_pi matrix or NULL. The coefficients of W in the regression of pi.
-#' @slot logtheta numeric. A vector of log of inverse dispersion parameters.
-#' @slot epsilon numeric. The regularization parameter for penalized maximum
-#'   likelihood estimation
-#' @slot penalty_alpha_mu numeric. This is a scalar that multiplies
-#'   epsilon to allow differential regularization for the rows of alpha_mu
-#'   parameters.
-#' @slot penalty_beta_mu numeric. This is a vector that multiplies
-#'   epsilon to allow differential regularization for the rows of beta_mu
-#'   parameters.
-#' @slot penalty_gamma_mu numeric. This is a vector that multiplies
-#'   epsilon to allow differential regularization for the rows of gamma_mu
-#'   parameters.
-#' @slot penalty_alpha_pi numeric. This is a scalar that multiplies
-#'   epsilon to allow differential regularization for the matrix of alpha_pi
-#'   parameters.
-#' @slot penalty_beta_pi numeric. This is a vector that multiplies
-#'   epsilon to allow differential regularization for the rows of beta_pi
-#'   parameters.
-#' @slot penalty_gamma_pi numeric. This is a vector that multiplies
-#'   epsilon to allow differential regularization for the rows of gamma_pi
-#'   parameters.
-#' @slot penalty_W numeric. This is a vector that multiplies epsilon to
-#'   allow differential regularization for the columns of W parameters.
-#' @slot epsilon_varphi numeric. This is the penalty for the variance of the
-#'   dispersion parameter.
+#' @slot zeta numeric. A vector of log of inverse dispersion parameters.
+#' @slot epsilon_beta_mu nonnegative scalar. Regularization parameter for 
+#'   beta_mu
+#' @slot epsilon_gamma_mu nonnegative scalar. Regularization parameter for 
+#'   gamma_mu
+#' @slot epsilon_beta_pi nonnegative scalar. Regularization parameter for 
+#'   beta_pi
+#' @slot epsilon_gamma_pi nonnegative scalar. Regularization parameter for 
+#'   gamma_pi
+#' @slot epsilon_W nonnegative scalar. Regularization parameter for W
+#' @slot epsilon_alpha nonnegative scalar. Regularization parameter for alpha
+#'   (both alpha_mu and alpha_pi)
+#' @slot epsilon_zeta nonnegative scalar. Regularization parameter for zeta
+#' @slot epsilon_min_logit scalar. Minimum regularization parameter for
+#'   parameters of the logit model, including the intercept.
 #'   
 #' @details For the full description of the model see the model vignette. 
 #'   Internally, the slots are checked so that the matrices are of the 
-#'   appropriate dimensions: in particular, \code{X}, \code{O_mu}, \code{O_pi},
-#'   and \code{W} need to have \code{n} rows, \code{V} needs to have \code{J}
-#'   rows, \code{logtheta} must be of length \code{J}.
+#'   appropriate dimensions: in particular, \code{X}, \code{O_mu}, \code{O_pi}, 
+#'   and \code{W} need to have \code{n} rows, \code{V} needs to have \code{J} 
+#'   rows, \code{zeta} must be of length \code{J}.
 #' @name ZinbModel-class
 #' @import methods
 #' @exportClass ZinbModel
 #' @aliases ZinbModel
-#' 
+#'   
 setClass(
     Class = "ZinbModel",
     slots = list(X = "matrix",
@@ -85,16 +77,15 @@ setClass(
                  beta_pi = "matrix",
                  gamma_pi = "matrix",
                  alpha_pi = "matrix",
-                 logtheta = "numeric",
-                 epsilon = "numeric",
-                 penalty_alpha_mu = "numeric",
-                 penalty_beta_mu = "numeric",
-                 penalty_gamma_mu = "numeric",
-                 penalty_alpha_pi = "numeric",
-                 penalty_beta_pi = "numeric",
-                 penalty_gamma_pi = "numeric",
-                 penalty_W = "numeric",
-                 epsilon_varphi = "numeric"
+                 zeta = "numeric",
+                 epsilon_beta_mu = "numeric",
+                 epsilon_gamma_mu = "numeric",
+                 epsilon_beta_pi = "numeric",
+                 epsilon_gamma_pi = "numeric",
+                 epsilon_W = "numeric",
+                 epsilon_alpha = "numeric",
+                 epsilon_zeta = "numeric",
+                 epsilon_min_logit = "numeric"
                  )
 )
 
@@ -172,29 +163,33 @@ setValidity("ZinbModel", function(object){
     if(NCOL(object@O_pi) != J) {
         return("O_pi must have J columns!")
     }
-    if(length(object@logtheta) != J) {
-        return("logtheta must have length J!")
+    if(length(object@zeta) != J) {
+        return("zeta must have length J!")
     }
-    if(length(object@penalty_alpha_mu) > 1) {
-        return("penalty_alpha_mu must be a scalar !")
+    if((length(object@epsilon_beta_mu) != 1) || (object@epsilon_beta_mu < 0)) {
+        return("epsilon_beta_mu must be a nonnegative scalar !")
     }
-    if(length(object@penalty_beta_mu) != NROW(object@beta_mu)) {
-        return("The length of penalty_beta_mu must be the number of rows of beta_mu !")
+    if((length(object@epsilon_gamma_mu) != 1) || (object@epsilon_gamma_mu < 0)) {
+        return("epsilon_gamma_mu must be a nonnegative scalar !")
     }
-    if(length(object@penalty_gamma_mu) != NROW(object@gamma_mu)) {
-        return("The length of penalty_gamma_mu must be the number of rows of gamma_mu !")
+    if((length(object@epsilon_beta_pi) != 1) || (object@epsilon_beta_pi < 0)) {
+        return("epsilon_beta_pi must be a nonnegative scalar !")
     }
-    if(length(object@penalty_alpha_pi) > 1) {
-        return("penalty_alpha_pi can only be a scalar !")
+    if((length(object@epsilon_gamma_pi) != 1) || (object@epsilon_gamma_pi < 0)) {
+        return("epsilon_gamma_pi must be a nonnegative scalar !")
     }
-    if(length(object@penalty_beta_pi) != NROW(object@beta_pi)) {
-        return("The length of penalty_beta_pi must be the number of rows of beta_pi !")
+    if((length(object@epsilon_W) != 1) || (object@epsilon_W < 0)) {
+        return("epsilon_W must be a nonnegative scalar !")
     }
-    if(length(object@penalty_gamma_pi) != NROW(object@gamma_pi)) {
-        return("The length of penalty_gamma_pi must be the number of rows of gamma_pi !")
+    if((length(object@epsilon_alpha) != 1) || (object@epsilon_alpha < 0)) {
+        return("epsilon_alpha must be a nonnegative scalar !")
     }
-    if(length(object@penalty_W) != NCOL(object@W)) {
-        return("The length of penalty_W must be the number of columns of W !")
+    if((length(object@epsilon_zeta) != 1) || (object@epsilon_zeta < 0)) {
+        return("epsilon_zeta must be a nonnegative scalar !")
+    }
+    
+    if((length(object@epsilon_min_logit) != 1) || (object@epsilon_min_logit < 0)) {
+        return("epsilon_min_logit must be a nonnegative scalar !")
     }
     return(TRUE)
 }

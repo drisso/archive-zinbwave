@@ -4,18 +4,34 @@
 \alias{zinbOptimize}
 \title{Optimize the parameters of a ZINB regression model}
 \usage{
-zinbOptimize(m, Y)
+zinbOptimize(m, Y, maxiter = 25, stop.epsilon = 1e-04, verbose = FALSE,
+  no_cores = 1)
 }
 \arguments{
 \item{m}{The model of class ZinbModel}
 
 \item{Y}{The matrix of counts.}
+
+\item{maxiter}{maximum number of iterations (default 25)}
+
+\item{verbose}{print information (default FALSE)}
+
+\item{no_cores}{number of cores (default to 1)}
+
+\item{stop.criterion}{stopping criterion, when the relative gain in
+likelihood is below epsilon (default 0.0001)}
 }
 \value{
-An object of class ZinbModel similar to the one given as argument with modified parameters alpha_mu, alpha_pi, beta_mu, beta_pi, gamma_mu, gamma_pi, W.
+An object of class ZinbModel similar to the one given as argument 
+  with modified parameters alpha_mu, alpha_pi, beta_mu, beta_pi, gamma_mu, 
+  gamma_pi, W.
 }
 \description{
-The parameters of the model given as argument are optimized by penalized maximum likelihood on the count matrix given as argument. It is recommended to call zinb_initialize before this function to have good starting point for optimization, since the optimization problem is not convex and can only converge to a local minimum.
+The parameters of the model given as argument are optimized by penalized 
+maximum likelihood on the count matrix given as argument. It is recommended 
+to call zinb_initialize before this function to have good starting point for 
+optimization, since the optimization problem is not convex and can only 
+converge to a local minimum.
 }
 \examples{
 Y = matrix(10,3,5)

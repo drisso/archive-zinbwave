@@ -4,7 +4,7 @@
 \name{getEpsilon_beta_pi}
 \alias{getEpsilon_beta_pi}
 \alias{getEpsilon_beta_pi,ZinbModel-method}
-\title{Returns the regularization parameter for beta_pi}
+\title{Returns the vector of regularization parameter for beta_pi}
 \usage{
 getEpsilon_beta_pi(object)
 
@@ -15,8 +15,9 @@ getEpsilon_beta_pi(object)
 distributions.}
 }
 \description{
-The regularization parameter is given by epsilon multiplied by
-penalty_beta_pi
+Given an object describing a ZINB model, returns a vector of size the number
+of rows in the parameter \code{beta_pi} with the regularization parameters
+associated to each row.
 }
 \section{Methods (by class)}{
 \itemize{

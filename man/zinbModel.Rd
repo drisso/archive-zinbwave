@@ -8,7 +8,7 @@ zinbModel(...)
 }
 \arguments{
 \item{...}{arguments passed to \code{new()}. See the \code{slots} section in 
-\code{\link{`ZinbModel-class`}}.}
+\code{\link{ZinbModel}}.}
 }
 \description{
 Initialize an object of class ZinbModel
@@ -17,16 +17,20 @@ Initialize an object of class ZinbModel
 This is a light wrapper around the new() function to create an 
   instance of class \code{ZinbModel}.
 
-If any of the related matrices are passed, \code{n}, \code{J}, and
-  \code{K} are inferred. Alternatively, the user can specify one or more of
+If any of the related matrices are passed, \code{n}, \code{J}, and 
+  \code{K} are inferred. Alternatively, the user can specify one or more of 
   \code{n}, \code{J}, and \code{K}.
 
-A call with no argument has the following default values: \code{n =
-  50}, \code{J = 100}, \code{K = 0}.
+The regularization parameters can be set by a unique parameter
+  \code{epsilon}, as described in the vignette; or specific values for the
+  different regularization parameters can also be provided.
+
+A call with no argument has the following default values: \code{n = 
+  50}, \code{J = 100}, \code{K = 0}, \code{epsilon=1e-3}.
 
 Although it is possible to create new instances of the class by 
-  calling this function, this is not the most common way of creating
-  \code{ZinbModel} objects. The main use of the class is within the
+  calling this function, this is not the most common way of creating 
+  \code{ZinbModel} objects. The main use of the class is within the 
   \code{\link{zinbFit}} function.
 }
 \examples{

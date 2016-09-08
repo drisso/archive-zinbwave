@@ -4,7 +4,7 @@
 \name{getEpsilon_W}
 \alias{getEpsilon_W}
 \alias{getEpsilon_W,ZinbModel-method}
-\title{Returns the regularization parameter for W}
+\title{Returns the vector of regularization parameter for W}
 \usage{
 getEpsilon_W(object)
 
@@ -15,8 +15,9 @@ getEpsilon_W(object)
 distributions.}
 }
 \description{
-The regularization parameter is given by epsilon multiplied by
-penalty_W
+Given an object describing a ZINB model, returns a vector of size the number 
+of columns in the parameter \code{W} with the regularization
+parameters associated to each column.
 }
 \section{Methods (by class)}{
 \itemize{

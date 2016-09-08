@@ -2,11 +2,11 @@ setMethod(
     f="initialize",
     signature="ZinbModel",
     definition=function(.Object, X, V, O_mu, O_pi, which_X_mu,
-                        which_X_pi, which_V_mu, which_V_pi, W,beta_mu, beta_pi,
-                        gamma_mu, gamma_pi, alpha_mu, alpha_pi, phi,epsilon,
-                        penalty_alpha_mu, penalty_beta_mu, penalty_gamma_mu,
-                        penalty_alpha_pi, penalty_beta_pi, penalty_gamma_pi,
-                        penalty_W, epsilon_varphi, n, J, K) {
+                        which_X_pi, which_V_mu, which_V_pi, W, beta_mu, beta_pi,
+                        gamma_mu, gamma_pi, alpha_mu, alpha_pi, zeta, epsilon,
+                        epsilon_beta_mu, epsilon_gamma_mu, epsilon_beta_pi, 
+                        epsilon_gamma_pi, epsilon_W, epsilon_alpha, 
+                        epsilon_zeta, epsilon_min_logit, n, J, K) {
         
         # Find n (default 50), J (default 100), K (default 0)
         if (missing(n)) {
@@ -22,8 +22,6 @@ setMethod(
                 n <- NROW(O_mu)
             } else if (!missing(O_pi)) {
                 n <- NROW(O_pi)
-            } else if (!missing(phi)) {
-                n <- length(phi)
             } else {
                 n <- 50
             }
@@ -43,6 +41,8 @@ setMethod(
                 J <- NCOL(O_mu)
             } else if (!missing(O_pi)) {
                 J <- NCOL(O_pi)
+            } else if (!missing(zeta)) {
+                J <- length(zeta)
             } else {
                 J <- 100
             }
@@ -55,7 +55,7 @@ setMethod(
             }
         }
         
-        # Set the different slots
+        # Set the different slots for the matrices
         if (!missing(X)) {
             .Object@X <- X
         } else {
@@ -167,64 +167,54 @@ setMethod(
         } else {
             .Object@alpha_pi <- matrix(0, nrow=K , ncol=J)
         }
-        if (!missing(phi)) {
-            .Object@logtheta <- -log(phi)
+        if (!missing(zeta)) {
+            .Object@zeta <- zeta
         } else {
-            .Object@logtheta <- numeric(J)
+            .Object@zeta <- numeric(J)
         }
         
-        if (!missing(epsilon)) {
-            .Object@epsilon <- epsilon
-        } else {
-            .Object@epsilon <- 1e-3
+        # Regularization parameters
+        if (missing(epsilon)) {
+            epsilon <- 1e-3
         }
-        if (!missing(penalty_alpha_mu)) {
-            .Object@penalty_alpha_mu <- penalty_alpha_mu
-        } else {
-            val <- max(1, NROW(.Object@alpha_mu)*NCOL(.Object@alpha_mu))
-            .Object@penalty_alpha_mu <- 1/val
+        if (missing(epsilon_min_logit)) {
+            .Object@epsilon_min_logit <- 1e-3
         }
-        if (!missing(penalty_beta_mu)) {
-            .Object@penalty_beta_mu <- penalty_beta_mu
+        if (!missing(epsilon_beta_mu)) {
+            .Object@epsilon_beta_mu <- epsilon_beta_mu
         } else {
-            val <- max(1, NROW(.Object@beta_mu)*NCOL(.Object@beta_mu))
-            .Object@penalty_beta_mu <- rep(1/val,NROW(.Object@beta_mu))
+            .Object@epsilon_beta_mu <- epsilon/J
         }
-        if (!missing(penalty_gamma_mu)) {
-            .Object@penalty_gamma_mu <- penalty_gamma_mu
+        if (!missing(epsilon_gamma_mu)) {
+            .Object@epsilon_gamma_mu <- epsilon_gamma_mu
         } else {
-            val <- max(1, NROW(.Object@gamma_mu)*NCOL(.Object@gamma_mu))
-            .Object@penalty_gamma_mu <- rep(1/val,NROW(.Object@gamma_mu))
+            .Object@epsilon_gamma_mu <- epsilon/n
         }
-        if (!missing(penalty_alpha_pi)) {
-            .Object@penalty_alpha_pi <- penalty_alpha_pi
+        if (!missing(epsilon_beta_pi)) {
+            .Object@epsilon_beta_pi <- epsilon_beta_pi
         } else {
-            val <- max(1, NROW(.Object@alpha_pi)*NCOL(.Object@alpha_pi))
-            .Object@penalty_alpha_pi <- 1/val
+            .Object@epsilon_beta_pi <- epsilon/J
         }
-        if (!missing(penalty_beta_pi)) {
-            .Object@penalty_beta_pi <- penalty_beta_pi
+        if (!missing(epsilon_gamma_pi)) {
+            .Object@epsilon_gamma_pi <- epsilon_gamma_pi
         } else {
-            val <- max(1, NROW(.Object@beta_pi)*NCOL(.Object@beta_pi))
-            .Object@penalty_beta_pi <- rep(1/val,NROW(.Object@beta_pi))
-        }
-        if (!missing(penalty_gamma_pi)) {
-            .Object@penalty_gamma_pi <- penalty_gamma_pi
+            .Object@epsilon_gamma_pi <- epsilon/n
+        }        
+        if (!missing(epsilon_W)) {
+            .Object@epsilon_W <- epsilon_W
         } else {
-            val <- max(1, NROW(.Object@gamma_pi)*NCOL(.Object@gamma_pi))
-            .Object@penalty_gamma_pi <- rep(1/val,NROW(.Object@gamma_pi))
-        }
-        if (!missing(penalty_W)) {
-            .Object@penalty_W <- penalty_W
+            .Object@epsilon_W <- epsilon/n
+        }        
+        if (!missing(epsilon_alpha)) {
+            .Object@epsilon_alpha <- epsilon_alpha
         } else {
-            val <- max(1, NROW(.Object@W)*NCOL(.Object@W))
-            .Object@penalty_W <- rep(1/val,NCOL(.Object@W))
+            .Object@epsilon_alpha <- epsilon/J
         }
-        if (!missing(epsilon_varphi)) {
-            .Object@epsilon_varphi <- epsilon_varphi
+        if (!missing(epsilon_zeta)) {
+            .Object@epsilon_zeta <- epsilon_zeta
         } else {
-            .Object@epsilon_varphi <- 1
-        }
+            .Object@epsilon_zeta <- epsilon
+        }        
         
         validObject(.Object) # call of the inspector
         return(.Object)
@@ -235,23 +225,27 @@ setMethod(
 #' @export
 #' 
 #' @param ... arguments passed to \code{new()}. See the \code{slots} section in 
-#'   \code{\link{`ZinbModel-class`}}.
+#'   \code{\link{ZinbModel}}.
 #'   
 #' @details This is a light wrapper around the new() function to create an 
 #'   instance of class \code{ZinbModel}.
 #'   
-#' @details If any of the related matrices are passed, \code{n}, \code{J}, and
-#'   \code{K} are inferred. Alternatively, the user can specify one or more of
+#' @details If any of the related matrices are passed, \code{n}, \code{J}, and 
+#'   \code{K} are inferred. Alternatively, the user can specify one or more of 
 #'   \code{n}, \code{J}, and \code{K}.
 #'   
-#' @details A call with no argument has the following default values: \code{n =
-#'   50}, \code{J = 100}, \code{K = 0}.
+#' @details The regularization parameters can be set by a unique parameter
+#'   \code{epsilon}, as described in the vignette; or specific values for the
+#'   different regularization parameters can also be provided.
+#'   
+#' @details A call with no argument has the following default values: \code{n = 
+#'   50}, \code{J = 100}, \code{K = 0}, \code{epsilon=1e-3}.
 #'   
 #' @details Although it is possible to create new instances of the class by 
-#'   calling this function, this is not the most common way of creating
-#'   \code{ZinbModel} objects. The main use of the class is within the
+#'   calling this function, this is not the most common way of creating 
+#'   \code{ZinbModel} objects. The main use of the class is within the 
 #'   \code{\link{zinbFit}} function.
-#' 
+#'   
 #' @examples
 #' a <- zinbModel()
 #' nSamples(a)
@@ -261,6 +255,23 @@ setMethod(
 zinbModel <- function(...) {
     new(Class="ZinbModel", ...)
 }
+
+#' @export
+#' @describeIn ZinbModel show useful info on the object.
+setMethod("show", "ZinbModel",
+          function(object) {
+              cat(paste0("Object of class ZinbModel.\n",
+                         NROW(object@X), " samples; ", NROW(object@V), " genes.\n",
+                         NCOL(object@X), " sample-level covariates; ",
+                         NCOL(object@V), " gene-level covariates; ",
+                         NCOL(object@W), " latent factors.\n"))
+          }
+)
+
+
+################################################################
+# Extract various informations and variables from a ZINB model #
+################################################################
 
 #' @export
 #' @importFrom clusterExperiment nSamples
@@ -288,131 +299,11 @@ setMethod("nFactors", "ZinbModel",
           }
 )
 
-#' @export
-#' @describeIn getMu return the mean of the non-zero component.
-setMethod("getMu", "ZinbModel",
-    function(object) {
-        return(exp(object@X[,object@which_X_mu] %*% object@beta_mu +
-                       t(object@V[,object@which_V_mu] %*% object@gamma_mu) + 
-                       object@O_mu))
-    }
-)
-
-#' @export
-#' @describeIn getPi return the probability of zero.
-#' @importFrom stats binomial
-setMethod("getPi", "ZinbModel",
-    function(object) {
-      return(stats::binomial()$linkinv(object@X[,object@which_X_pi] %*% object@beta_pi + 
-               t(object@V[,object@which_V_pi] %*% object@gamma_pi) + object@O_pi))
-    }
-)
-
-#' @export
-#' @describeIn getPhi return the dispersion parameter.
-setMethod("getPhi", "ZinbModel",
-          function(object) {
-              return(exp(-object@logtheta))
-          }
-)
-
-#' @export
-#' @describeIn getTheta return the inverse of the dispersion parameter.
-setMethod("getTheta", "ZinbModel",
-          function(object) {
-              return(exp(object@logtheta))
-          }
-)
-
-#' @export
-#' @describeIn zinbSim simulate from a ZINB distribution.
-#' @importFrom parallel mclapply
-setMethod(
-    f="zinbSim",
-    signature="ZinbModel",
-    definition=function(object, seed, no_cores=1) {
-        
-        if (!exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-            runif(1)
-        }
-        
-        if (missing(seed)) {
-            RNGstate <- get(".Random.seed", envir = .GlobalEnv)
-        } else {
-            R.seed <- get(".Random.seed", envir = .GlobalEnv)
-            set.seed(seed)
-            RNGstate <- structure(seed, kind = as.list(RNGkind()))
-            on.exit(assign(".Random.seed", R.seed, envir = .GlobalEnv))
-        }
-        
-        mu <- getMu(object)
-        pi <- getPi(object)
-        theta <- getTheta(object)
-        n <- nSamples(object)
-        J <- nFeatures(object)
-        
-        # Simulate negative binomial with the mean matrix and dispersion
-        # parameters
-        datanb <- parallel::mclapply(seq(n*J), 
-                      function(i) { 
-                          rnbinom(1, mu = mu[i] , size = theta[ceiling(i/n)])
-                          }, mc.cores = no_cores)
-        
-        data.nb <- matrix(unlist(datanb), nrow = n )
-        
-        # Simulate the binary dropout matrix. "1" means that a dropout (zero) is
-        # observed instead of the value
-        datado <- parallel::mclapply(seq(n*J), 
-                      function(i) { 
-                          rbinom(1, size =1, prob = pi[i])
-                          }, mc.cores = no_cores)
-        
-        data.dropout <- matrix(unlist(datado), nrow = n)
-        
-        # Matrix of zero-inflated counts
-        counts <- data.nb * (1 - data.dropout)
-        
-        # Fraction of zeros in the matrix
-        zero.fraction <- sum(counts == 0) / (n*J)    
-        
-        ret <- list(counts = counts, dataNB = data.nb, 
-                    dataDropouts = data.dropout, zeroFraction = zero.fraction)
-        attr(ret, "seed") <- RNGstate
-        ret
-    }
-)
-
-#' @export
-#' @describeIn loglik return the log-likelihood of the ZINB model.
-setMethod(
-    f="loglik",
-    signature=c("ZinbModel","matrix"),
-    definition=function(model, x) {
-        zinb.loglik(x, getMu(model), getTheta(model), getPi(model))
-    }
-)
-
-#' @export
-#' @describeIn penalty return the penalization.
-setMethod(
-    f="penalty",
-    signature="ZinbModel",
-    definition=function(model) {
-        sum(model@epsilon*model@penalty_alpha_mu*(model@alpha_mu)^2)/2
-        + sum(model@epsilon*model@penalty_alpha_pi*(model@alpha_pi)^2)/2
-        + sum(model@epsilon*model@penalty_beta_mu*(model@beta_mu)^2)/2
-        + sum(model@epsilon*model@penalty_beta_pi*(model@beta_pi)^2)/2
-        + sum(model@epsilon*model@penalty_gamma_mu*(model@gamma_mu)^2)/2
-        + sum(model@epsilon*model@penalty_gamma_pi*(model@gamma_pi)^2)/2
-        + sum(model@epsilon*model@penalty_W*(model@W)^2)/2
-        + model@epsilon_varphi*var(getPhi(model))
-    }
-)
 
 #' @export
 #' @describeIn getX_mu return the sample-level design matrix for mu.
 #' @param intercept logical. Whether to return the intercept (ignored if X_mu has
-#'   no intercept).
+#'   no intercept). Default \code{TRUE}
 setMethod("getX_mu", "ZinbModel",
           function(object, intercept=TRUE) {
               if(object@X_mu_intercept && !intercept) {
@@ -470,22 +361,71 @@ setMethod("getV_pi", "ZinbModel",
 )
 
 #' @export
-#' @describeIn ZinbModel show useful info on the object.
-setMethod("show", "ZinbModel",
+#' @describeIn getLogMu return the logarithm of the mean of the non-zero
+#'   component.
+setMethod("getLogMu", "ZinbModel",
           function(object) {
-              cat(paste0("Object of class ZinbModel.\n",
-                         NROW(object@X), " samples; ", NROW(object@V), " genes.\n",
-                         NCOL(object@X), " sample-level covariates; ",
-                         NCOL(object@V), " gene-level covariates; ",
-                         NCOL(object@W), " latent factors.\n"))
+              return(getX_mu(object) %*% object@beta_mu +
+                         t(getV_mu(object) %*% object@gamma_mu) +
+                         object@W %*% object@alpha_mu +
+                         object@O_mu)
           }
 )
 
 #' @export
-#' @describeIn getEpsilon_alpha_mu method for ZinbModel.
-setMethod("getEpsilon_alpha_mu", "ZinbModel",
+#' @describeIn getMu return the mean of the non-zero component.
+setMethod("getMu", "ZinbModel",
+    function(object) {
+        return(exp(getLogMu(object)))
+    }
+)
+
+#' @export
+#' @describeIn getLogitPi return the logit-probability of zero.
+#' @importFrom stats binomial
+setMethod("getLogitPi", "ZinbModel",
           function(object) {
-              object@epsilon * object@penalty_alpha_mu
+              return(getX_pi(object) %*% object@beta_pi +
+                         t(getV_pi(object) %*% object@gamma_pi) +
+                         object@W %*% object@alpha_pi +
+                         object@O_pi)
+          }
+)
+
+#' @export
+#' @describeIn getPi return the probability of zero.
+#' @importFrom stats binomial
+setMethod("getPi", "ZinbModel",
+    function(object) {
+        # return(stats::binomial()$linkinv(getLogitPi(object))
+        # Instead of the call to stats::binomial() in the previous line, we 
+        # directly compute with the exp() function which remains exact for 
+        # smaller values of the arguments.
+        return(1/(1+exp(-getLogitPi(object))))
+    }
+)
+
+#' @export
+#' @describeIn getZeta return the log of the inverse of the dispersion parameter.
+setMethod("getZeta", "ZinbModel",
+          function(object) {
+              return(object@zeta)
+          }
+)
+
+#' @export
+#' @describeIn getPhi return the dispersion parameter.
+setMethod("getPhi", "ZinbModel",
+          function(object) {
+              return(exp(-object@zeta))
+          }
+)
+
+#' @export
+#' @describeIn getTheta return the inverse of the dispersion parameter.
+setMethod("getTheta", "ZinbModel",
+          function(object) {
+              return(exp(object@zeta))
           }
 )
 
@@ -493,7 +433,11 @@ setMethod("getEpsilon_alpha_mu", "ZinbModel",
 #' @describeIn getEpsilon_beta_mu method for ZinbModel.
 setMethod("getEpsilon_beta_mu", "ZinbModel",
           function(object) {
-              object@epsilon * object@penalty_beta_mu
+              e <- rep(object@epsilon_beta_mu, length(object@which_X_mu))
+              if (object@X_mu_intercept) {
+                  e[1] <- 0
+              }
+              e
           }
 )
 
@@ -501,15 +445,11 @@ setMethod("getEpsilon_beta_mu", "ZinbModel",
 #' @describeIn getEpsilon_gamma_mu method for ZinbModel.
 setMethod("getEpsilon_gamma_mu", "ZinbModel",
           function(object) {
-              object@epsilon * object@penalty_gamma_mu
-          }
-)
-
-#' @export
-#' @describeIn getEpsilon_alpha_pi method for ZinbModel.
-setMethod("getEpsilon_alpha_pi", "ZinbModel",
-          function(object) {
-              object@epsilon * object@penalty_alpha_pi
+              e <- rep(object@epsilon_gamma_mu, length(object@which_V_mu))
+              if (object@V_mu_intercept) {
+                  e[1] <- 0
+              }
+              e
           }
 )
 
@@ -517,7 +457,11 @@ setMethod("getEpsilon_alpha_pi", "ZinbModel",
 #' @describeIn getEpsilon_beta_pi method for ZinbModel.
 setMethod("getEpsilon_beta_pi", "ZinbModel",
           function(object) {
-              object@epsilon * object@penalty_beta_pi
+              e <- rep(object@epsilon_beta_pi, length(object@which_X_pi))
+              if (object@X_pi_intercept) {
+                  e[1] <- object@epsilon_min_logit
+              }
+              e
           }
 )
 
@@ -525,7 +469,11 @@ setMethod("getEpsilon_beta_pi", "ZinbModel",
 #' @describeIn getEpsilon_gamma_pi method for ZinbModel.
 setMethod("getEpsilon_gamma_pi", "ZinbModel",
           function(object) {
-              object@epsilon * object@penalty_gamma_pi
+              e <- rep(object@epsilon_gamma_pi, length(object@which_V_pi))
+              if (object@V_pi_intercept) {
+                  e[1] <- object@epsilon_min_logit
+              }
+              e
           }
 )
 
@@ -533,6 +481,112 @@ setMethod("getEpsilon_gamma_pi", "ZinbModel",
 #' @describeIn getEpsilon_W method for ZinbModel.
 setMethod("getEpsilon_W", "ZinbModel",
           function(object) {
-              object@epsilon * object@penalty_W
+              rep(object@epsilon_W, nFactors(m))
           }
 )
+
+#' @export
+#' @describeIn getEpsilon_alpha method for ZinbModel.
+setMethod("getEpsilon_alpha", "ZinbModel",
+          function(object) {
+              rep(object@epsilon_alpha, nFactors(m))
+          }
+)
+
+#' @export
+#' @describeIn getEpsilon_zeta method for ZinbModel.
+setMethod("getEpsilon_zeta", "ZinbModel",
+          function(object) {
+              object@epsilon_zeta
+          }
+)
+
+########################
+# Other useful methods #
+########################
+
+#' @export
+#' @describeIn zinbSim simulate from a ZINB distribution.
+#' @importFrom parallel mclapply
+setMethod(
+    f="zinbSim",
+    signature="ZinbModel",
+    definition=function(object, seed, no_cores=1) {
+        
+        if (!exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+            runif(1)
+        }
+        
+        if (missing(seed)) {
+            RNGstate <- get(".Random.seed", envir = .GlobalEnv)
+        } else {
+            R.seed <- get(".Random.seed", envir = .GlobalEnv)
+            set.seed(seed)
+            RNGstate <- structure(seed, kind = as.list(RNGkind()))
+            on.exit(assign(".Random.seed", R.seed, envir = .GlobalEnv))
+        }
+        
+        mu <- getMu(object)
+        pi <- getPi(object)
+        theta <- getTheta(object)
+        n <- nSamples(object)
+        J <- nFeatures(object)
+        
+        # Simulate negative binomial with the mean matrix and dispersion
+        # parameters
+        datanb <- parallel::mclapply(seq(n*J), 
+                                     function(i) { 
+                                         rnbinom(1, mu = mu[i] , size = theta[ceiling(i/n)])
+                                     }, mc.cores = no_cores)
+        
+        data.nb <- matrix(unlist(datanb), nrow = n )
+        
+        # Simulate the binary dropout matrix. "1" means that a dropout (zero) is
+        # observed instead of the value
+        datado <- parallel::mclapply(seq(n*J), 
+                                     function(i) { 
+                                         rbinom(1, size =1, prob = pi[i])
+                                     }, mc.cores = no_cores)
+        
+        data.dropout <- matrix(unlist(datado), nrow = n)
+        
+        # Matrix of zero-inflated counts
+        counts <- data.nb * (1 - data.dropout)
+        
+        # Fraction of zeros in the matrix
+        zero.fraction <- sum(counts == 0) / (n*J)    
+        
+        ret <- list(counts = counts, dataNB = data.nb, 
+                    dataDropouts = data.dropout, zeroFraction = zero.fraction)
+        attr(ret, "seed") <- RNGstate
+        ret
+    }
+)
+
+#' @export
+#' @describeIn loglik return the log-likelihood of the ZINB model.
+setMethod(
+    f="loglik",
+    signature=c("ZinbModel","matrix"),
+    definition=function(model, x) {
+        zinb.loglik(x, getMu(model), getTheta(model), getLogitPi(model))
+    }
+)
+
+#' @export
+#' @describeIn penalty return the penalization.
+setMethod(
+    f="penalty",
+    signature="ZinbModel",
+    definition=function(model) {
+        sum(getEpsilon_alpha(model)*(model@alpha_mu)^2)/2 +
+        sum(getEpsilon_alpha(model)*(model@alpha_pi)^2)/2 +
+        sum(getEpsilon_beta_mu(model)*(model@beta_mu)^2)/2 +
+        sum(getEpsilon_beta_pi(model)*(model@beta_pi)^2)/2 +
+        sum(getEpsilon_gamma_mu(model)*(model@gamma_mu)^2)/2 +
+        sum(getEpsilon_gamma_pi(model)*(model@gamma_pi)^2)/2 +
+        sum(getEpsilon_W(model)*t(model@W)^2)/2 +
+        getEpsilon_zeta(model)*var(getZeta(model))/2
+    }
+)
+

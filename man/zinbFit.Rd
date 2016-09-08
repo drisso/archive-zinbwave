@@ -8,16 +8,12 @@
 \usage{
 zinbFit(Y, ...)
 
-\S4method{zinbFit}{matrix}(Y, X = matrix(1, ncol = 1, nrow = NCOL(Y)),
-  V = matrix(1, ncol = 1, nrow = NROW(Y)), which_X_mu = seq_len(NCOL(X)),
-  which_V_mu = seq_len(NCOL(V)), which_X_pi = seq_len(NCOL(X)),
-  which_V_pi = seq_len(NCOL(V)), penalty_beta_mu, penalty_beta_pi,
-  penalty_gamma_mu, penalty_gamma_pi, ncores = 1, ...)
+\S4method{zinbFit}{matrix}(Y, ncores = 1, ...)
 }
 \arguments{
 \item{Y}{The data (genes in rows, samples in columns).}
 
-\item{...}{Additional parameters to describe the model.}
+\item{...}{Additional parameters to describe the model, see \link{zinbModel}.}
 }
 \value{
 An object of class \code{ZinbModel} that has been fitted by penalized

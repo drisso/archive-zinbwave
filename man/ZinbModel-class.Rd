@@ -10,43 +10,45 @@
 \alias{show,ZinbModel-method}
 \title{Class ZinbModel}
 \usage{
+\S4method{show}{ZinbModel}(object)
+
 \S4method{nSamples}{ZinbModel}(x)
 
 \S4method{nFeatures}{ZinbModel}(x)
 
 \S4method{nFactors}{ZinbModel}(x)
-
-\S4method{show}{ZinbModel}(object)
 }
 \description{
-Objects of this class store all the values needed to work with a fitted 
-model. Starting with an object of this class, one should be able to simulate 
-data from a zero-inflated negative binomial and to compute the 
-log-likelihood.
+Objects of this class store all the values needed to work with a 
+zero-inflated negative binomial (ZINB) model, as described in the vignette. 
+They contain all information to fit a model by penalized maximum likelihood 
+or simulate data from a model.
 }
 \details{
 For the full description of the model see the model vignette. 
   Internally, the slots are checked so that the matrices are of the 
-  appropriate dimensions: in particular, \code{X}, \code{O_mu}, \code{O_pi},
-  and \code{W} need to have \code{n} rows, \code{V} needs to have \code{J}
-  rows, \code{logtheta} must be of length \code{J}.
+  appropriate dimensions: in particular, \code{X}, \code{O_mu}, \code{O_pi}, 
+  and \code{W} need to have \code{n} rows, \code{V} needs to have \code{J} 
+  rows, \code{zeta} must be of length \code{J}.
 }
 \section{Methods (by generic)}{
 \itemize{
+\item \code{show}: show useful info on the object.
+
 \item \code{nSamples}: returns the number of samples.
 
 \item \code{nFeatures}: returns the number of features.
 
 \item \code{nFactors}: returns the number of latent factors.
-
-\item \code{show}: show useful info on the object.
 }}
 \section{Slots}{
 
 \describe{
-\item{\code{X}}{matrix. The design matrix containing sample-level covariates.}
+\item{\code{X}}{matrix. The design matrix containing sample-level covariates, one 
+sample per row.}
 
-\item{\code{V}}{matrix. The design matrix containing gene-level covariates.}
+\item{\code{V}}{matrix. The design matrix containing gene-level covariates, one gene 
+per row.}
 
 \item{\code{O_mu}}{matrix. The offset matrix for mu.}
 
@@ -72,7 +74,7 @@ regression of pi.}
 
 \item{\code{V_pi_intercept}}{logical. TRUE if V_pi contains an intercept.}
 
-\item{\code{W}}{matrix. The factors of gene-level latent factors.}
+\item{\code{W}}{matrix. The factors of sample-level latent factors.}
 
 \item{\code{beta_mu}}{matrix or NULL. The coefficients of X in the regression of mu.}
 
@@ -86,39 +88,28 @@ regression of pi.}
 
 \item{\code{alpha_pi}}{matrix or NULL. The coefficients of W in the regression of pi.}
 
-\item{\code{logtheta}}{numeric. A vector of log of inverse dispersion parameters.}
+\item{\code{zeta}}{numeric. A vector of log of inverse dispersion parameters.}
 
-\item{\code{epsilon}}{numeric. The regularization parameter for penalized maximum
-likelihood estimation}
+\item{\code{epsilon_beta_mu}}{nonnegative scalar. Regularization parameter for 
+beta_mu}
 
-\item{\code{penalty_alpha_mu}}{numeric. This is a scalar that multiplies
-epsilon to allow differential regularization for the rows of alpha_mu
-parameters.}
+\item{\code{epsilon_gamma_mu}}{nonnegative scalar. Regularization parameter for 
+gamma_mu}
 
-\item{\code{penalty_beta_mu}}{numeric. This is a vector that multiplies
-epsilon to allow differential regularization for the rows of beta_mu
-parameters.}
+\item{\code{epsilon_beta_pi}}{nonnegative scalar. Regularization parameter for 
+beta_pi}
 
-\item{\code{penalty_gamma_mu}}{numeric. This is a vector that multiplies
-epsilon to allow differential regularization for the rows of gamma_mu
-parameters.}
+\item{\code{epsilon_gamma_pi}}{nonnegative scalar. Regularization parameter for 
+gamma_pi}
 
-\item{\code{penalty_alpha_pi}}{numeric. This is a scalar that multiplies
-epsilon to allow differential regularization for the matrix of alpha_pi
-parameters.}
+\item{\code{epsilon_W}}{nonnegative scalar. Regularization parameter for W}
 
-\item{\code{penalty_beta_pi}}{numeric. This is a vector that multiplies
-epsilon to allow differential regularization for the rows of beta_pi
-parameters.}
+\item{\code{epsilon_alpha}}{nonnegative scalar. Regularization parameter for alpha
+(both alpha_mu and alpha_pi)}
 
-\item{\code{penalty_gamma_pi}}{numeric. This is a vector that multiplies
-epsilon to allow differential regularization for the rows of gamma_pi
-parameters.}
+\item{\code{epsilon_zeta}}{nonnegative scalar. Regularization parameter for zeta}
 
-\item{\code{penalty_W}}{numeric. This is a vector that multiplies epsilon to
-allow differential regularization for the columns of W parameters.}
-
-\item{\code{epsilon_varphi}}{numeric. This is the penalty for the variance of the
-dispersion parameter.}
+\item{\code{epsilon_min_logit}}{scalar. Minimum regularization parameter for
+parameters of the logit model, including the intercept.}
 }}
 

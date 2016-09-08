@@ -4,19 +4,20 @@
 \name{getEpsilon_gamma_mu}
 \alias{getEpsilon_gamma_mu}
 \alias{getEpsilon_gamma_mu,ZinbModel-method}
-\title{Returns the regularization parameter for gamma_mu}
+\title{Returns the vector of regularization parameter for gamma_mu}
 \usage{
 getEpsilon_gamma_mu(object)
 
 \S4method{getEpsilon_gamma_mu}{ZinbModel}(object)
 }
 \arguments{
-\item{object}{an object that describes a matrix of zero-inflated
+\item{object}{an object that describes a matrix of zero-inflated 
 distributions.}
 }
 \description{
-The regularization parameter is given by epsilon multiplied by
-penalty_gamma_mu
+Given an object describing a ZINB model, returns a vector of size the number 
+of columns in the parameter \code{alpha_mu} with the regularization
+parameters associated to each row.
 }
 \section{Methods (by class)}{
 \itemize{
