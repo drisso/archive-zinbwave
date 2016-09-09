@@ -18,27 +18,27 @@ knitr::opts_chunk$set(fig.align="center", cache=FALSE, error=FALSE, message=FALS
 
 ## Introduction
 
-Single cell RNA-sequencing (scRNA-seq) is a powerful and relatively young technique to characterize molecular states of individual cells through their transcriptional profiles. It represents a major advance with respect to the standard RNA-sequencing which is only capable of detecting gene expressions averaged over millions of cells. Such averaged gene expression profiles may describe and characterize the global state of the tissue but cannot afford to study its heterogeneity and completely mask signals coming from individual cells. Accessing cell-to-cell variability is crucial for understanding many important biological processes such as tissue development and cancer. To be continued...
+Single-cell RNA sequencing (scRNA-Seq) is a powerful and relatively young technique to characterize molecular states of individual cells through their transcriptional profiles. It represents a major advance with respect to standard bulk RNA sequencing, which is only capable of measuring gene expression levels averaged over millions of cells. Such averaged gene expression profiles may describe and characterize the global state of a tissue but cannot afford to study its heterogeneity and completely mask signals coming from individual cells. Accessing cell-to-cell variability is crucial for understanding many important biological processes such as tissue development and cancer. To be continued...
 
 ## Model
 
-For any $\mu\geq 0$ and $\theta>0$ let $f_{NB}( \cdot \,;\mu,\theta)$ denote the probability mass function (p.m.f.) of the negative binomial (NB) distribution with mean $\mu$ and inverse dispersion parameter $\theta$, namely:
+For any $\mu\geq 0$ and $\theta>0$, let $f_{NB}( \cdot \,;\mu,\theta)$ denote the probability mass function (p.m.f.) of the negative binomial (NB) distribution with mean $\mu$ and inverse dispersion parameter $\theta$, namely:
 $$
 \forall y\in\mathbb{N},\quad f_{NB}(y;\mu,\theta) = \frac{\Gamma(y+\theta)}{\Gamma(y+1)\Gamma(\theta)} \left(\frac{\theta}{\theta+\mu}\right)^{\theta} \left(\frac{\mu}{\mu + \theta}\right)^y \,.
 $$
-Note that another parametrization of the NB p.m.f. is in terms of the dispersion parameter $\phi=\theta^{-1}$ (although $\theta$ is also sometimes called dispersion parameter in the literature). In both cases, the mean of the NB distribution is $\mu$, and its variance is:
+Note that another parametrization of the NB p.m.f. is in terms of the dispersion parameter $\phi=\theta^{-1}$ (although $\theta$ is also sometimes called dispersion parameter in the literature). In both cases, the mean of the NB distribution is $\mu$ and its variance is:
 $$
 \sigma^2 = \mu + \frac{\mu^2}{\theta}= \mu + \phi\mu^2 \,.
 $$
-In particular the NB distribution boils down to a Poisson distribution when $\phi=0 \Leftrightarrow \theta = +\infty$.
+In particular, the NB distribution boils down to a Poisson distribution when $\phi=0 \Leftrightarrow \theta = +\infty$.
 
 For any $\pi\in[0,1]$, let $f_{ZINB}( \cdot \,;\mu,\theta, \pi)$ be the p.m.f. of the zero-inflated negative binomial (ZINB) distribution given by:
 $$
 \forall y\in\mathbb{N},\quad f_{ZINB}(y;\mu,\theta, \pi) = \pi \delta_0(y) + (1-\pi) f_{NB}(y;\mu,\theta) \,,
 $$
-where $\delta_0(\cdot)$ is the Dirac function. Here $\pi$ can be interpreted as the probability that a $0$ is observed instead of the actual count, resulting in an inflation of $0$ compared to the NB distribution, hence the name ZINB.
+where $\delta_0(\cdot)$ is the Dirac function. Here, $\pi$ can be interpreted as the probability that a $0$ is observed instead of the actual count, resulting in an inflation of zeros compared to the NB distribution, hence the name ZINB.
 
-Given $n$ samples (typically, $n$ single cells) and $J$ features (typically, $J$ genes) that can be counted in each samples, let $Y_{ij}$ be the count of feature $j$ (for $j=1,\ldots,J$) in sample $i$ ($i=1,\ldots,n$). To account for various technical and biological effects frequent in particular in single-cell sequencing technologies, we model $Y_{ij}$ as a random variable following a ZINB distribution with parameters $\mu_{ij}, \theta_{ij}$ and $\pi_{ij}$, and consider the following model for the parameters:
+Given $n$ samples (typically, $n$ single cells) and $J$ features (typically, $J$ genes) that can be counted in each samples, let $Y_{ij}$ be the count of feature $j$ (for $j=1,\ldots,J$) in sample $i$ ($i=1,\ldots,n$). To account for various technical and biological effects frequent in particular in single-cell sequencing technologies, we model $Y_{ij}$ as a random variable following a ZINB distribution with parameters $\mu_{ij}, \theta_{ij}$, and $\pi_{ij}$, and consider the following model for the parameters:
 \begin{align}
 \label{eq:model1}
 \ln(\mu_{ij}) &= \left( X\beta_\mu + (V\gamma_\mu)^\top + W\alpha_\mu + O_\mu\right)_{ij}\,,\\
@@ -49,43 +49,43 @@ Given $n$ samples (typically, $n$ single cells) and $J$ features (typically, $J$
 \end{align}
 where
 $$
-\text{logit}(\pi) = \ln\left(\frac{\pi}{1-\pi}\right)\,,
+\text{logit}(\pi) = \ln\left(\frac{\pi}{1-\pi}\right)\,
 $$
 and:
 \begin{itemize}
-\item $X$ is a known $n\times M$ design matrix corresponding to $M$ covariates for each cell, and ${\bf \beta}=(\beta_\mu,\beta_\pi)$ its associated M × J matrices of parameters. $X$ can typically include covariates that induce a variation of interest, such as cell types, or covariates that induce unwanted variations, such as batch or QC measures. It can also include a constant column ${\bf 1}_n$ to account for gene-specific intercepts.
-\item $V$ is a known $J \times L$ matrix corresponding to known gene-level covariates, such as gene length or GC-content, and ${\bf \gamma} = (\gamma_\mu , \gamma_\pi)$ its associated $L\times n$ matrices of parameters. It can also include a constant column ${\bf 1}_J$ to account for cell-specific intercepts, such as size factors representing differences in library sizes.
-\item $W$ is an unobserved $n \times K$ matrix corresponding to unknown cell covariates, which could be of “unwanted variation” as in RUV or of interest (such as biological variations), and ${\bf \alpha} = (\alpha_\mu,\alpha_{\pi})$ its associated $K \times J$ matrices of parameters.
-\item $O_\mu$ and $O_\pi$ are known $n\times J$ matrices of offsets.
-\item $\zeta\in\mathbb{R}^J$ is a vector of gene-specific dispersion parameters in log scale.
+\item $X$ is a known $n \times M$ design matrix corresponding to $M$ cell-level covariates and ${\bf \beta}=(\beta_\mu,\beta_\pi)$ its associated $M \times J$ matrices of regression parameters. $X$ can typically include covariates that induce variation of interest, such as cell types, or covariates that induce unwanted variation, such as batch or QC measures. It can also include a constant column ${\bf 1}_n$ to account for gene-specific intercepts.
+\item $V$ is a known $J \times L$ matrix corresponding to $J$ gene-level covariates, such as gene length or GC-content, and ${\bf \gamma} = (\gamma_\mu , \gamma_\pi)$ its associated $L\times n$ matrices of regression parameters. $V$ can also include a constant column ${\bf 1}_J$ to account for cell-specific intercepts, such as size factors representing differences in library sizes.
+\item $W$ is an unobserved $n \times K$ matrix corresponding to $K$ unknown cell-level covariates, which could be of “unwanted variation” as in RUV or of interest (such as cell type), and ${\bf \alpha} = (\alpha_\mu,\alpha_{\pi})$ its associated $K \times J$ matrices of regression parameters.
+\item $O_\mu$ and $O_\pi$ are known $n \times J$ matrices of offsets.
+\item $\zeta\in\mathbb{R}^J$ is a vector of gene-specific dispersion parameters on the log scale.
 \end{itemize}
 
-This model deserves a few comments
+This model deserves a few comments.
 \begin{itemize}
-\item The model extends the RUV framework to ZINB variables. It differs in interpretation from RUV in the $W\alpha$ factor, which we do not consider as necessarily unwanted; it generally corresponds to an unknown low-dimensional variations in the data, that could be due to unwanted factors such as technical artifacts (as in RUV), or to biological variations which could be of interest such as cell cycle or cell differentiation, as typically assumed in other factor models such as PCA or ICA.
-\item By default $X$ and $V$ contain a constant column, to account for cell-specific  (e.g., size factors) and gene-specific (e.g., mean expression level) variations. In that case, $X$ and $V$ are of the form $X=[{\bf 1}_n , X^0]$ and $V = [{\bf 1}_J , V^0]$, and we can similarly decompose the corresponding parameters as $\beta = [\beta^1 ; \beta^0]$ and $\gamma = [\gamma^1 ; \gamma^0]$, where $\beta^1 \in \mathbb{R}^{1\times J}$ is the vector of gene-specific intercepts, and $\gamma^1 \in \mathbb{R}^{1\times n}$ is the vector of cell-specific intercepts. The representation ${\bf 1}_n \beta^1 + ({\bf 1}_J \gamma^1)^\top$ is then not unique, but we could make it unique by adding a constant and constraining $\beta^1$ and $\gamma^1$ to have zero mean.
-\item The $X$ and $V$ matrices could differ in the modelling of $\mu$ and $\pi$ if we assume that some known factors do not affect both $\mu$ and $\pi$; to keep notations simple and consistent we use the same matrices, but will implicitly assume that some parameters may be constrained to be $0$ if needed.
-\item When $X={\bf 1}_n$ and $V={\bf 1}_J$, then the model if a factor model akin to PCA where $W$ is a factor matrix and $(\alpha_\mu, \alpha_\pi)$ are loading matrices.
+\item The model extends the RUV framework to the ZINB distribution (thus far, RUV had only been implement for linear and log-linear regression). It differs in interpretation from RUV in the $W\alpha$ factor, which is not necessarily considered unwanted; this term generally corresponds to unknown low-dimensional variation, that could be due to unwanted techical effects (as in RUV), such as batch effects, or to biological effects which could be of interest, such as cell cycle or cell differentiation, as typically assumed in other factor models such as principal component analysis (PCA) or independent component analysis (ICA).
+\item By default, $X$ and $V$ contain a constant column of ones, to account, respectively, for gene-specific (e.g., mean expression level) and cell-specific (e.g., size factors) variation. In that case, $X$ and $V$ are of the form $X=[{\bf 1}_n , X^0]$ and $V = [{\bf 1}_J , V^0]$, and we can similarly decompose the corresponding parameters as $\beta = [\beta^1 ; \beta^0]$ and $\gamma = [\gamma^1 ; \gamma^0]$, where $\beta^1 \in \mathbb{R}^{1\times J}$ is a vector of gene-specific intercepts and $\gamma^1 \in \mathbb{R}^{1\times n}$ a vector of cell-specific intercepts. The representation ${\bf 1}_n \beta^1 + ({\bf 1}_J \gamma^1)^\top$ is then not unique, but could be made unique by adding a constant and constraining $\beta^1$ and $\gamma^1$ to each have elements summing to zero.
+\item The $X$ and $V$ matrices could differ in the modelling of $\mu$ and $\pi$ if we assume that some known factors do not affect both $\mu$ and $\pi$; to keep notation simple and consistent we use the same matrices, but will implicitly assume that some parameters may be constrained to be $0$ if needed.
+\item When $X={\bf 1}_n$ and $V={\bf 1}_J$, the model is a factor model akin to PCA, where $W$ is a factor matrix and $(\alpha_\mu, \alpha_\pi)$ are loading matrices.
 \item By allowing the parameters to differ between the models of $\mu$ and $\pi$, we can model and test for differences in NB mean or in ZI probability.
-\item We limit ourselves to a gene-dependent dispersion parameter. More complicated models for $\theta_{ij}$ could be investigated, such as a model similar to $\mu_{ij}$, or a functional of the form $\theta_{ij} = f(\mu_{ij})$, but we restrict ourselves to a simpler model that has been shown to be largely sufficient in bulk RNA-seq models.
+\item We limit ourselves to a gene-dependent dispersion parameter. More complicated models for $\theta_{ij}$ could be investigated, such as a model similar to $\mu_{ij}$ or a functional of the form $\theta_{ij} = f(\mu_{ij})$, but we restrict ourselves to a simpler model that has been shown to be largely sufficient in bulk RNA-Seq analysis.
 \end{itemize}
 
 ## Parameter estimation
-The input to the model are the matrices $X, V, O_\mu, O_\pi$ and the integer $K$; the parameters to be inferred $\beta=(\beta_\mu,\beta_\pi)$, $\gamma=(\gamma_\mu,\gamma_\pi)$, $W$, $\alpha=(\alpha_\mu,\alpha_\pi)$ and $\zeta$. Given an $n\times J$ matrix of counts $Y$, the log-likelihood of the model is
+The input to the model are the matrices $X$, $V$, $O_\mu$, and $O_\pi$ and the integer $K$; the parameters to be inferred are $\beta=(\beta_\mu,\beta_\pi)$, $\gamma=(\gamma_\mu,\gamma_\pi)$, $W$, $\alpha=(\alpha_\mu,\alpha_\pi)$, and $\zeta$. Given an $n\times J$ matrix of counts $Y$, the log-likelihood function is
 $$
 \ell(\beta,\gamma,W,\alpha,\zeta) = \sum_{i=1}^n \sum_{j=1}^J \ln f_{ZINB}(Y_{ij};\mu_{ij},\theta_{ij}, \pi_{ij}) \,,
 $$
-where $\mu_{ij}, \theta_{ij}$ and $\pi_{ij}$ depend on $(\beta,\gamma,W,\alpha,\zeta)$ through (\ref{eq:model1})-(\ref{eq:model3}).
+where $\mu_{ij}$, $\theta_{ij}$, and $\pi_{ij}$ depend on $(\beta,\gamma,W,\alpha,\zeta)$ through \eqref{eq:model1}-\eqref{eq:model3}. 
 
-To infer the parameters we follow a penalized maximum likelihood approach, by trying to solve
+To infer the parameters, we follow a penalized maximum likelihood approach, by trying to solve
 $$
 \max_{\beta,\gamma,W,\alpha,\zeta} \left\{\ell(\beta,\gamma,W,\alpha,\zeta) - \text{Pen}(\beta,\gamma,W,\alpha,\zeta) \right\}\,,
 $$
-where $\text{Pen}(\cdot)$ is a regularization term to reduce overfitting and improve numerical stability of the optimization problem, where many parameters must be estimated. For a set of nonnegative regularization parameters $\left( \epsilon_\beta , \epsilon_\gamma, \epsilon_W, \epsilon_\alpha, \epsilon_\zeta \right)$, we take
+where $\text{Pen}(\cdot)$ is a regularization term to reduce overfitting and improve numerical stability of the optimization problem over many parameters. For a set of nonnegative regularization parameters $\left( \epsilon_\beta , \epsilon_\gamma, \epsilon_W, \epsilon_\alpha, \epsilon_\zeta \right)$, we take
 $$
 \text{Pen}(\beta,\gamma,W,\alpha,\zeta) = \frac{\epsilon_{\beta}}{2} \|\beta^0\|^2 + \frac{\epsilon_{\gamma}}{2} \|\gamma^0\|^2 + \frac{\epsilon_{W}}{2}\|W\|^2 + \frac{\epsilon_{\alpha}}{2}\|\alpha\|^2 + \frac{\epsilon_{\zeta}}{2}\text{var}(\zeta) \,,
 $$
-where $\beta^0$ and $\gamma^0$ stand for the matrices $\beta$ and $\gamma$ without the rows corresponding to the intercepts if an unpenalized intercept is included in the model, $\|\cdot\|$ is the Frobenius matrix norm, and $\text{var}(\zeta) = 1/(J-1) \sum_{i=1}^J \left(\zeta_i - (\sum_{j=1}^J \zeta_j)/J\right)^2$ is the unbiased sample variance of $\zeta$. The penalty tends to shrink the estimated parameters to $0$, except for the cell- and gene-specific intercepts which are not penalized, and the for the dispersion parameters which are not shrunk towards $0$ but instead towards a constant value across genes. Note also that the likelihood only depends on $W$ and $\alpha$ through their product $R=W\alpha$, and that the penalty ensures that at the optimum $W$ and $\alpha$ have specific structures as described in the following result which generalizes standard results such as [@Srebro2005Maximum, Lemma 1; @Mazumder2010Spectral, Lemma 6]
+where $\beta^0$ and $\gamma^0$ stand for the matrices $\beta$ and $\gamma$ without the rows corresponding to the intercepts if an unpenalized intercept is included in the model, $\|\cdot\|$ is the Frobenius matrix norm, and $\text{var}(\zeta) = 1/(J-1) \sum_{i=1}^J \left(\zeta_i - (\sum_{j=1}^J \zeta_j)/J\right)^2$ is the unbiased sample variance of $\zeta$. The penalty tends to shrink the estimated parameters to $0$, except for the cell- and gene-specific intercepts which are not penalized and the dispersion parameters which are not shrunk towards $0$ but instead towards a constant value across genes. Note also that the likelihood only depends on $W$ and $\alpha$ through their product $R=W\alpha$ and that the penalty ensures that at the optimum $W$ and $\alpha$ have specific structures as described in the following result which generalizes standard results such as [@Srebro2005Maximum, Lemma 1; @Mazumder2010Spectral, Lemma 6].
 \begin{lemma}\label{lem:tracenorm}
 For any matrix $R$ and positive scalars $s$ and $t$, the following holds:
 $$
