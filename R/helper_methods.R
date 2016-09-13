@@ -569,7 +569,7 @@ setMethod(
     f="loglik",
     signature=c("ZinbModel","matrix"),
     definition=function(model, x) {
-        zinb.loglik(x, getMu(model), getTheta(model), getLogitPi(model))
+        zinb.loglik(x, getMu(model), rep(getTheta(model),rep(nSamples(model),nFeatures(model))), getLogitPi(model))
     }
 )
 
