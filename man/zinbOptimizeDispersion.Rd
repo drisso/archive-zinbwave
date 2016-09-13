@@ -4,12 +4,14 @@
 \alias{zinbOptimizeDispersion}
 \title{Optimize the dispersion parameters of a ZINB regression model}
 \usage{
-zinbOptimizeDispersion(m, Y)
+zinbOptimizeDispersion(m, Y, ncores = 1)
 }
 \arguments{
 \item{m}{The model of class ZinbModel}
 
 \item{Y}{The matrix of counts.}
+
+\item{ncores}{Number of cores for parallel computation (default 1)}
 }
 \value{
 An object of class ZinbModel similar to the one given as argument

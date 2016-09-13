@@ -481,7 +481,7 @@ setMethod("getEpsilon_gamma_pi", "ZinbModel",
 #' @describeIn getEpsilon_W method for ZinbModel.
 setMethod("getEpsilon_W", "ZinbModel",
           function(object) {
-              rep(object@epsilon_W, nFactors(m))
+              rep(object@epsilon_W, nFactors(object))
           }
 )
 
@@ -489,7 +489,7 @@ setMethod("getEpsilon_W", "ZinbModel",
 #' @describeIn getEpsilon_alpha method for ZinbModel.
 setMethod("getEpsilon_alpha", "ZinbModel",
           function(object) {
-              rep(object@epsilon_alpha, nFactors(m))
+              rep(object@epsilon_alpha, nFactors(object))
           }
 )
 

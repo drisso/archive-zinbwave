@@ -16,16 +16,22 @@
 #' bio <- gl(2, 3)
 #' m <- zinbFit(matrix(10, 10, 6), X=model.matrix(~bio))
 setMethod("zinbFit", "matrix",
-          function(Y, ncores=1, ...) {
+          function(Y, ncores=1, verbose=FALSE, nb.repeat.initialize=2, maxiter.optimize=25, stop.epsilon.optimize=.0001, ...) {
     
     # Create a ZinbModel object
+    if (verbose) {cat("Create model: ")}
     m <- zinbModel(n=NROW(Y), J=NCOL(Y), ...)
+    if (verbose) {cat("ok\n")}
     
     # Initialize the parameters
-    m <- zinbInitialize(m, Y, ncores = ncores)
+    if (verbose) {cat("Initialize parameters: \n")}
+    m <- zinbInitialize(m, Y, ncores = ncores, nb.repeat=nb.repeat.initialize)
+    if (verbose) {cat("ok\n")}
     
     # Optimize parameters
-    m <- zinbOptimize(m, Y)
+    if (verbose) {cat("Optimize parameters: \n")}
+    m <- zinbOptimize(m, Y, maxiter=maxiter.optimize, stop.epsilon=stop.epsilon.optimize, ncores=ncores, verbose=verbose)
+    if (verbose) {cat("ok\n")}
     
     validObject(m)
     m
@@ -100,12 +106,12 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
             iter <- nb.repeat # no need to estimate gamma_mu nor to iterate
         } else {
             Xbeta_mu <- getX_mu(m) %*% m@beta_mu
-            m@gamma_mu <- matrix(unlist(lapply(seq(n), function(i) {
+            m@gamma_mu <- matrix(unlist(parallel::mclapply(seq(n), function(i) {
                 solveRidgeRegression(x=getV_mu(m)[P[i,], , drop=FALSE],
                                      y=L[i,P[i,]] - Xbeta_mu[i, P[i,]],
                                      epsilon = getEpsilon_gamma_mu(m),
                                      family="gaussian")
-                }
+                } , mc.cores=ncores
                 )), nrow=NCOL(getV_mu(m)))
         }
  
@@ -114,12 +120,12 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
             iter <- nb.repeat # no need to estimate gamma_mu nor to iterate
         } else {
             tVgamma_mu <- t(getV_mu(m) %*% m@gamma_mu)
-            m@beta_mu <- matrix(unlist(lapply(seq(J), function(j) {
+            m@beta_mu <- matrix(unlist(parallel::mclapply(seq(J), function(j) {
                 solveRidgeRegression(x=getX_mu(m)[P[,j], , drop=FALSE],
                                      y=L[P[,j],j] - tVgamma_mu[P[,j], j],
                                      epsilon = getEpsilon_beta_mu(m),
                                      family="gaussian")
-            }
+            }, mc.cores=ncores
             )), nrow=NCOL(getX_mu(m)))
         }
         
@@ -135,12 +141,12 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
         
         # Find a low-rank approximation with trace-norm regularization
         R <- softImpute::softImpute(D, 
-                                    lambda=sqrt(getEpsilon_W(m) * getEpsilon_alpha(m)),
+                                    lambda=sqrt(getEpsilon_W(m) * getEpsilon_alpha(m))[1],
                                     rank.max=nFactors(m))
         
         # Orthogonalize to get W and alpha
-        m@W <- (getEpsilon_alpha(m)/getEpsilon_W(m))^(1/4) * R$u %*% diag(sqrt(R$d), nrow = length(R$d))
-        m@alpha_mu <- (getEpsilon_W(m)/getEpsilon_alpha(m))^(1/4) * diag(sqrt(R$d), nrow = length(R$d)) %*% t(R$v)
+        m@W <- (getEpsilon_alpha(m)/getEpsilon_W(m))[1]^(1/4) * R$u %*% diag(sqrt(R$d), nrow = length(R$d))
+        m@alpha_mu <- (getEpsilon_W(m)/getEpsilon_alpha(m))[1]^(1/4) * diag(sqrt(R$d), nrow = length(R$d)) %*% t(R$v)
     }
     
     ## 6. Estimate beta_pi, gamma_pi, and alpha_pi
@@ -152,13 +158,13 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
             iter <- nb.repeat # no need to estimate gamma_pi nor to iterate
         } else {
             off <- getX_pi(m) %*% m@beta_pi + m@W %*% m@alpha_pi
-            m@gamma_pi <- matrix(unlist(lapply(seq(n), function(i) {
+            m@gamma_pi <- matrix(unlist(parallel::mclapply(seq(n), function(i) {
                 solveRidgeRegression(x=getV_pi(m),
                                      y=Z[i,],
                                      offset=off[i,],
                                      epsilon = getEpsilon_gamma_pi(m),
                                      family="binomial")
-            }
+            }, mc.cores=ncores
             )), nrow=NCOL(getV_pi(m)))
         }
         
@@ -168,13 +174,13 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
         } else {
             tVgamma_pi <- t(getV_pi(m) %*% m@gamma_pi)
             XW <- cbind(getX_pi(m),m@W)
-            s <- matrix(unlist(lapply(seq(J), function(j) {
+            s <- matrix(unlist(parallel::mclapply(seq(J), function(j) {
                 solveRidgeRegression(x=XW,
                                      y=Z[,j],
                                      offset = tVgamma_pi[,j],
                                      epsilon = c(getEpsilon_beta_pi(m),getEpsilon_alpha(m)),
                                      family="binomial")
-            }
+            }, mc.cores=ncores
             )), nrow=NCOL(getX_pi(m)) + nFactors(m))
             if (NCOL(getX_pi(m))>0) {
                 m@beta_pi <- s[1:NCOL(getX_pi(m)),,drop=F]
@@ -208,7 +214,7 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
 #' @param stop.criterion stopping criterion, when the relative gain in
 #'   likelihood is below epsilon (default 0.0001)
 #' @param verbose print information (default FALSE)
-#' @param no_cores number of cores (default to 1)
+#' @param ncores number of cores (default to 1)
 #' @return An object of class ZinbModel similar to the one given as argument 
 #'   with modified parameters alpha_mu, alpha_pi, beta_mu, beta_pi, gamma_mu, 
 #'   gamma_pi, W.
@@ -218,7 +224,7 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
 #' m = zinbInitialize(m,Y)
 #' m = zinbOptimize(m,Y)
 #' @export
-zinbOptimize <- function(m, Y, maxiter=25, stop.epsilon=.0001,  verbose=FALSE, no_cores=1) {
+zinbOptimize <- function(m, Y, maxiter=25, stop.epsilon=.0001, verbose=FALSE, ncores=1) {
     
     total.lik=rep(NA,maxiter)
     n <- nSamples(m)
@@ -248,7 +254,7 @@ zinbOptimize <- function(m, Y, maxiter=25, stop.epsilon=.0001,  verbose=FALSE, n
             }
         
         # 1. Optimize dispersion
-        m <- zinbOptimizeDispersion(m,Y)
+        m <- zinbOptimizeDispersion(m,Y,ncores=ncores)
         
         # Evaluate total penalized likelihood
         if (verbose) {cat("After dispersion optimization = ",loglik(m, Y) - penalty(m),"\n",sep="")}
@@ -257,7 +263,7 @@ zinbOptimize <- function(m, Y, maxiter=25, stop.epsilon=.0001,  verbose=FALSE, n
         if (optimright) {
             ptm <- proc.time()
             estimate <- matrix(unlist( parallel::mclapply(seq(J), function(j) {
-                optim( fn=zinb.loglik.regression , gr=zinb.loglik.regression.gradient , par=c(m@beta_mu[,j], m@alpha_mu[,j], m@beta_pi[,j], m@alpha_pi[,j]) , Y=Y[,j] , A.mu=cbind(getX_mu(m), m@W) , C.mu=t(getV_mu(m)[j,] %*% m@gamma_mu) + m@O_mu[,j] , A.pi=cbind(getX_pi(m), m@W) , C.pi=t(getV_pi(m)[j,] %*% m@gamma_pi) + m@O_pi[,j], C.theta=matrix(m@zeta[j], nrow = n, ncol = 1) , epsilon=epsilonright , control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=no_cores)) , nrow=sum(nright))
+                optim( fn=zinb.loglik.regression , gr=zinb.loglik.regression.gradient , par=c(m@beta_mu[,j], m@alpha_mu[,j], m@beta_pi[,j], m@alpha_pi[,j]) , Y=Y[,j] , A.mu=cbind(getX_mu(m), m@W) , C.mu=t(getV_mu(m)[j,] %*% m@gamma_mu) + m@O_mu[,j] , A.pi=cbind(getX_pi(m), m@W) , C.pi=t(getV_pi(m)[j,] %*% m@gamma_pi) + m@O_pi[,j], C.theta=matrix(m@zeta[j], nrow = n, ncol = 1) , epsilon=epsilonright , control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=ncores)) , nrow=sum(nright))
             
             if (verbose) {print(proc.time()-ptm)}
             ind <- 1
@@ -271,7 +277,7 @@ zinbOptimize <- function(m, Y, maxiter=25, stop.epsilon=.0001,  verbose=FALSE, n
             }
             if (nright[3]>0) {
                 m@beta_pi <- estimate[ind:(ind+nright[3]-1),,drop=F]
-                ind <- ind+nleft[3]
+                ind <- ind+nright[3]
             }
             if (nright[4]>0) {
                 m@alpha_pi <- estimate[ind:(ind+nright[4]-1),,drop=F]
@@ -296,7 +302,7 @@ zinbOptimize <- function(m, Y, maxiter=25, stop.epsilon=.0001,  verbose=FALSE, n
         if (optimleft) {
             ptm <- proc.time()
             estimate <- matrix(unlist( parallel::mclapply(seq(n), function(i) {
-                optim( fn=zinb.loglik.regression , gr=zinb.loglik.regression.gradient , par=c(m@gamma_mu[,i], m@gamma_pi[,i], t(m@W[i,])) , Y=t(Y[i,]) , A.mu=getV_mu(m) , B.mu=t(m@alpha_mu), C.mu=t(getX_mu(m)[i,]%*%m@beta_mu + m@O_mu[i,]) , A.pi=getV_pi(m), B.pi=t(m@alpha_pi), C.pi=t(getX_pi(m)[i,]%*%m@beta_pi + m@O_pi[i,]), C.theta=m@zeta , epsilon=epsilonleft , control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=no_cores)) , nrow=sum(nleft))
+                optim( fn=zinb.loglik.regression , gr=zinb.loglik.regression.gradient , par=c(m@gamma_mu[,i], m@gamma_pi[,i], t(m@W[i,])) , Y=t(Y[i,]) , A.mu=getV_mu(m) , B.mu=t(m@alpha_mu), C.mu=t(getX_mu(m)[i,]%*%m@beta_mu + m@O_mu[i,]) , A.pi=getV_pi(m), B.pi=t(m@alpha_pi), C.pi=t(getX_pi(m)[i,]%*%m@beta_pi + m@O_pi[i,]), C.theta=m@zeta , epsilon=epsilonleft , control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=ncores)) , nrow=sum(nleft))
             if (verbose) {print(proc.time()-ptm)}
             ind <- 1
             if (nleft[1]>0) {
@@ -337,6 +343,7 @@ zinbOptimize <- function(m, Y, maxiter=25, stop.epsilon=.0001,  verbose=FALSE, n
 #' penalized maximum likelihood on the count matrix given as argument.
 #' @param m The model of class ZinbModel
 #' @param Y The matrix of counts.
+#' @param ncores Number of cores for parallel computation (default 1)
 #' @return An object of class ZinbModel similar to the one given as argument
 #'   with modified parameters zeta.
 #' @examples
@@ -345,7 +352,7 @@ zinbOptimize <- function(m, Y, maxiter=25, stop.epsilon=.0001,  verbose=FALSE, n
 #' m = zinbInitialize(m,Y)
 #' m = zinbOptimizeDispersion(m,Y)
 #' @export
-zinbOptimizeDispersion <- function(m, Y) {
+zinbOptimizeDispersion <- function(m, Y, ncores=1) {
     
     J <- nFeatures(m)
     mu <- getMu(m)
@@ -361,18 +368,18 @@ zinbOptimizeDispersion <- function(m, Y) {
     
     # 2) Optimize the dispersion parameter of each sample
     locfun <- function(logt) {
-        s <- sum(unlist(lapply(seq(J),function(i) {
+        s <- sum(unlist(parallel::mclapply(seq(J),function(i) {
             zinb.loglik.dispersion(logt[i],Y[,i],mu[,i],logitPi[,i])
-        })))
+        }, mc.cores=ncores)))
         if (J>1) {
             s <- s - epsilon*var(logt)/2
         }
         s
     }
     locgrad <- function(logt) {
-        s <- unlist(lapply(seq(J),function(i) {
+        s <- unlist(parallel::mclapply(seq(J),function(i) {
             zinb.loglik.dispersion.gradient(logt[i],Y[,i],mu[,i],logitPi[,i])
-        } )) 
+        }, mc.cores=ncores )) 
         if (J>1) {
             s <- s - epsilon*(logt - mean(logt))/(J-1)
         }

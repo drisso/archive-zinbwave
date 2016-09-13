@@ -8,7 +8,9 @@
 \usage{
 zinbFit(Y, ...)
 
-\S4method{zinbFit}{matrix}(Y, ncores = 1, ...)
+\S4method{zinbFit}{matrix}(Y, ncores = 1, verbose = FALSE,
+  nb.repeat.initialize = 2, maxiter.optimize = 25,
+  stop.epsilon.optimize = 1e-04, ...)
 }
 \arguments{
 \item{Y}{The data (genes in rows, samples in columns).}

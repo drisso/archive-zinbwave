@@ -28,27 +28,27 @@ solveRidgeRegression <- function(x, y, beta=rep(0,NCOL(x)), epsilon=1e-6, family
     family <-  match.arg(family)
     
     # loglik
-    f <- function(beta) {
-        eta <- x %*% beta + offset
+    f <- function(b) {
+        eta <- x %*% b + offset
         if (family=="gaussian") {
             l <- sum((y-eta)^2)/2
         }
         if (family=="binomial") {
             l <- sum(-y*eta + copula::log1pexp(eta))
         }
-        l + sum(epsilon*beta^2)/2
+        l + sum(epsilon*b^2)/2
     }
     
     # gradient of loglik
-    g <- function(beta) {
-        eta <- x %*% beta + offset
+    g <- function(b) {
+        eta <- x %*% b + offset
         if (family=="gaussian") {
             l <- t(x) %*% (-y + eta)
         }
         if (family=="binomial") {
             l <- t(x) %*% (-y + 1/(1+exp(-eta)))
         }
-        l + epsilon*beta
+        l + epsilon*b
     }
     
     # optimize

@@ -5,7 +5,7 @@
 \title{Optimize the parameters of a ZINB regression model}
 \usage{
 zinbOptimize(m, Y, maxiter = 25, stop.epsilon = 1e-04, verbose = FALSE,
-  no_cores = 1)
+  ncores = 1)
 }
 \arguments{
 \item{m}{The model of class ZinbModel}
@@ -16,7 +16,7 @@ zinbOptimize(m, Y, maxiter = 25, stop.epsilon = 1e-04, verbose = FALSE,
 
 \item{verbose}{print information (default FALSE)}
 
-\item{no_cores}{number of cores (default to 1)}
+\item{ncores}{number of cores (default to 1)}
 
 \item{stop.criterion}{stopping criterion, when the relative gain in
 likelihood is below epsilon (default 0.0001)}
