@@ -8,8 +8,8 @@
 \usage{
 zinbFit(Y, ...)
 
-\S4method{zinbFit}{matrix}(Y, ncores = 1, verbose = FALSE,
-  nb.repeat.initialize = 2, maxiter.optimize = 25,
+\S4method{zinbFit}{matrix}(Y, commondispersion = TRUE, ncores = 1,
+  verbose = FALSE, nb.repeat.initialize = 2, maxiter.optimize = 25,
   stop.epsilon.optimize = 1e-04, ...)
 }
 \arguments{

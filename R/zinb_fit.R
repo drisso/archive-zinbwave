@@ -16,7 +16,7 @@
 #' bio <- gl(2, 3)
 #' m <- zinbFit(matrix(10, 10, 6), X=model.matrix(~bio))
 setMethod("zinbFit", "matrix",
-          function(Y, ncores=1, verbose=FALSE, nb.repeat.initialize=2, maxiter.optimize=25, stop.epsilon.optimize=.0001, ...) {
+          function(Y, commondispersion=TRUE, ncores=1, verbose=FALSE, nb.repeat.initialize=2, maxiter.optimize=25, stop.epsilon.optimize=.0001, ...) {
     
     # Create a ZinbModel object
     if (verbose) {cat("Create model: ")}
@@ -30,7 +30,7 @@ setMethod("zinbFit", "matrix",
     
     # Optimize parameters
     if (verbose) {cat("Optimize parameters: \n")}
-    m <- zinbOptimize(m, Y, maxiter=maxiter.optimize, stop.epsilon=stop.epsilon.optimize, ncores=ncores, verbose=verbose)
+    m <- zinbOptimize(m, Y, commondispersion=commondispersion, maxiter=maxiter.optimize, stop.epsilon=stop.epsilon.optimize, ncores=ncores, verbose=verbose)
     if (verbose) {cat("ok\n")}
     
     validObject(m)
@@ -210,8 +210,10 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
 #' converge to a local minimum.
 #' @param m The model of class ZinbModel
 #' @param Y The matrix of counts.
+#' @param commondispersion Whether the dispersion is the same for all features
+#'   (default=TRUE)
 #' @param maxiter maximum number of iterations (default 25)
-#' @param stop.criterion stopping criterion, when the relative gain in
+#' @param stop.criterion stopping criterion, when the relative gain in 
 #'   likelihood is below epsilon (default 0.0001)
 #' @param verbose print information (default FALSE)
 #' @param ncores number of cores (default to 1)
@@ -224,7 +226,7 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
 #' m = zinbInitialize(m,Y)
 #' m = zinbOptimize(m,Y)
 #' @export
-zinbOptimize <- function(m, Y, maxiter=25, stop.epsilon=.0001, verbose=FALSE, ncores=1) {
+zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25, stop.epsilon=.0001, verbose=FALSE, ncores=1) {
     
     total.lik=rep(NA,maxiter)
     n <- nSamples(m)
@@ -254,7 +256,7 @@ zinbOptimize <- function(m, Y, maxiter=25, stop.epsilon=.0001, verbose=FALSE, nc
             }
         
         # 1. Optimize dispersion
-        m <- zinbOptimizeDispersion(m,Y,ncores=ncores)
+        m <- zinbOptimizeDispersion(m,Y,commondispersion=commondispersion,ncores=ncores)
         
         # Evaluate total penalized likelihood
         if (verbose) {cat("After dispersion optimization = ",loglik(m, Y) - penalty(m),"\n",sep="")}
@@ -339,12 +341,14 @@ zinbOptimize <- function(m, Y, maxiter=25, stop.epsilon=.0001, verbose=FALSE, nc
 
 #' Optimize the dispersion parameters of a ZINB regression model
 #' 
-#' The dispersion parameters of the model given as argument are optimized by
+#' The dispersion parameters of the model given as argument are optimized by 
 #' penalized maximum likelihood on the count matrix given as argument.
 #' @param m The model of class ZinbModel
 #' @param Y The matrix of counts.
+#' @param commondispersion Whether or not a single dispersion for all features
+#'   is estimated (default TRUE)
 #' @param ncores Number of cores for parallel computation (default 1)
-#' @return An object of class ZinbModel similar to the one given as argument
+#' @return An object of class ZinbModel similar to the one given as argument 
 #'   with modified parameters zeta.
 #' @examples
 #' Y = matrix(10,3,5)
@@ -352,7 +356,7 @@ zinbOptimize <- function(m, Y, maxiter=25, stop.epsilon=.0001, verbose=FALSE, nc
 #' m = zinbInitialize(m,Y)
 #' m = zinbOptimizeDispersion(m,Y)
 #' @export
-zinbOptimizeDispersion <- function(m, Y, ncores=1) {
+zinbOptimizeDispersion <- function(m, Y, commondispersion=TRUE, ncores=1) {
     
     J <- nFeatures(m)
     mu <- getMu(m)
@@ -366,28 +370,32 @@ zinbOptimizeDispersion <- function(m, Y, ncores=1) {
     
     zeta <- rep(g$maximum,J)
     
-    # 2) Optimize the dispersion parameter of each sample
-    locfun <- function(logt) {
-        s <- sum(unlist(parallel::mclapply(seq(J),function(i) {
-            zinb.loglik.dispersion(logt[i],Y[,i],mu[,i],logitPi[,i])
-        }, mc.cores=ncores)))
-        if (J>1) {
-            s <- s - epsilon*var(logt)/2
+    if (commondispersion) {
+        m@zeta <- zeta
+    } else {
+        
+        # 2) Optimize the dispersion parameter of each sample
+        locfun <- function(logt) {
+            s <- sum(unlist(parallel::mclapply(seq(J),function(i) {
+                zinb.loglik.dispersion(logt[i],Y[,i],mu[,i],logitPi[,i])
+            }, mc.cores=ncores)))
+            if (J>1) {
+                s <- s - epsilon*var(logt)/2
+            }
+            s
         }
-        s
-    }
-    locgrad <- function(logt) {
-        s <- unlist(parallel::mclapply(seq(J),function(i) {
-            zinb.loglik.dispersion.gradient(logt[i],Y[,i],mu[,i],logitPi[,i])
-        }, mc.cores=ncores )) 
-        if (J>1) {
-            s <- s - epsilon*(logt - mean(logt))/(J-1)
+        locgrad <- function(logt) {
+            s <- unlist(parallel::mclapply(seq(J),function(i) {
+                zinb.loglik.dispersion.gradient(logt[i],Y[,i],mu[,i],logitPi[,i])
+            }, mc.cores=ncores )) 
+            if (J>1) {
+                s <- s - epsilon*(logt - mean(logt))/(J-1)
+            }
+            s
         }
-        s
-    }
-    
-    m@zeta <- optim( par=zeta, fn=locfun , gr=locgrad, 
+        m@zeta <- optim( par=zeta, fn=locfun , gr=locgrad, 
                         control=list(fnscale=-1,trace=0), method="BFGS")$par
+    }
     validObject(m)
     
     return(m)

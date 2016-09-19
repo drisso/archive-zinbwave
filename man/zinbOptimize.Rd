@@ -4,13 +4,16 @@
 \alias{zinbOptimize}
 \title{Optimize the parameters of a ZINB regression model}
 \usage{
-zinbOptimize(m, Y, maxiter = 25, stop.epsilon = 1e-04, verbose = FALSE,
-  ncores = 1)
+zinbOptimize(m, Y, commondispersion = TRUE, maxiter = 25,
+  stop.epsilon = 1e-04, verbose = FALSE, ncores = 1)
 }
 \arguments{
 \item{m}{The model of class ZinbModel}
 
 \item{Y}{The matrix of counts.}
+
+\item{commondispersion}{Whether the dispersion is the same for all features
+(default=TRUE)}
 
 \item{maxiter}{maximum number of iterations (default 25)}
 
@@ -18,7 +21,7 @@ zinbOptimize(m, Y, maxiter = 25, stop.epsilon = 1e-04, verbose = FALSE,
 
 \item{ncores}{number of cores (default to 1)}
 
-\item{stop.criterion}{stopping criterion, when the relative gain in
+\item{stop.criterion}{stopping criterion, when the relative gain in 
 likelihood is below epsilon (default 0.0001)}
 }
 \value{

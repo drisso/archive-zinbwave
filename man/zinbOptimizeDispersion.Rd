@@ -4,21 +4,24 @@
 \alias{zinbOptimizeDispersion}
 \title{Optimize the dispersion parameters of a ZINB regression model}
 \usage{
-zinbOptimizeDispersion(m, Y, ncores = 1)
+zinbOptimizeDispersion(m, Y, commondispersion = TRUE, ncores = 1)
 }
 \arguments{
 \item{m}{The model of class ZinbModel}
 
 \item{Y}{The matrix of counts.}
 
+\item{commondispersion}{Whether or not a single dispersion for all features
+is estimated (default TRUE)}
+
 \item{ncores}{Number of cores for parallel computation (default 1)}
 }
 \value{
-An object of class ZinbModel similar to the one given as argument
+An object of class ZinbModel similar to the one given as argument 
   with modified parameters zeta.
 }
 \description{
-The dispersion parameters of the model given as argument are optimized by
+The dispersion parameters of the model given as argument are optimized by 
 penalized maximum likelihood on the count matrix given as argument.
 }
 \examples{
