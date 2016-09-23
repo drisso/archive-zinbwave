@@ -11,11 +11,10 @@ Authors@R:
           email="jean-philippe.vert@mines-paristech.fr"),
       person("Sandrine", "Dudoit", role="aut", 
           email="sandrine@stat.berkeley.edu"))
-Author:
-    Davide Risso [aut, cre, cph], 
-    Svetlana Gribkova [aut], 
-    Jean-Philippe Vert [aut], 
-    Sandrine Dudoit [aut]
+Author: Davide Risso [aut, cre, cph], 
+        Svetlana Gribkova [aut], 
+        Jean-Philippe Vert [aut], 
+        Sandrine Dudoit [aut]
 Maintainer: Davide Risso <risso.davide@gmail.com>
 Description: 
    Implements a zero-inflated negative binomial model for single-cell 
