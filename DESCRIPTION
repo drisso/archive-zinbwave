@@ -26,8 +26,10 @@ Depends:
    methods
 Imports:
    clusterExperiment,
-   copula, 
-   parallel
+   copula,
+   glmnet,
+   parallel,
+   softImpute
 Suggests: 
     knitr,
     rmarkdown,
