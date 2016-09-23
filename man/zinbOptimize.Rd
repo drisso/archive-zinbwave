@@ -17,12 +17,12 @@ zinbOptimize(m, Y, commondispersion = TRUE, maxiter = 25,
 
 \item{maxiter}{maximum number of iterations (default 25)}
 
+\item{stop.epsilon}{stopping criterion, when the relative gain in 
+likelihood is below epsilon (default 0.0001)}
+
 \item{verbose}{print information (default FALSE)}
 
 \item{ncores}{number of cores (default to 1)}
-
-\item{stop.criterion}{stopping criterion, when the relative gain in 
-likelihood is below epsilon (default 0.0001)}
 }
 \value{
 An object of class ZinbModel similar to the one given as argument 

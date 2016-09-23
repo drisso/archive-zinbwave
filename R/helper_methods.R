@@ -267,6 +267,8 @@ zinbModel <- function(...) {
 
 #' @export
 #' @describeIn ZinbModel show useful info on the object.
+#' 
+#' @param object an object of class \code{ZinbModel}.
 setMethod("show", "ZinbModel",
           function(object) {
               cat(paste0("Object of class ZinbModel.\n",
@@ -285,6 +287,7 @@ setMethod("show", "ZinbModel",
 #' @export
 #' @importFrom clusterExperiment nSamples
 #' @describeIn ZinbModel returns the number of samples.
+#' @param x an object of class \code{ZinbModel}.
 setMethod("nSamples", "ZinbModel",
           function(x) {
               return(NROW(x@X))
@@ -517,6 +520,9 @@ setMethod("getEpsilon_zeta", "ZinbModel",
 #' @export
 #' @describeIn zinbSim simulate from a ZINB distribution.
 #' @importFrom parallel mclapply
+#' 
+#' @param no_cores number of cores for parallel computations (to be passed to
+#'   mclapply).
 setMethod(
     f="zinbSim",
     signature="ZinbModel",

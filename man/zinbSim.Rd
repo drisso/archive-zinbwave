@@ -19,6 +19,9 @@ should be initialized with a call to \code{set.seed}. If missing, the
 random generator state is not changed.}
 
 \item{...}{additional arguments.}
+
+\item{no_cores}{number of cores for parallel computations (to be passed to
+mclapply).}
 }
 \value{
 A list with the following elements.

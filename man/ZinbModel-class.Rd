@@ -18,6 +18,11 @@
 
 \S4method{nFactors}{ZinbModel}(x)
 }
+\arguments{
+\item{object}{an object of class \code{ZinbModel}.}
+
+\item{x}{an object of class \code{ZinbModel}.}
+}
 \description{
 Objects of this class store all the values needed to work with a 
 zero-inflated negative binomial (ZINB) model, as described in the vignette. 

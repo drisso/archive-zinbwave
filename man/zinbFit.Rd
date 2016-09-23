@@ -16,6 +16,23 @@ zinbFit(Y, ...)
 \item{Y}{The data (genes in rows, samples in columns).}
 
 \item{...}{Additional parameters to describe the model, see \link{zinbModel}.}
+
+\item{commondispersion}{Whether or not a single dispersion for all features 
+is estimated (default TRUE).}
+
+\item{ncores}{The number of cores for parallel computations (passed to
+mclapply).}
+
+\item{verbose}{Print helpful messages.}
+
+\item{nb.repeat.initialize}{Number of iterations for the initialization of
+beta_mu and gamma_mu.}
+
+\item{maxiter.optimize}{maximum number of iterations for the optimization
+step (default 25).}
+
+\item{stop.epsilon.optimize}{stopping criterion in the optimization step,
+when the relative gain in likelihood is below epsilon (default 0.0001).}
 }
 \value{
 An object of class \code{ZinbModel} that has been fitted by penalized

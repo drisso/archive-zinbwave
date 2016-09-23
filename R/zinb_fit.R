@@ -1,6 +1,18 @@
 #' @describeIn zinbFit Y is a matrix of counts (genes in rows).
 #' @export
 #' 
+#' @param commondispersion Whether or not a single dispersion for all features 
+#'   is estimated (default TRUE).
+#' @param ncores The number of cores for parallel computations (passed to
+#'   mclapply).
+#' @param verbose Print helpful messages.
+#' @param nb.repeat.initialize Number of iterations for the initialization of
+#'   beta_mu and gamma_mu.
+#' @param maxiter.optimize maximum number of iterations for the optimization
+#'   step (default 25).
+#' @param stop.epsilon.optimize stopping criterion in the optimization step,
+#'   when the relative gain in likelihood is below epsilon (default 0.0001).
+#'  
 #' @details By default, i.e., if no arguments other than \code{Y} are passed, 
 #'   the model is fitted with an intercept for the regression across-samples and
 #'   one intercept for the regression across genes, both for mu and for pi.
@@ -213,7 +225,7 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
 #' @param commondispersion Whether the dispersion is the same for all features
 #'   (default=TRUE)
 #' @param maxiter maximum number of iterations (default 25)
-#' @param stop.criterion stopping criterion, when the relative gain in 
+#' @param stop.epsilon stopping criterion, when the relative gain in 
 #'   likelihood is below epsilon (default 0.0001)
 #' @param verbose print information (default FALSE)
 #' @param ncores number of cores (default to 1)
