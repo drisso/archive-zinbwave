@@ -1,3 +1,12 @@
+#' Toy dataset to check the model
+#' 
+#' @name toydata
+#' @aliases toydata
+#' 
+#' @format A matrix of integers (counts) with 96 samples (rows) and 500 genes
+#'   (columns).
+NULL
+
 setMethod(
     f="initialize",
     signature="ZinbModel",
