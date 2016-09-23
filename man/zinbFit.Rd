@@ -57,7 +57,7 @@ This means that by default the model is fitted with \code{X_mu =
 }}
 \examples{
 bio <- gl(2, 3)
-m <- zinbFit(matrix(10, 10, 6), X=model.matrix(~bio))
+m <- zinbFit(matrix(rpois(60, lambda=5), nrow=10, ncol=6), X=model.matrix(~bio))
 }
 \seealso{
 \code{\link[stats]{model.matrix}}.

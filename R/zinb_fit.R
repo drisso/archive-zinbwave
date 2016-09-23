@@ -26,9 +26,12 @@
 #' 
 #' @examples 
 #' bio <- gl(2, 3)
-#' m <- zinbFit(matrix(10, 10, 6), X=model.matrix(~bio))
+#' m <- zinbFit(matrix(rpois(60, lambda=5), nrow=10, ncol=6), X=model.matrix(~bio))
 setMethod("zinbFit", "matrix",
           function(Y, commondispersion=TRUE, ncores=1, verbose=FALSE, nb.repeat.initialize=2, maxiter.optimize=25, stop.epsilon.optimize=.0001, ...) {
+    
+    # Transpose Y: UI wants genes in rows, internals genes in columns!
+    Y <- t(Y)
     
     # Create a ZinbModel object
     if (verbose) {cat("Create model: ")}
@@ -233,10 +236,10 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
 #'   with modified parameters alpha_mu, alpha_pi, beta_mu, beta_pi, gamma_mu, 
 #'   gamma_pi, W.
 #' @examples
-#' Y = matrix(10,3,5)
-#' m = zinbModel(n=NROW(Y),J=NCOL(Y))
-#' m = zinbInitialize(m,Y)
-#' m = zinbOptimize(m,Y)
+#' Y = matrix(10, 3, 5)
+#' m = zinbModel(n=NROW(Y), J=NCOL(Y))
+#' m = zinbInitialize(m, Y)
+#' m = zinbOptimize(m, Y)
 #' @export
 zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25, stop.epsilon=.0001, verbose=FALSE, ncores=1) {
     
@@ -363,10 +366,10 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25, stop.epsilon=.
 #' @return An object of class ZinbModel similar to the one given as argument 
 #'   with modified parameters zeta.
 #' @examples
-#' Y = matrix(10,3,5)
-#' m = zinbModel(n=NROW(Y),J=NCOL(Y))
-#' m = zinbInitialize(m,Y)
-#' m = zinbOptimizeDispersion(m,Y)
+#' Y = matrix(10, 3, 5)
+#' m = zinbModel(n=NROW(Y), J=NCOL(Y))
+#' m = zinbInitialize(m, Y)
+#' m = zinbOptimizeDispersion(m, Y)
 #' @export
 zinbOptimizeDispersion <- function(m, Y, commondispersion=TRUE, ncores=1) {
     

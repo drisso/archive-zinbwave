@@ -25,9 +25,9 @@ The dispersion parameters of the model given as argument are optimized by
 penalized maximum likelihood on the count matrix given as argument.
 }
 \examples{
-Y = matrix(10,3,5)
-m = zinbModel(n=NROW(Y),J=NCOL(Y))
-m = zinbInitialize(m,Y)
-m = zinbOptimizeDispersion(m,Y)
+Y = matrix(10, 3, 5)
+m = zinbModel(n=NROW(Y), J=NCOL(Y))
+m = zinbInitialize(m, Y)
+m = zinbOptimizeDispersion(m, Y)
 }
 

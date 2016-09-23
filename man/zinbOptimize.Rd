@@ -37,9 +37,9 @@ optimization, since the optimization problem is not convex and can only
 converge to a local minimum.
 }
 \examples{
-Y = matrix(10,3,5)
-m = zinbModel(n=NROW(Y),J=NCOL(Y))
-m = zinbInitialize(m,Y)
-m = zinbOptimize(m,Y)
+Y = matrix(10, 3, 5)
+m = zinbModel(n=NROW(Y), J=NCOL(Y))
+m = zinbInitialize(m, Y)
+m = zinbOptimize(m, Y)
 }
 
