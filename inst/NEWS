@@ -1,6 +1,8 @@
-Changes in Version 0.0.3 (2016-06-30)
+Changes in Version 0.1.0 (2016-09-23)
 =====================================
 
-* Introducing S4 class zinb_model
-* Methods to simulate data and fit model
+* Introducing S4 class zinbModel
+* Major restructuring of the initialization and optimization (see vignette)
+* Method zinbFit to fit a model 
+* Many other methods, including zinbInitialize, zinbOptimize, zinbSim
 
