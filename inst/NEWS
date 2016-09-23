@@ -1,0 +1,6 @@
+Changes in Version 0.0.3 (2016-06-30)
+=====================================
+
+* Introducing S4 class zinb_model
+* Methods to simulate data and fit model
+
