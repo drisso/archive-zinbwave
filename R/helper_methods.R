@@ -1,8 +1,8 @@
 #' Toy dataset to check the model
-#' 
+#'
 #' @name toydata
 #' @aliases toydata
-#' 
+#'
 #' @format A matrix of integers (counts) with 96 samples (rows) and 500 genes
 #'   (columns).
 NULL
@@ -13,10 +13,10 @@ setMethod(
     definition=function(.Object, X, V, O_mu, O_pi, which_X_mu,
                         which_X_pi, which_V_mu, which_V_pi, W, beta_mu, beta_pi,
                         gamma_mu, gamma_pi, alpha_mu, alpha_pi, zeta, epsilon,
-                        epsilon_beta_mu, epsilon_gamma_mu, epsilon_beta_pi, 
-                        epsilon_gamma_pi, epsilon_W, epsilon_alpha, 
+                        epsilon_beta_mu, epsilon_gamma_mu, epsilon_beta_pi,
+                        epsilon_gamma_pi, epsilon_W, epsilon_alpha,
                         epsilon_zeta, epsilon_min_logit, n, J, K) {
-        
+
         # Find n (default 50), J (default 100), K (default 0)
         if (missing(n)) {
             if (!missing(X)) {
@@ -63,7 +63,7 @@ setMethod(
                 K <- 0
             }
         }
-        
+
         # Set the different slots for the matrices
         if (!missing(X)) {
             .Object@X <- X
@@ -75,7 +75,7 @@ setMethod(
         } else {
             .Object@V <- matrix(1, nrow=J, ncol=1)
         }
-        
+
         if (!missing(which_X_mu)) {
             .Object@which_X_mu <- which_X_mu
         } else if (NCOL(.Object@X)>0) {
@@ -104,14 +104,14 @@ setMethod(
         } else {
             .Object@which_V_pi <- integer(0)
         }
-        
-        
+
+
         if (all(.Object@X[,.Object@which_X_mu[1]]==1)) {
             .Object@X_mu_intercept <- TRUE
         } else {
             .Object@X_mu_intercept <- FALSE
         }
-        
+
         if (all(.Object@V[,.Object@which_V_mu[1]]==1)) {
             .Object@V_mu_intercept <- TRUE
         } else {
@@ -122,13 +122,13 @@ setMethod(
         } else {
             .Object@X_pi_intercept <- FALSE
         }
-        
+
         if (all(.Object@V[,.Object@which_V_pi[1]]==1)) {
             .Object@V_pi_intercept <- TRUE
         } else {
             .Object@V_pi_intercept <- FALSE
         }
-        
+
         if (!missing(O_mu)) {
             .Object@O_mu <- O_mu
         } else {
@@ -139,13 +139,13 @@ setMethod(
         } else {
             .Object@O_pi <- matrix(0, nrow=n, ncol=J)
         }
-        
+
         if (!missing(W)) {
             .Object@W <- W
         } else {
             .Object@W <- matrix(0, nrow=n , ncol=K)
         }
-        
+
         if (!missing(beta_mu)) {
             .Object@beta_mu <- beta_mu
         } else {
@@ -181,7 +181,7 @@ setMethod(
         } else {
             .Object@zeta <- numeric(J)
         }
-        
+
         # Regularization parameters
         if (missing(epsilon)) {
             epsilon <- 1e-3
@@ -208,12 +208,12 @@ setMethod(
             .Object@epsilon_gamma_pi <- epsilon_gamma_pi
         } else {
             .Object@epsilon_gamma_pi <- epsilon/n
-        }        
+        }
         if (!missing(epsilon_W)) {
             .Object@epsilon_W <- epsilon_W
         } else {
             .Object@epsilon_W <- epsilon/n
-        }        
+        }
         if (!missing(epsilon_alpha)) {
             .Object@epsilon_alpha <- epsilon_alpha
         } else {
@@ -223,8 +223,8 @@ setMethod(
             .Object@epsilon_zeta <- epsilon_zeta
         } else {
             .Object@epsilon_zeta <- epsilon
-        }        
-        
+        }
+
         validObject(.Object) # call of the inspector
         return(.Object)
     }
@@ -232,42 +232,42 @@ setMethod(
 
 #' Initialize an object of class ZinbModel
 #' @export
-#' 
-#' @param ... arguments passed to \code{new()}. See the \code{slots} section in 
+#'
+#' @param ... arguments passed to \code{new()}. See the \code{slots} section in
 #'   \code{\link{ZinbModel}}.
-#'   
-#' @details This is a light wrapper around the new() function to create an 
+#'
+#' @details This is a light wrapper around the new() function to create an
 #'   instance of class \code{ZinbModel}.
-#'   
-#' @details If any of the related matrices are passed, \code{n}, \code{J}, and 
-#'   \code{K} are inferred. Alternatively, the user can specify one or more of 
+#'
+#' @details If any of the related matrices are passed, \code{n}, \code{J}, and
+#'   \code{K} are inferred. Alternatively, the user can specify one or more of
 #'   \code{n}, \code{J}, and \code{K}.
-#'   
+#'
 #' @details The regularization parameters can be set by a unique parameter
 #'   \code{epsilon}, as described in the vignette; or specific values for the
 #'   different regularization parameters can also be provided.
-#'   
-#' @details A call with no argument has the following default values: \code{n = 
+#'
+#' @details A call with no argument has the following default values: \code{n =
 #'   50}, \code{J = 100}, \code{K = 0}, \code{epsilon=1e-3}.
-#'   
-#' @details Although it is possible to create new instances of the class by 
-#'   calling this function, this is not the most common way of creating 
-#'   \code{ZinbModel} objects. The main use of the class is within the 
+#'
+#' @details Although it is possible to create new instances of the class by
+#'   calling this function, this is not the most common way of creating
+#'   \code{ZinbModel} objects. The main use of the class is within the
 #'   \code{\link{zinbFit}} function.
-#'   
+#'
 #' @examples
 #' a <- zinbModel()
 #' nSamples(a)
 #' nFeatures(a)
 #' nFactors(a)
-#' 
+#'
 zinbModel <- function(...) {
     new(Class="ZinbModel", ...)
 }
 
 #' @export
 #' @describeIn ZinbModel show useful info on the object.
-#' 
+#'
 #' @param object an object of class \code{ZinbModel}.
 setMethod("show", "ZinbModel",
           function(object) {
@@ -410,8 +410,8 @@ setMethod("getLogitPi", "ZinbModel",
 setMethod("getPi", "ZinbModel",
     function(object) {
         # return(stats::binomial()$linkinv(getLogitPi(object))
-        # Instead of the call to stats::binomial() in the previous line, we 
-        # directly compute with the exp() function which remains exact for 
+        # Instead of the call to stats::binomial() in the previous line, we
+        # directly compute with the exp() function which remains exact for
         # smaller values of the arguments.
         return(1/(1+exp(-getLogitPi(object))))
     }
@@ -520,18 +520,18 @@ setMethod("getEpsilon_zeta", "ZinbModel",
 #' @export
 #' @describeIn zinbSim simulate from a ZINB distribution.
 #' @importFrom parallel mclapply
-#' 
+#'
 #' @param no_cores number of cores for parallel computations (to be passed to
 #'   mclapply).
 setMethod(
     f="zinbSim",
     signature="ZinbModel",
     definition=function(object, seed, no_cores=1) {
-        
+
         if (!exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
             runif(1)
         }
-        
+
         if (missing(seed)) {
             RNGstate <- get(".Random.seed", envir = .GlobalEnv)
         } else {
@@ -540,38 +540,38 @@ setMethod(
             RNGstate <- structure(seed, kind = as.list(RNGkind()))
             on.exit(assign(".Random.seed", R.seed, envir = .GlobalEnv))
         }
-        
+
         mu <- getMu(object)
         pi <- getPi(object)
         theta <- getTheta(object)
         n <- nSamples(object)
         J <- nFeatures(object)
-        
+
         # Simulate negative binomial with the mean matrix and dispersion
         # parameters
-        datanb <- parallel::mclapply(seq(n*J), 
-                                     function(i) { 
+        datanb <- parallel::mclapply(seq(n*J),
+                                     function(i) {
                                          rnbinom(1, mu = mu[i] , size = theta[ceiling(i/n)])
                                      }, mc.cores = no_cores)
-        
+
         data.nb <- matrix(unlist(datanb), nrow = n )
-        
+
         # Simulate the binary dropout matrix. "1" means that a dropout (zero) is
         # observed instead of the value
-        datado <- parallel::mclapply(seq(n*J), 
-                                     function(i) { 
+        datado <- parallel::mclapply(seq(n*J),
+                                     function(i) {
                                          rbinom(1, size =1, prob = pi[i])
                                      }, mc.cores = no_cores)
-        
+
         data.dropout <- matrix(unlist(datado), nrow = n)
-        
+
         # Matrix of zero-inflated counts
         counts <- data.nb * (1 - data.dropout)
-        
+
         # Fraction of zeros in the matrix
-        zero.fraction <- sum(counts == 0) / (n*J)    
-        
-        ret <- list(counts = counts, dataNB = data.nb, 
+        zero.fraction <- sum(counts == 0) / (n*J)
+
+        ret <- list(counts = counts, dataNB = data.nb,
                     dataDropouts = data.dropout, zeroFraction = zero.fraction)
         attr(ret, "seed") <- RNGstate
         ret

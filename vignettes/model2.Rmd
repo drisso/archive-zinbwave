@@ -3,7 +3,8 @@ title: "Zero-inflated models for single-cell RNA-seq data"
 author: "The ZINB team"
 date: '`r Sys.Date()`'
 output: 
-    pdf_document:
+  pdf_document:
+    keep_tex: no
 bibliography: bibli.bib
 header-includes:
    - \usepackage{bbm}

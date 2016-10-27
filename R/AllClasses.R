@@ -1,23 +1,23 @@
 #' Class ZinbModel
-#' 
-#' Objects of this class store all the values needed to work with a 
-#' zero-inflated negative binomial (ZINB) model, as described in the vignette. 
-#' They contain all information to fit a model by penalized maximum likelihood 
+#'
+#' Objects of this class store all the values needed to work with a
+#' zero-inflated negative binomial (ZINB) model, as described in the vignette.
+#' They contain all information to fit a model by penalized maximum likelihood
 #' or simulate data from a model.
-#' 
-#' @slot X matrix. The design matrix containing sample-level covariates, one 
+#'
+#' @slot X matrix. The design matrix containing sample-level covariates, one
 #'   sample per row.
-#' @slot V matrix. The design matrix containing gene-level covariates, one gene 
+#' @slot V matrix. The design matrix containing gene-level covariates, one gene
 #'   per row.
 #' @slot O_mu matrix. The offset matrix for mu.
 #' @slot O_pi matrix. The offset matrix for pi.
-#' @slot which_X_mu integer. Indeces of which columns of X to use in the 
+#' @slot which_X_mu integer. Indeces of which columns of X to use in the
 #'   regression of mu.
-#' @slot which_V_mu integer. Indeces of which columns of V to use in the 
+#' @slot which_V_mu integer. Indeces of which columns of V to use in the
 #'   regression of mu.
-#' @slot which_X_pi integer. Indeces of which columns of X to use in the 
+#' @slot which_X_pi integer. Indeces of which columns of X to use in the
 #'   regression of pi.
-#' @slot which_V_pi integer. Indeces of which columns of V to use in the 
+#' @slot which_V_pi integer. Indeces of which columns of V to use in the
 #'   regression of pi.
 #' @slot X_mu_intercept logical. TRUE if X_mu contains an intercept.
 #' @slot X_pi_intercept logical. TRUE if X_pi contains an intercept.
@@ -31,13 +31,13 @@
 #' @slot gamma_pi matrix or NULL. The coefficients of V in the regression of pi.
 #' @slot alpha_pi matrix or NULL. The coefficients of W in the regression of pi.
 #' @slot zeta numeric. A vector of log of inverse dispersion parameters.
-#' @slot epsilon_beta_mu nonnegative scalar. Regularization parameter for 
+#' @slot epsilon_beta_mu nonnegative scalar. Regularization parameter for
 #'   beta_mu
-#' @slot epsilon_gamma_mu nonnegative scalar. Regularization parameter for 
+#' @slot epsilon_gamma_mu nonnegative scalar. Regularization parameter for
 #'   gamma_mu
-#' @slot epsilon_beta_pi nonnegative scalar. Regularization parameter for 
+#' @slot epsilon_beta_pi nonnegative scalar. Regularization parameter for
 #'   beta_pi
-#' @slot epsilon_gamma_pi nonnegative scalar. Regularization parameter for 
+#' @slot epsilon_gamma_pi nonnegative scalar. Regularization parameter for
 #'   gamma_pi
 #' @slot epsilon_W nonnegative scalar. Regularization parameter for W
 #' @slot epsilon_alpha nonnegative scalar. Regularization parameter for alpha
@@ -45,17 +45,17 @@
 #' @slot epsilon_zeta nonnegative scalar. Regularization parameter for zeta
 #' @slot epsilon_min_logit scalar. Minimum regularization parameter for
 #'   parameters of the logit model, including the intercept.
-#'   
-#' @details For the full description of the model see the model vignette. 
-#'   Internally, the slots are checked so that the matrices are of the 
-#'   appropriate dimensions: in particular, \code{X}, \code{O_mu}, \code{O_pi}, 
-#'   and \code{W} need to have \code{n} rows, \code{V} needs to have \code{J} 
+#'
+#' @details For the full description of the model see the model vignette.
+#'   Internally, the slots are checked so that the matrices are of the
+#'   appropriate dimensions: in particular, \code{X}, \code{O_mu}, \code{O_pi},
+#'   and \code{W} need to have \code{n} rows, \code{V} needs to have \code{J}
 #'   rows, \code{zeta} must be of length \code{J}.
 #' @name ZinbModel-class
 #' @import methods
 #' @exportClass ZinbModel
 #' @aliases ZinbModel
-#'   
+#'
 setClass(
     Class = "ZinbModel",
     slots = list(X = "matrix",
@@ -90,15 +90,16 @@ setClass(
 )
 
 setValidity("ZinbModel", function(object){
+
     n <- NROW(object@X) # number of samples
     J <- NROW(object@V) # number of genes
     K <- NCOL(object@W) # number of latent factors
-    
+
     if(K > n) {
-        return("Cannot have more latent factors than samples.")        
+        return("Cannot have more latent factors than samples.")
     }
     if(K > J) {
-        return("Cannot have more latent factors than genes.")        
+        return("Cannot have more latent factors than genes.")
     }
     if(NROW(object@W) != n) {
         return("W must have n rows!")
@@ -187,7 +188,7 @@ setValidity("ZinbModel", function(object){
     if((length(object@epsilon_zeta) != 1) || (object@epsilon_zeta < 0)) {
         return("epsilon_zeta must be a nonnegative scalar !")
     }
-    
+
     if((length(object@epsilon_min_logit) != 1) || (object@epsilon_min_logit < 0)) {
         return("epsilon_min_logit must be a nonnegative scalar !")
     }
