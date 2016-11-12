@@ -39,7 +39,7 @@ $$
 $$
 where $\delta_0(\cdot)$ is the Dirac function. Here, $\pi$ can be interpreted as the probability that a $0$ is observed instead of the actual count, resulting in an inflation of zeros compared to the NB distribution, hence the name ZINB.
 
-Given $n$ samples (typically, $n$ single cells) and $J$ features (typically, $J$ genes) that can be counted in each samples, let $Y_{ij}$ be the count of feature $j$ (for $j=1,\ldots,J$) in sample $i$ ($i=1,\ldots,n$). To account for various technical and biological effects frequent in particular in single-cell sequencing technologies, we model $Y_{ij}$ as a random variable following a ZINB distribution with parameters $\mu_{ij}, \theta_{ij}$, and $\pi_{ij}$, and consider the following model for the parameters:
+Given $n$ samples (typically, $n$ single cells) and $J$ features (typically, $J$ genes) that can be counted in each sample, let $Y_{ij}$ be the count of feature $j$ (for $j=1,\ldots,J$) in sample $i$ ($i=1,\ldots,n$). To account for various technical and biological effects frequent in particular in single-cell sequencing technologies, we model $Y_{ij}$ as a random variable following a ZINB distribution with parameters $\mu_{ij}, \theta_{ij}$, and $\pi_{ij}$, and consider the following model for the parameters:
 \begin{align}
 \label{eq:model1}
 \ln(\mu_{ij}) &= \left( X\beta_\mu + (V\gamma_\mu)^\top + W\alpha_\mu + O_\mu\right)_{ij}\,,\\
@@ -126,7 +126,7 @@ W = \left(\frac{n}{J}\right)^{\frac{1}{4}} R_L R_\Sigma^{\frac{1}{2}} \,,\quad T
 $$
 In particular, for any $i=1,\ldots,\min(n,J)$,
 $$
-\frac{1}{n} \sum_{j=1}^n S_{j,i}^2 = \frac{1}{J} \sum_{j=1}^J T_{i,j}^2 = \frac{[R_\Sigma]_{i,i}}{\sqrt{nJ}}.
+\frac{1}{n} \sum_{j=1}^n W_{j,i}^2 = \frac{1}{J} \sum_{j=1}^J \alpha_{i,j}^2 = \frac{[R_\Sigma]_{i,i}}{\sqrt{nJ}}.
 $$
 \end{corollary}
 
@@ -242,7 +242,7 @@ Note that this optimization can be performed independently and in parallel for e
 \text{logit}(\pi) &= A_\pi a_\pi + B_\pi b + C_\pi \,,\\
 \ln(\theta) &= C_\theta \,.
 \end{align*}
-To solve (\ref{eq:leftoptim}) for cell $i$ we call \texttt{solveZinbRegression} with the following parameters:
+We give more details on how to solve \texttt{solveZinbRegression} in the next section. To solve (\ref{eq:leftoptim}) for cell $i$ we call \texttt{solveZinbRegression} with the following parameters:
 $$
 \begin{cases}
 a_\mu &= \gamma_\mu[.,i]\\
@@ -285,6 +285,59 @@ $$
 This is obtained by applying Lemma~\ref{lem:tracenorm}, starting from an SVD decomposition of the current $\hat{W}\hat{\alpha}$. Note that this step not only allows to maximize locally the penalized log-likelihood, but also ensures that the columns of $W$ stay orthogonal to each other during optimization.
 \end{enumerate}
 
-**TODO: write gradients and explain how steps 1-3 are implemented using a single function**
+### Solving \texttt{solveZinbRegression}
+
+Given a $N$-dimensional matrix of counts $y\in\mathbb{N}^N$, and matrix $A_\mu\in\mathbb{R}^{N\times p}$, $B_\mu\in\mathbb{R}^{N\times r}$, $C_\mu\in\mathbb{R}^{N}$, $A_\pi\in\mathbb{R}^{N\times q}$, $B_\pi\in\mathbb{R}^{N\times r}$, $C_\pi\in\mathbb{R}^{N}$ and $C_\theta\in\mathbb{R}^{N}$, for some integers $p, q,r$, the function \texttt{solveZinbRegression}$(y,A_\mu,B_\mu,C_\mu,A_\pi,B_\pi,C_\pi,C_\theta)$ attempts to find parameters $(a_\mu,a_\pi,b) \in \mathbb{R}^{p}\times \mathbb{R}^{q}\times\mathbb{R}^{r}$ that maximize the ZINB log-likelihood of $y$ with parameters:
+\begin{align*}
+\ln(\mu) &= A_\mu a_\mu + B_\mu b + C_\mu\,,\\
+\text{logit}(\pi) &= A_\pi a_\pi + B_\pi b + C_\pi \,,\\
+\ln(\theta) &= C_\theta \,.
+\end{align*}
+Starting from an initial guess (as explained in the different steps above), we perform a local minimization of this function $F(a_\mu,a_\pi,b)$ using the Broyden-Fletcher-Goldfarb-Shanno (BFGS) quasi-Newton method. Let us now give some implementation details, on how the gradient of $F$ is computed.
+
+Given a single count $y$ (i.e., $N=1$), let us first explicit the derivatives of the log-likelihood of $y$ with respect to the $(\mu,\pi)$ parameters of the ZINB distribution. Let us first observe that
+$$
+\frac{\partial}{\partial\mu}\ln f_{NB}(y;\mu,\theta) = \frac{y}{\mu} - \frac{y+\theta}{\mu+\theta}\,,
+$$
+and that by definition of the ZINB distribution the following holds:
+\begin{align*}
+\frac{\partial}{\partial\mu}\ln f_{ZINB}(y;\mu,\theta,\pi) 
+&= \frac{(1-\pi)f_{NB}(y;\mu,\theta) \frac{\partial}{\partial\mu}\ln f_{NB}(y;\mu,\theta) }{f_{ZINB}(y;\mu,\theta,\pi) }\,, \\
+\frac{\partial}{\partial\pi}\ln f_{ZINB}(y;\mu,\theta,\pi) 
+&= \frac{\delta_0(y) - f_{NB}(y;\mu,\theta)}{f_{ZINB}(y;\mu,\theta,\pi) }\,.
+\end{align*}
+Let us explicit these expressions, depending on whether or not $y$ is null:
+\begin{itemize}
+\item If $y>0$, then $\delta_0(y)=0$ and $f_{ZINB}(y;\mu,\theta,\pi) = (1-\pi)f_{NB}(y;\mu,\theta)$, so we obtain:
+\begin{align*}
+\frac{\partial}{\partial\mu}\ln f_{ZINB}(y;\mu,\theta,\pi) 
+&= \frac{y}{\mu} - \frac{y+\theta}{\mu+\theta}\,, \\
+\frac{\partial}{\partial\pi}\ln f_{ZINB}(y;\mu,\theta,\pi) 
+&= \frac{-1}{1-\pi}\,.
+\end{align*}
+\item If $y=0$, then $\delta_0(y)=0$, and we get
+\begin{align*}
+\frac{\partial}{\partial\mu}\ln f_{ZINB}(0;\mu,\theta,\pi) 
+&= \frac{-(1-\pi) \left(\frac{\theta}{\mu+\theta}\right)^{\theta+1}}{\pi+(1-\pi) \left(\frac{\theta}{\mu+\theta}\right)^{\theta}}\,, \\
+\frac{\partial}{\partial\pi}\ln f_{ZINB}(0;\mu,\theta,\pi) 
+&= \frac{1 - \left(\frac{\theta}{\mu+\theta}\right)^{\theta}}{\pi+(1-\pi) \left(\frac{\theta}{\mu+\theta}\right)^{\theta}}\,.
+\end{align*}
+\end{itemize}
+When $N\geq 1$, using standard calculus for the differentiation of compositions and the facts that:
+\begin{align*}
+\left( \ln^{-1}\right)'(\ln \mu) &= \mu\,, \\
+\left( \text{logit}^{-1}\right)'(\text{logit} \pi) &= \pi(1-\pi)\,,
+\end{align*}
+we finally get that
+\begin{align*}
+\nabla_{a_\mu} F &= A_\mu^\top G\,,\\
+\nabla_{a_\pi} F &= A_\pi^\top H\,,\\
+\nabla_{b} F &= B_\mu^\top G + B_\pi^\top H\,.
+\end{align*}
+where $G$ and $H$ are the $N$-dimensional vectors given by
+\begin{align*}
+\forall i\in[1,N],\quad G_i &= \mu_i \frac{\partial}{\partial\mu}\ln f_{ZINB}(y_i;\mu_i,\theta_i,\pi_i)\,, \\
+H_i &= \pi_i(1-\pi_i) \frac{\partial}{\partial\pi}\ln f_{ZINB}(y_i;\mu_i,\theta_i,\pi_i)\,.
+\end{align*}
 
 # References
