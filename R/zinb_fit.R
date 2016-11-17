@@ -53,6 +53,35 @@ setMethod("zinbFit", "matrix",
     m
 })
 
+#' @describeIn zinbFit Y is a sparse matrix of counts (genes in rows).
+#' @export
+#' @import Matrix
+setMethod("zinbFit", "dgCMatrix",
+          function(Y, commondispersion=TRUE, ncores=1, verbose=FALSE, nb.repeat.initialize=2, maxiter.optimize=25, stop.epsilon.optimize=.0001, ...) {
+              
+              
+              # Transpose Y: UI wants genes in rows, internals genes in columns!
+              Y <- t(Y)
+              
+              # Create a ZinbModel object
+              if (verbose) {cat("Create model: ")}
+              m <- zinbModel(n=NROW(Y), J=NCOL(Y), ...)
+              if (verbose) {cat("ok\n")}
+              
+              # Initialize the parameters
+              if (verbose) {cat("Initialize parameters: \n")}
+              m <- zinbInitialize(m, Y, ncores = ncores, nb.repeat=nb.repeat.initialize)
+              if (verbose) {cat("ok\n")}
+              
+              # Optimize parameters
+              if (verbose) {cat("Optimize parameters: \n")}
+              m <- zinbOptimize(m, Y, commondispersion=commondispersion, maxiter=maxiter.optimize, stop.epsilon=stop.epsilon.optimize, ncores=ncores, verbose=verbose)
+              if (verbose) {cat("ok\n")}
+              
+              validObject(m)
+              m
+          })
+
 #' Initialize the parameters of a ZINB regression model
 #'
 #' The initialization performs quick optimization of the parameters with several
@@ -83,7 +112,6 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
 
     ## we want to work with genes in columns
     #Y <- t(Y)
-
     n <- NROW(Y)
     J <- NCOL(Y)
 
@@ -96,7 +124,7 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
     }
 
     ## 1. Define P
-    P <- Y > 0
+    P <- as.matrix(Y > 0)
 
     if(any(rowSums(P) == 0)) {
         stop(paste0("Sample ", which(rowSums(P) == 0)[1], " has only 0 counts!"))
@@ -381,7 +409,7 @@ zinbOptimizeDispersion <- function(m, Y, commondispersion=TRUE, ncores=1) {
 
     # 1) Find a single dispersion parameter for all counts by 1-dimensional
     # optimization of the likelihood
-    g=optimize(f=zinb.loglik.dispersion, Y=Y, mu=mu,
+    g=optimize(f=zinb.loglik.dispersion, Y=as.matrix(Y), mu=mu,
                logitPi=logitPi, maximum=TRUE,interval=c(-100,100))
 
     zeta <- rep(g$maximum,J)

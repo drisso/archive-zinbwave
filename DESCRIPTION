@@ -1,7 +1,7 @@
 Package: zinb
 Type: Package
 Title: Zero-Inflated Negative Binomial Model for RNA-Seq Data
-Version: 0.1.0-9000
+Version: 0.1.0-9991
 Authors@R: 
     c(person("Davide","Risso", role=c("aut","cre", "cph"), 
           email="risso.davide@gmail.com" ),
@@ -27,6 +27,7 @@ Imports:
    clusterExperiment,
    copula,
    glmnet,
+   Matrix,
    parallel,
    softImpute
 Suggests: 

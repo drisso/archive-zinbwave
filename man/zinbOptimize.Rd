@@ -17,7 +17,7 @@ zinbOptimize(m, Y, commondispersion = TRUE, maxiter = 25,
 
 \item{maxiter}{maximum number of iterations (default 25)}
 
-\item{stop.epsilon}{stopping criterion, when the relative gain in 
+\item{stop.epsilon}{stopping criterion, when the relative gain in
 likelihood is below epsilon (default 0.0001)}
 
 \item{verbose}{print information (default FALSE)}
@@ -25,15 +25,15 @@ likelihood is below epsilon (default 0.0001)}
 \item{ncores}{number of cores (default to 1)}
 }
 \value{
-An object of class ZinbModel similar to the one given as argument 
-  with modified parameters alpha_mu, alpha_pi, beta_mu, beta_pi, gamma_mu, 
+An object of class ZinbModel similar to the one given as argument
+  with modified parameters alpha_mu, alpha_pi, beta_mu, beta_pi, gamma_mu,
   gamma_pi, W.
 }
 \description{
-The parameters of the model given as argument are optimized by penalized 
-maximum likelihood on the count matrix given as argument. It is recommended 
-to call zinb_initialize before this function to have good starting point for 
-optimization, since the optimization problem is not convex and can only 
+The parameters of the model given as argument are optimized by penalized
+maximum likelihood on the count matrix given as argument. It is recommended
+to call zinb_initialize before this function to have good starting point for
+optimization, since the optimization problem is not convex and can only
 converge to a local minimum.
 }
 \examples{

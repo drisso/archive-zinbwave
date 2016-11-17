@@ -3,12 +3,15 @@
 \docType{methods}
 \name{loglik}
 \alias{loglik}
+\alias{loglik,ZinbModel,dgCMatrix-method}
 \alias{loglik,ZinbModel,matrix-method}
 \title{Compute the log-likelihood of a model given some data}
 \usage{
 loglik(model, x, ...)
 
 \S4method{loglik}{ZinbModel,matrix}(model, x)
+
+\S4method{loglik}{ZinbModel,dgCMatrix}(model, x)
 }
 \arguments{
 \item{model}{an object that describes a statistical model.}
@@ -28,6 +31,8 @@ data under the model.
 \section{Methods (by class)}{
 \itemize{
 \item \code{model = ZinbModel,x = matrix}: return the log-likelihood of the ZINB model.
+
+\item \code{model = ZinbModel,x = dgCMatrix}: return the log-likelihood of the ZINB model.
 }}
 \examples{
 m <- zinbModel(n=5, J=10)

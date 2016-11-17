@@ -17,14 +17,14 @@ gamma_mu.}
 \item{ncores}{The number of cores. To be passed to mclapply.}
 }
 \value{
-An object of class ZinbModel similar to the one given as argument 
-  with modified parameters alpha_mu, alpha_pi, beta_mu, beta_pi, gamma_mu, 
+An object of class ZinbModel similar to the one given as argument
+  with modified parameters alpha_mu, alpha_pi, beta_mu, beta_pi, gamma_mu,
   gamma_pi, W.
 }
 \description{
 The initialization performs quick optimization of the parameters with several
-simplifying assumptions compared to the true model: non-zero counts are 
-models as log-Gaussian, zeros are modeled as dropouts. The dispersion 
+simplifying assumptions compared to the true model: non-zero counts are
+models as log-Gaussian, zeros are modeled as dropouts. The dispersion
 parameter is not modified.
 }
 \examples{

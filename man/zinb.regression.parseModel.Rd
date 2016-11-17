@@ -28,9 +28,9 @@ A list with slots \code{logMu}, \code{logitPi}, \code{dim.alpha} (a
   of length 3 with the starting indices of the 3 vectors in \code{alpha})
 }
 \description{
-Given the parameters of a ZINB regression model, this function parses the 
-model and computes the vector of log(mu), logit(pi), and the dimensions of 
-the different components of the vector of parameters. See 
+Given the parameters of a ZINB regression model, this function parses the
+model and computes the vector of log(mu), logit(pi), and the dimensions of
+the different components of the vector of parameters. See
 \code{\link{zinb.loglik.regression}} for details of the ZINB regression model
 and its parameters.
 }

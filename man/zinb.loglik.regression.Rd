@@ -30,9 +30,9 @@ zinb.loglik.regression(alpha, Y, A.mu = matrix(nrow = length(Y), ncol = 0),
 
 \item{C.theta}{matrix of the model (see Details, default=zero)}
 
-\item{epsilon}{regularization parameter. A vector of the same length as 
-\code{alpha} if each coordinate of \code{alpha} has a specific 
-regularization, or just a scalar is the regularization is the same for all 
+\item{epsilon}{regularization parameter. A vector of the same length as
+\code{alpha} if each coordinate of \code{alpha} has a specific
+regularization, or just a scalar is the regularization is the same for all
 coordinates of \code{alpha}. Default=\code{O}.}
 }
 \description{

@@ -24,16 +24,16 @@
 \item{x}{an object of class \code{ZinbModel}.}
 }
 \description{
-Objects of this class store all the values needed to work with a 
-zero-inflated negative binomial (ZINB) model, as described in the vignette. 
-They contain all information to fit a model by penalized maximum likelihood 
+Objects of this class store all the values needed to work with a
+zero-inflated negative binomial (ZINB) model, as described in the vignette.
+They contain all information to fit a model by penalized maximum likelihood
 or simulate data from a model.
 }
 \details{
-For the full description of the model see the model vignette. 
-  Internally, the slots are checked so that the matrices are of the 
-  appropriate dimensions: in particular, \code{X}, \code{O_mu}, \code{O_pi}, 
-  and \code{W} need to have \code{n} rows, \code{V} needs to have \code{J} 
+For the full description of the model see the model vignette.
+  Internally, the slots are checked so that the matrices are of the
+  appropriate dimensions: in particular, \code{X}, \code{O_mu}, \code{O_pi},
+  and \code{W} need to have \code{n} rows, \code{V} needs to have \code{J}
   rows, \code{zeta} must be of length \code{J}.
 }
 \section{Methods (by generic)}{
@@ -49,26 +49,26 @@ For the full description of the model see the model vignette.
 \section{Slots}{
 
 \describe{
-\item{\code{X}}{matrix. The design matrix containing sample-level covariates, one 
+\item{\code{X}}{matrix. The design matrix containing sample-level covariates, one
 sample per row.}
 
-\item{\code{V}}{matrix. The design matrix containing gene-level covariates, one gene 
+\item{\code{V}}{matrix. The design matrix containing gene-level covariates, one gene
 per row.}
 
 \item{\code{O_mu}}{matrix. The offset matrix for mu.}
 
 \item{\code{O_pi}}{matrix. The offset matrix for pi.}
 
-\item{\code{which_X_mu}}{integer. Indeces of which columns of X to use in the 
+\item{\code{which_X_mu}}{integer. Indeces of which columns of X to use in the
 regression of mu.}
 
-\item{\code{which_V_mu}}{integer. Indeces of which columns of V to use in the 
+\item{\code{which_V_mu}}{integer. Indeces of which columns of V to use in the
 regression of mu.}
 
-\item{\code{which_X_pi}}{integer. Indeces of which columns of X to use in the 
+\item{\code{which_X_pi}}{integer. Indeces of which columns of X to use in the
 regression of pi.}
 
-\item{\code{which_V_pi}}{integer. Indeces of which columns of V to use in the 
+\item{\code{which_V_pi}}{integer. Indeces of which columns of V to use in the
 regression of pi.}
 
 \item{\code{X_mu_intercept}}{logical. TRUE if X_mu contains an intercept.}
@@ -95,16 +95,16 @@ regression of pi.}
 
 \item{\code{zeta}}{numeric. A vector of log of inverse dispersion parameters.}
 
-\item{\code{epsilon_beta_mu}}{nonnegative scalar. Regularization parameter for 
+\item{\code{epsilon_beta_mu}}{nonnegative scalar. Regularization parameter for
 beta_mu}
 
-\item{\code{epsilon_gamma_mu}}{nonnegative scalar. Regularization parameter for 
+\item{\code{epsilon_gamma_mu}}{nonnegative scalar. Regularization parameter for
 gamma_mu}
 
-\item{\code{epsilon_beta_pi}}{nonnegative scalar. Regularization parameter for 
+\item{\code{epsilon_beta_pi}}{nonnegative scalar. Regularization parameter for
 beta_pi}
 
-\item{\code{epsilon_gamma_pi}}{nonnegative scalar. Regularization parameter for 
+\item{\code{epsilon_gamma_pi}}{nonnegative scalar. Regularization parameter for
 gamma_pi}
 
 \item{\code{epsilon_W}}{nonnegative scalar. Regularization parameter for W}

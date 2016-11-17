@@ -589,6 +589,17 @@ setMethod(
 )
 
 #' @export
+#' @describeIn loglik return the log-likelihood of the ZINB model.
+setMethod(
+    f="loglik",
+    signature=c("ZinbModel","dgCMatrix"),
+    definition=function(model, x) {
+        x <- as.matrix(x)
+        loglik(model, x)
+    }
+)
+
+#' @export
 #' @describeIn penalty return the penalization.
 setMethod(
     f="penalty",

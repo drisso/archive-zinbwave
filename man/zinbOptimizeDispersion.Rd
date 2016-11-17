@@ -17,11 +17,11 @@ is estimated (default TRUE)}
 \item{ncores}{Number of cores for parallel computation (default 1)}
 }
 \value{
-An object of class ZinbModel similar to the one given as argument 
+An object of class ZinbModel similar to the one given as argument
   with modified parameters zeta.
 }
 \description{
-The dispersion parameters of the model given as argument are optimized by 
+The dispersion parameters of the model given as argument are optimized by
 penalized maximum likelihood on the count matrix given as argument.
 }
 \examples{
