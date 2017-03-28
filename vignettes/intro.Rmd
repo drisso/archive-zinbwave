@@ -1,0 +1,14 @@
+---
+title: "An introduction to ZINB-WaVE"
+author: "Davide Risso"
+date: "3/28/2017"
+output:
+  BiocStyle::html_document:
+    toc: true
+vignette: >
+  %\VignetteEncoding{UTF-8}
+---
+
+# Introduction
+
+This vignette provides an introductory example on how to work with ZINB-WaVE.
