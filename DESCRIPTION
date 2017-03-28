@@ -1,27 +1,24 @@
-Package: zinb
+Package: zinbwave
 Type: Package
 Title: Zero-Inflated Negative Binomial Model for RNA-Seq Data
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: 
     c(person("Davide","Risso", role=c("aut","cre", "cph"), 
           email="risso.davide@gmail.com" ),
       person("Svetlana","Gribkova", role="aut", 
           email="svetlana.gribkova@mines-paristech.fr"),
       person("Jean-Philippe", "Vert", role="aut", 
-          email="jean-philippe.vert@mines-paristech.fr"),
-      person("Sandrine", "Dudoit", role="aut", 
-          email="sandrine@stat.berkeley.edu"))
+          email="jean-philippe.vert@mines-paristech.fr"))
 Author: Davide Risso [aut, cre, cph], 
         Svetlana Gribkova [aut], 
-        Jean-Philippe Vert [aut], 
-        Sandrine Dudoit [aut]
+        Jean-Philippe Vert [aut]
 Maintainer: Davide Risso <risso.davide@gmail.com>
 Description: 
    Implements a zero-inflated negative binomial model for single-cell 
    RNA-seq data, with latent factors.
-License: GPL (>= 2)
+License: Artistic-2.0
 Depends: 
-   R (>= 2.10),
+   R (>= 3.3),
    methods
 Imports:
    clusterExperiment,
@@ -36,3 +33,12 @@ Suggests:
 VignetteBuilder: knitr
 LazyData: TRUE
 RoxygenNote: 5.0.1
+biocViews:
+  DimensionReduction,
+  GeneExpression,
+  RNASeq,
+  Software,
+  Transcriptomics,
+  Sequencing,
+  SingleCell
+BugReports: https://github.com/drisso/zinbwave/issues
