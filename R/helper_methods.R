@@ -184,7 +184,7 @@ setMethod(
         
         # Regularization parameters
         if (missing(epsilon)) {
-            epsilon <- 1e-3
+            epsilon <- J
         }
         if (missing(epsilon_min_logit)) {
             .Object@epsilon_min_logit <- 1e-3
@@ -510,6 +510,14 @@ setMethod("getEpsilon_alpha", "ZinbModel",
 setMethod("getEpsilon_zeta", "ZinbModel",
           function(object) {
               object@epsilon_zeta
+          }
+)
+
+#' @export
+#' @describeIn getW method for ZinbModel.
+setMethod("getW", "ZinbModel",
+          function(object) {
+              object@W
           }
 )
 

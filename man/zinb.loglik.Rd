@@ -36,4 +36,3 @@ Y <- rnbinom(n=n, size=exp(zeta), mu=mu)
 zinb.loglik(Y, mu, exp(zeta), logitPi)
 zinb.loglik(Y, mu, 1, logitPi)
 }
-

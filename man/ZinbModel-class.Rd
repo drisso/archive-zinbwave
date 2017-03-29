@@ -2,12 +2,12 @@
 % Please edit documentation in R/AllClasses.R, R/helper_methods.R
 \docType{class}
 \name{ZinbModel-class}
-\alias{ZinbModel}
 \alias{ZinbModel-class}
-\alias{nFactors,ZinbModel-method}
-\alias{nFeatures,ZinbModel-method}
-\alias{nSamples,ZinbModel-method}
+\alias{ZinbModel}
 \alias{show,ZinbModel-method}
+\alias{nSamples,ZinbModel-method}
+\alias{nFeatures,ZinbModel-method}
+\alias{nFactors,ZinbModel-method}
 \title{Class ZinbModel}
 \usage{
 \S4method{show}{ZinbModel}(object)
@@ -46,6 +46,7 @@ For the full description of the model see the model vignette.
 
 \item \code{nFactors}: returns the number of latent factors.
 }}
+
 \section{Slots}{
 
 \describe{

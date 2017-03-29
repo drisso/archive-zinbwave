@@ -40,4 +40,3 @@ nFeatures(a)
 nFactors(a)
 
 }
-

@@ -24,4 +24,3 @@ with respect to the log of the inverse dispersion parameter
 \seealso{
 \code{\link{zinb.loglik}}, \code{\link{zinb.loglik.dispersion}}.
 }
-

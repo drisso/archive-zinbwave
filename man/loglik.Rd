@@ -29,9 +29,9 @@ data under the model.
 \itemize{
 \item \code{model = ZinbModel,x = matrix}: return the log-likelihood of the ZINB model.
 }}
+
 \examples{
 m <- zinbModel(n=5, J=10)
 x <- zinbSim(m)
 loglik(m, x$counts)
 }
-

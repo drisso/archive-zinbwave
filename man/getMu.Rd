@@ -25,8 +25,8 @@ returns the matrix of mean parameters.
 \itemize{
 \item \code{ZinbModel}: return the mean of the non-zero component.
 }}
+
 \examples{
 a <- zinbModel(n=5, J=10)
 getMu(a) 
 }
-

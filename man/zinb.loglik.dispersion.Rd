@@ -36,4 +36,3 @@ zinb.loglik.dispersion(zeta, Y, mu, logitPi)
 \seealso{
 \code{\link{zinb.loglik}}.
 }
-

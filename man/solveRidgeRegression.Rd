@@ -42,4 +42,3 @@ When \code{family="gaussian"}, we solve the ridge regression problem
   vector of size equal to the size of \code{beta}, then the penalty is a
   weighted L2 norm \eqn{\sum_i \epsilon_i \beta_i^2 / 2}.
 }
-

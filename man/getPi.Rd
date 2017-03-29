@@ -25,8 +25,8 @@ returns the matrix of probabilities of 0.
 \itemize{
 \item \code{ZinbModel}: return the probability of zero.
 }}
+
 \examples{
 a <- zinbModel(n=5, J=10)
 getPi(a) 
 }
-

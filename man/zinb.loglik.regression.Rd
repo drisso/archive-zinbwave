@@ -53,4 +53,3 @@ The regression model is parametrized as follows: \deqn{log(\mu) =
   vector of the same size as \eqn{\alpha} to allow for differential
   regularization among the parameters.
 }
-

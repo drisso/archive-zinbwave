@@ -102,6 +102,21 @@ setGeneric("getTheta", function(object) standardGeneric("getTheta"))
 #' @export
 setGeneric("getZeta", function(object) standardGeneric("getZeta"))
 
+#' Returns the low-dimensional matrix of inferred sample-level covariates W
+#' 
+#' Given an object that contains the fit of a ZINB-WaVE model, returns the
+#' matrix \code{W} of low-dimensional matrix of inferred sample-level
+#' covariates.
+#' 
+#' @param object a \code{\linkS4class{ZinbModel}} object, typically the result of
+#' \code{\link{zinbFit}}.
+#' @return the matrix \code{W} of inferred sample-level covariates.
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getW(a) 
+#' @export
+setGeneric("getW", function(object) standardGeneric("getW"))
+
 #' Simulate counts from a zero-inflated negative binomial model
 #' 
 #' Given an object that describes zero-inflated negative binomial distribution,

@@ -45,4 +45,3 @@ The regression model is described in \code{\link{zinb.loglik.regression}}.
 \seealso{
 \code{\link{zinb.loglik.regression}}
 }
-

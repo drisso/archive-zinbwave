@@ -32,4 +32,3 @@ norm( U\%*\%V - o$U\%*\%o$V) # should be zero
 sum(U^2)+sum(V^2)
 sum(o$U^2)+sum(o$V^2) # should be smaller
 }
-

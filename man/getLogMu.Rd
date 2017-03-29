@@ -26,8 +26,8 @@ returns the matrix of logarithm of mean parameters.
 \item \code{ZinbModel}: return the logarithm of the mean of the non-zero
 component.
 }}
+
 \examples{
 a <- zinbModel(n=5, J=10)
 getLogMu(a) 
 }
-

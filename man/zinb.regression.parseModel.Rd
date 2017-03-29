@@ -37,4 +37,3 @@ and its parameters.
 \seealso{
 \code{\link{zinb.loglik.regression}}
 }
-

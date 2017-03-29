@@ -25,8 +25,8 @@ returns the matrix of logit of probabilities of 0.
 \itemize{
 \item \code{ZinbModel}: return the logit-probability of zero.
 }}
+
 \examples{
 a <- zinbModel(n=5, J=10)
 getLogitPi(a) 
 }
-
