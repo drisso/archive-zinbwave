@@ -34,7 +34,8 @@ Suggests:
     magrittr,
     scRNAseq,
     ggplot2,
-    biomaRt
+    biomaRt,
+    BiocStyle
 VignetteBuilder: knitr
 LazyData: TRUE
 RoxygenNote: 6.0.1
