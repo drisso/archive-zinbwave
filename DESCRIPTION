@@ -25,7 +25,8 @@ Imports:
    copula,
    glmnet,
    parallel,
-   softImpute
+   softImpute,
+   stats
 Suggests: 
     knitr,
     rmarkdown,
