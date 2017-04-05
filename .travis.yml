@@ -18,6 +18,12 @@ r:
   - bioc-release
   - bioc-devel
 
+# External dependencies
+addons:
+  apt:
+    packages:
+      - gsl-bin
+
 ## Turn this to true before submission to CRAN/Bioconductor
 warnings_are_errors: false
 
