@@ -198,10 +198,10 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
             }, mc.cores=ncores
             )), nrow=NCOL(getX_pi(m)) + nFactors(m))
             if (NCOL(getX_pi(m))>0) {
-                m@beta_pi <- s[1:NCOL(getX_pi(m)),,drop=F]
+                m@beta_pi <- s[1:NCOL(getX_pi(m)),,drop=FALSE]
             }
             if (nFactors(m)>0) {
-                m@alpha_pi <- s[(NCOL(getX_pi(m))+1):(NCOL(getX_pi(m))+nFactors(m)),,drop=F]
+                m@alpha_pi <- s[(NCOL(getX_pi(m))+1):(NCOL(getX_pi(m))+nFactors(m)),,drop=FALSE]
             }
         }
         
@@ -285,19 +285,19 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25, stop.epsilon=.
             if (verbose) {print(proc.time()-ptm)}
             ind <- 1
             if (nright[1]>0) {
-                m@beta_mu <- estimate[ind:(ind+nright[1]-1),,drop=F]
+                m@beta_mu <- estimate[ind:(ind+nright[1]-1),,drop=FALSE]
                 ind <- ind+nright[1]
                 }
             if (nright[2]>0) {
-                m@alpha_mu <- estimate[ind:(ind+nright[2]-1),,drop=F]
+                m@alpha_mu <- estimate[ind:(ind+nright[2]-1),,drop=FALSE]
                 ind <- ind+nright[2]
             }
             if (nright[3]>0) {
-                m@beta_pi <- estimate[ind:(ind+nright[3]-1),,drop=F]
+                m@beta_pi <- estimate[ind:(ind+nright[3]-1),,drop=FALSE]
                 ind <- ind+nright[3]
             }
             if (nright[4]>0) {
-                m@alpha_pi <- estimate[ind:(ind+nright[4]-1),,drop=F]
+                m@alpha_pi <- estimate[ind:(ind+nright[4]-1),,drop=FALSE]
             }
         }
         # Evaluate total penalized likelihood
@@ -308,8 +308,8 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25, stop.epsilon=.
             o <- orthogonalizeTraceNorm(m@W, cbind(m@alpha_mu, m@alpha_pi), 
                                       m@epsilon_W, m@epsilon_alpha)
             m@W <- o$U
-            m@alpha_mu <- o$V[,1:J,drop=F]
-            m@alpha_pi <- o$V[,(J+1):(2*J),drop=F]
+            m@alpha_mu <- o$V[,1:J,drop=FALSE]
+            m@alpha_pi <- o$V[,(J+1):(2*J),drop=FALSE]
         }
         
         # Evaluate total penalized likelihood
@@ -323,15 +323,15 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25, stop.epsilon=.
             if (verbose) {print(proc.time()-ptm)}
             ind <- 1
             if (nleft[1]>0) {
-                m@gamma_mu <- estimate[ind:(ind+nleft[1]-1),,drop=F]
+                m@gamma_mu <- estimate[ind:(ind+nleft[1]-1),,drop=FALSE]
                 ind <- ind+nleft[1]
             }
             if (nleft[2]>0) {
-                m@gamma_pi <- estimate[ind:(ind+nleft[2]-1),,drop=F]
+                m@gamma_pi <- estimate[ind:(ind+nleft[2]-1),,drop=FALSE]
                 ind <- ind+nleft[2]
             }
             if (nleft[3]>0) {
-                m@W <- t(estimate[ind:(ind+nleft[3]-1),,drop=F])
+                m@W <- t(estimate[ind:(ind+nleft[3]-1),,drop=FALSE])
                 ind <- ind+nleft[3]
             }
         }
@@ -344,8 +344,8 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25, stop.epsilon=.
             o <- orthogonalizeTraceNorm(m@W, cbind(m@alpha_mu, m@alpha_pi), 
                                       m@epsilon_W, m@epsilon_alpha)
             m@W <- o$U
-            m@alpha_mu <- o$V[,1:J,drop=F]
-            m@alpha_pi <- o$V[,(J+1):(2*J),drop=F]
+            m@alpha_mu <- o$V[,1:J,drop=FALSE]
+            m@alpha_pi <- o$V[,(J+1):(2*J),drop=FALSE]
         }
         # Evaluate total penalized likelihood
         if (verbose) {cat("After orthogonalization = ",loglik(m, Y) - penalty(m),"\n",sep="")}
