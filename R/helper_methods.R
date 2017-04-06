@@ -7,6 +7,50 @@
 #'   (columns).
 NULL
 
+#' @rdname zinbModel
+#' 
+#' @param .Object an object of class \code{ZinbModel}.
+#' @param X matrix. The design matrix containing sample-level covariates, one 
+#'   sample per row.
+#' @param V matrix. The design matrix containing gene-level covariates, one gene 
+#'   per row.
+#' @param O_mu matrix. The offset matrix for mu.
+#' @param O_pi matrix. The offset matrix for pi.
+#' @param which_X_mu integer. Indeces of which columns of X to use in the 
+#'   regression of mu.
+#' @param which_V_mu integer. Indeces of which columns of V to use in the 
+#'   regression of mu.
+#' @param which_X_pi integer. Indeces of which columns of X to use in the 
+#'   regression of pi.
+#' @param which_V_pi integer. Indeces of which columns of V to use in the 
+#'   regression of pi.
+#' @param W matrix. The factors of sample-level latent factors.
+#' @param beta_mu matrix or NULL. The coefficients of X in the regression of mu.
+#' @param gamma_mu matrix or NULL. The coefficients of V in the regression of mu.
+#' @param alpha_mu matrix or NULL. The coefficients of W in the regression of mu.
+#' @param beta_pi matrix or NULL. The coefficients of X in the regression of pi.
+#' @param gamma_pi matrix or NULL. The coefficients of V in the regression of pi.
+#' @param alpha_pi matrix or NULL. The coefficients of W in the regression of pi.
+#' @param zeta numeric. A vector of log of inverse dispersion parameters.
+#' @param epsilon nonnegative scalar. Regularization parameter.
+#' @param epsilon_beta_mu nonnegative scalar. Regularization parameter for 
+#'   beta_mu.
+#' @param epsilon_gamma_mu nonnegative scalar. Regularization parameter for 
+#'   gamma_mu.
+#' @param epsilon_beta_pi nonnegative scalar. Regularization parameter for 
+#'   beta_pi.
+#' @param epsilon_gamma_pi nonnegative scalar. Regularization parameter for 
+#'   gamma_pi.
+#' @param epsilon_W nonnegative scalar. Regularization parameter for W.
+#' @param epsilon_alpha nonnegative scalar. Regularization parameter for alpha
+#'   (both alpha_mu and alpha_pi).
+#' @param epsilon_zeta nonnegative scalar. Regularization parameter for zeta.
+#' @param epsilon_min_logit scalar. Minimum regularization parameter for
+#'   parameters of the logit model, including the intercept.
+#' @param n integer. Number of samples.
+#' @param J integer. Number of genes.
+#' @param K integer. Number of latent factors.
+#' 
 setMethod(
     f="initialize",
     signature="ZinbModel",
@@ -233,22 +277,35 @@ setMethod(
 #' Initialize an object of class ZinbModel
 #' @export
 #' 
-#' @param ... arguments passed to \code{new()}. See the \code{slots} section in 
-#'   \code{\link{ZinbModel}}.
+#' @param ... arguments passed to \code{new()}. See the parameter of
+#'   \code{initialize}.
 #'   
 #' @details This is a light wrapper around the new() function to create an 
 #'   instance of class \code{ZinbModel}.
+#'   Rarely, the user will need to create a \code{ZinbModel} object from scratch,
+#'   as tipically this is the result of \code{\link{zinbFit}}.
+#' 
+#' @details If any of \code{X}, \code{V}, \code{W} matrices are passed,
+#'   \code{n}, \code{J}, and \code{K} are inferred. Alternatively, the user can
+#'   specify one or more of \code{n}, \code{J}, and \code{K}.
 #'   
-#' @details If any of the related matrices are passed, \code{n}, \code{J}, and 
-#'   \code{K} are inferred. Alternatively, the user can specify one or more of 
-#'   \code{n}, \code{J}, and \code{K}.
-#'   
-#' @details The regularization parameters can be set by a unique parameter
-#'   \code{epsilon}, as described in the vignette; or specific values for the
-#'   different regularization parameters can also be provided.
+#' @details The regularization parameters can be set by a unique parameter 
+#'   \code{epsilon} or specific values for the different regularization
+#'   parameters can also be provided.
+#'   If only \code{epsilon} is specified, the other parameters take the
+#'   following values:
+#'   \itemize{
+#'   \item epsilon_beta = epsilon/J
+#'   \item epsilon_gamma = epsilon/n
+#'   \item epsilon_W = epsilon/n
+#'   \item epsilon_alpha = epsilon/J
+#'   \item epsilon_zeta = epsilon
+#'   }
+#'   We empirically found that large values of \code{epsilon} provide a more stable
+#'   estimation of \code{W}.
 #'   
 #' @details A call with no argument has the following default values: \code{n = 
-#'   50}, \code{J = 100}, \code{K = 0}, \code{epsilon=1e-3}.
+#'   50}, \code{J = 100}, \code{K = 0}, \code{epsilon=J}.
 #'   
 #' @details Although it is possible to create new instances of the class by 
 #'   calling this function, this is not the most common way of creating 
