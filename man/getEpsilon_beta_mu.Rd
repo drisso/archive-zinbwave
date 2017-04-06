@@ -27,3 +27,7 @@ associated to each row.
 \item \code{ZinbModel}: method for ZinbModel.
 }}
 
+\examples{
+a <- zinbModel(n=5, J=10)
+getEpsilon_beta_mu(a) 
+}

@@ -35,6 +35,9 @@ zinb.loglik.regression(alpha, Y, A.mu = matrix(nrow = length(Y), ncol = 0),
 regularization, or just a scalar is the regularization is the same for all 
 coordinates of \code{alpha}. Default=\code{O}.}
 }
+\value{
+the penalized log-likelihood.
+}
 \description{
 This function computes the penalized log-likelihood of a ZINB regression 
 model given a vector of counts.

@@ -190,6 +190,9 @@ setGeneric("zinbFit", function(Y, ...) standardGeneric("zinbFit"))
 #' @param ... Additional parameters.
 #' @return the sample-level design matrix for mu
 #' @export
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getX_mu(a) 
 setGeneric("getX_mu", function(object, ...) standardGeneric("getX_mu"))
 
 #' Returns the sample-level design matrix for pi
@@ -201,6 +204,9 @@ setGeneric("getX_mu", function(object, ...) standardGeneric("getX_mu"))
 #' @param ... Additional parameters.
 #' @return the sample-level design matrix for pi
 #' @export
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getX_pi(a) 
 setGeneric("getX_pi", function(object, ...) standardGeneric("getX_pi"))
 
 #' Returns the gene-level design matrix for mu
@@ -212,6 +218,9 @@ setGeneric("getX_pi", function(object, ...) standardGeneric("getX_pi"))
 #' @param ... Additional parameters.
 #' @return the gene-level design matrix for mu
 #' @export
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getV_mu(a) 
 setGeneric("getV_mu", function(object, ...) standardGeneric("getV_mu"))
 
 #' Returns the gene-level design matrix for pi
@@ -223,6 +232,9 @@ setGeneric("getV_mu", function(object, ...) standardGeneric("getV_mu"))
 #' @param ... Additional parameters.
 #' @return the gene-level design matrix for pi
 #' @export
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getV_pi(a) 
 setGeneric("getV_pi", function(object, ...) standardGeneric("getV_pi"))
 
 #' Returns the vector of regularization parameter for beta_mu
@@ -234,6 +246,9 @@ setGeneric("getV_pi", function(object, ...) standardGeneric("getV_pi"))
 #'   distributions.
 #' @return the regularization parameters for \code{beta_mu}.
 #' @export
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getEpsilon_beta_mu(a) 
 setGeneric("getEpsilon_beta_mu", 
            function(object) standardGeneric("getEpsilon_beta_mu"))
 
@@ -246,6 +261,9 @@ setGeneric("getEpsilon_beta_mu",
 #'   distributions.
 #' @return the regularization parameters for \code{gamma_mu}.
 #' @export
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getEpsilon_gamma_mu(a) 
 setGeneric("getEpsilon_gamma_mu", 
            function(object) standardGeneric("getEpsilon_gamma_mu"))
 
@@ -258,6 +276,9 @@ setGeneric("getEpsilon_gamma_mu",
 #'   distributions.
 #' @return the regularization parameters for \code{beta_pi}.
 #' @export
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getEpsilon_beta_pi(a) 
 setGeneric("getEpsilon_beta_pi", 
            function(object) standardGeneric("getEpsilon_beta_pi"))
 
@@ -270,6 +291,9 @@ setGeneric("getEpsilon_beta_pi",
 #'   distributions.
 #' @return the regularization parameters for \code{gamma_pi}.
 #' @export
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getEpsilon_gamma_pi(a) 
 setGeneric("getEpsilon_gamma_pi", 
            function(object) standardGeneric("getEpsilon_gamma_pi"))
 
@@ -282,6 +306,9 @@ setGeneric("getEpsilon_gamma_pi",
 #'   distributions.
 #' @return the regularization parameters for \code{W}.
 #' @export
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getEpsilon_W(a) 
 setGeneric("getEpsilon_W", function(object) standardGeneric("getEpsilon_W"))
 
 #' Returns the vector of regularization parameter for alpha
@@ -295,6 +322,9 @@ setGeneric("getEpsilon_W", function(object) standardGeneric("getEpsilon_W"))
 #' @return the regularization parameters for \code{alpha_mu} and
 #'   \code{alpha_pi}.
 #' @export
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getEpsilon_alpha(a) 
 setGeneric("getEpsilon_alpha", 
            function(object) standardGeneric("getEpsilon_alpha"))
 
@@ -306,5 +336,8 @@ setGeneric("getEpsilon_alpha",
 #'   distributions.
 #' @return the regularization parameters for \code{zeta}.
 #' @export
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getEpsilon_zeta(a) 
 setGeneric("getEpsilon_zeta", 
            function(object) standardGeneric("getEpsilon_zeta"))

@@ -17,6 +17,9 @@ negative binomial model}
 
 \item{logitPi}{a vector of logit of the probabilities of the zero component}
 }
+\value{
+the log-likelihood of the model.
+}
 \description{
 Given a unique dispersion parameter and a set of counts, together with a 
 corresponding set of mean parameters and probabilities of zero components, 

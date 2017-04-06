@@ -31,3 +31,7 @@ returns the gene-level design matrix for mu
 \item \code{ZinbModel}: return the gene-level design matrix for mu.
 }}
 
+\examples{
+a <- zinbModel(n=5, J=10)
+getV_mu(a) 
+}

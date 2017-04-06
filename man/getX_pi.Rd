@@ -31,3 +31,7 @@ returns the sample-level design matrix for pi
 \item \code{ZinbModel}: return the sample-level design matrix for pi.
 }}
 
+\examples{
+a <- zinbModel(n=5, J=10)
+getX_pi(a) 
+}

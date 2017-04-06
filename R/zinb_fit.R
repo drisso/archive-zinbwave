@@ -496,6 +496,7 @@ zinbOptimizeDispersion <- function(m, Y, commondispersion=TRUE, ncores=1) {
 #'   theta is mu + mu^2/theta.
 #' @param logitPi the vector of logit of the probabilities of the zero component
 #' @export
+#' @return the log-likelihood of the model.
 #' @importFrom copula log1pexp
 #' @examples
 #' n <- 10
@@ -537,6 +538,7 @@ zinb.loglik <- function(Y, mu, theta, logitPi) {
 #' @param logitPi a vector of logit of the probabilities of the zero component
 #' @export
 #' @seealso \code{\link{zinb.loglik}}.
+#' @return the log-likelihood of the model.
 #' @examples
 #' mu <- seq(10,50,length.out=10)
 #' logitPi <- rnorm(10)
@@ -556,6 +558,7 @@ zinb.loglik.dispersion <- function(zeta, Y, mu, logitPi) {
 #' @param mu a vector of mean parameters of the negative binomial
 #' @param logitPi a vector of the logit of the probability of the zero component
 #' @export
+#' @return the gradient of the inverse dispersion parameters.
 #' @seealso \code{\link{zinb.loglik}}, \code{\link{zinb.loglik.dispersion}}.
 zinb.loglik.dispersion.gradient <- function(zeta, Y, mu, logitPi) {
     theta <- exp(zeta)
@@ -679,6 +682,7 @@ zinb.regression.parseModel <- function(alpha, A.mu, B.mu, C.mu,
 #'   \eqn{\epsilon} is a scalar, or \eqn{\sum_{i}\epsilon_i \alpha_i^2 / 2} is
 #'   \eqn{\epsilon} is a vector of the same size as \eqn{\alpha} to allow for
 #'   differential regularization among the parameters.
+#' @return the penalized log-likelihood.
 #' @export
 zinb.loglik.regression <- function(alpha, Y, 
                                    A.mu = matrix(nrow=length(Y), ncol=0),
@@ -729,6 +733,7 @@ zinb.loglik.regression <- function(alpha, Y,
 #' @details The regression model is described in
 #'   \code{\link{zinb.loglik.regression}}.
 #' @seealso \code{\link{zinb.loglik.regression}}
+#' @return The gradient of the penalized log-likelihood.
 #' @export
 zinb.loglik.regression.gradient <- function(alpha, Y, 
                                      A.mu = matrix(nrow=length(Y), ncol=0),

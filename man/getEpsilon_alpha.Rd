@@ -29,3 +29,7 @@ associated to each row. Here \code{alpha} refers to both \code{alpha_mu} and
 \item \code{ZinbModel}: method for ZinbModel.
 }}
 
+\examples{
+a <- zinbModel(n=5, J=10)
+getEpsilon_alpha(a) 
+}

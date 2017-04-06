@@ -23,6 +23,11 @@
 
 \item{x}{an object of class \code{ZinbModel}.}
 }
+\value{
+\code{nSamples} returns the number of samples; \code{nFeatures}
+returns the number of features; \code{nFactors} returns the number of latent
+factors.
+}
 \description{
 Objects of this class store all the values needed to work with a 
 zero-inflated negative binomial (ZINB) model, as described in the vignette. 

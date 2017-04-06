@@ -20,6 +20,9 @@ theta is mu + mu^2/theta.}
 
 \item{logitPi}{the vector of logit of the probabilities of the zero component}
 }
+\value{
+the log-likelihood of the model.
+}
 \description{
 Given a vector of counts, this function computes the sum of the
 log-probabilities of the counts under a zero-inflated negative binomial

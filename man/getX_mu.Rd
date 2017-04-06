@@ -31,3 +31,7 @@ returns the sample-level design matrix for mu
 \item \code{ZinbModel}: return the sample-level design matrix for mu.
 }}
 
+\examples{
+a <- zinbModel(n=5, J=10)
+getX_mu(a) 
+}
