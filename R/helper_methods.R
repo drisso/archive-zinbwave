@@ -445,7 +445,7 @@ setMethod("getLogMu", "ZinbModel",
 #' @describeIn getMu return the mean of the non-zero component.
 setMethod("getMu", "ZinbModel",
     function(object) {
-        return(exp(getLogMu(object)))
+        return(t(exp(getLogMu(object))))
     }
 )
 
@@ -470,7 +470,7 @@ setMethod("getPi", "ZinbModel",
         # Instead of the call to stats::binomial() in the previous line, we 
         # directly compute with the exp() function which remains exact for 
         # smaller values of the arguments.
-        return(1/(1+exp(-getLogitPi(object))))
+        return(t(1/(1+exp(-getLogitPi(object)))))
     }
 )
 
