@@ -108,8 +108,8 @@ setGeneric("getZeta", function(object) standardGeneric("getZeta"))
 #' matrix \code{W} of low-dimensional matrix of inferred sample-level
 #' covariates.
 #' 
-#' @param object a \code{\linkS4class{ZinbModel}} object, typically the result of
-#' \code{\link{zinbFit}}.
+#' @param object a \code{\linkS4class{ZinbModel}} object, typically the result
+#'   of \code{\link{zinbFit}}.
 #' @return the matrix \code{W} of inferred sample-level covariates.
 #' @examples
 #' a <- zinbModel(n=5, J=10)
@@ -174,7 +174,8 @@ setGeneric("penalty", function(model) standardGeneric("penalty"))
 #' Given an object with the data, it fits a ZINB model.
 #' 
 #' @param Y The data (genes in rows, samples in columns).
-#' @param ... Additional parameters to describe the model, see \link{zinbModel}.
+#' @param ... Additional parameters to describe the model, see
+#'   \code{\link{zinbModel}}.
 #' @return An object of class \code{ZinbModel} that has been fitted by penalized
 #'   maximum likelihood on the data.
 #' @export
@@ -231,18 +232,22 @@ setGeneric("getV_pi", function(object, ...) standardGeneric("getV_pi"))
 #' associated to each row.
 #' @param object an object that describes a matrix of zero-inflated
 #'   distributions.
+#' @return the regularization parameters for \code{beta_mu}.
 #' @export
-setGeneric("getEpsilon_beta_mu", function(object) standardGeneric("getEpsilon_beta_mu"))
+setGeneric("getEpsilon_beta_mu", 
+           function(object) standardGeneric("getEpsilon_beta_mu"))
 
 #' Returns the vector of regularization parameter for gamma_mu
 #' 
 #' Given an object describing a ZINB model, returns a vector of size the number 
-#' of columns in the parameter \code{alpha_mu} with the regularization
+#' of columns in the parameter \code{gamma_mu} with the regularization
 #' parameters associated to each row.
 #' @param object an object that describes a matrix of zero-inflated 
 #'   distributions.
+#' @return the regularization parameters for \code{gamma_mu}.
 #' @export
-setGeneric("getEpsilon_gamma_mu", function(object) standardGeneric("getEpsilon_gamma_mu"))
+setGeneric("getEpsilon_gamma_mu", 
+           function(object) standardGeneric("getEpsilon_gamma_mu"))
 
 #' Returns the vector of regularization parameter for beta_pi
 #' 
@@ -251,8 +256,10 @@ setGeneric("getEpsilon_gamma_mu", function(object) standardGeneric("getEpsilon_g
 #' associated to each row.
 #' @param object an object that describes a matrix of zero-inflated
 #'   distributions.
+#' @return the regularization parameters for \code{beta_pi}.
 #' @export
-setGeneric("getEpsilon_beta_pi", function(object) standardGeneric("getEpsilon_beta_pi"))
+setGeneric("getEpsilon_beta_pi", 
+           function(object) standardGeneric("getEpsilon_beta_pi"))
 
 #' Returns the vector of regularization parameter for gamma_pi
 #' 
@@ -261,8 +268,10 @@ setGeneric("getEpsilon_beta_pi", function(object) standardGeneric("getEpsilon_be
 #' parameters associated to each column.
 #' @param object an object that describes a matrix of zero-inflated 
 #'   distributions.
+#' @return the regularization parameters for \code{gamma_pi}.
 #' @export
-setGeneric("getEpsilon_gamma_pi", function(object) standardGeneric("getEpsilon_gamma_pi"))
+setGeneric("getEpsilon_gamma_pi", 
+           function(object) standardGeneric("getEpsilon_gamma_pi"))
 
 #' Returns the vector of regularization parameter for W
 #' 
@@ -271,6 +280,7 @@ setGeneric("getEpsilon_gamma_pi", function(object) standardGeneric("getEpsilon_g
 #' parameters associated to each column.
 #' @param object an object that describes a matrix of zero-inflated
 #'   distributions.
+#' @return the regularization parameters for \code{W}.
 #' @export
 setGeneric("getEpsilon_W", function(object) standardGeneric("getEpsilon_W"))
 
@@ -282,8 +292,11 @@ setGeneric("getEpsilon_W", function(object) standardGeneric("getEpsilon_W"))
 #' \code{alpha_pi}, which have the same size and have the same regularization.
 #' @param object an object that describes a matrix of zero-inflated
 #'   distributions.
+#' @return the regularization parameters for \code{alpha_mu} and
+#'   \code{alpha_pi}.
 #' @export
-setGeneric("getEpsilon_alpha", function(object) standardGeneric("getEpsilon_alpha"))
+setGeneric("getEpsilon_alpha", 
+           function(object) standardGeneric("getEpsilon_alpha"))
 
 #' Returns the regularization parameter for the dispersion parameter
 #' 
@@ -291,5 +304,7 @@ setGeneric("getEpsilon_alpha", function(object) standardGeneric("getEpsilon_alph
 #' the dispersion parameters across samples.
 #' @param object an object that describes a matrix of zero-inflated
 #'   distributions.
+#' @return the regularization parameters for \code{zeta}.
 #' @export
-setGeneric("getEpsilon_zeta", function(object) standardGeneric("getEpsilon_zeta"))
+setGeneric("getEpsilon_zeta", 
+           function(object) standardGeneric("getEpsilon_zeta"))

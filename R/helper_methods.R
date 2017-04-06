@@ -8,11 +8,11 @@
 NULL
 
 #' @rdname zinbModel
-#' 
+#'   
 #' @param .Object an object of class \code{ZinbModel}.
 #' @param X matrix. The design matrix containing sample-level covariates, one 
 #'   sample per row.
-#' @param V matrix. The design matrix containing gene-level covariates, one gene 
+#' @param V matrix. The design matrix containing gene-level covariates, one gene
 #'   per row.
 #' @param O_mu matrix. The offset matrix for mu.
 #' @param O_pi matrix. The offset matrix for pi.
@@ -26,11 +26,15 @@ NULL
 #'   regression of pi.
 #' @param W matrix. The factors of sample-level latent factors.
 #' @param beta_mu matrix or NULL. The coefficients of X in the regression of mu.
-#' @param gamma_mu matrix or NULL. The coefficients of V in the regression of mu.
-#' @param alpha_mu matrix or NULL. The coefficients of W in the regression of mu.
+#' @param gamma_mu matrix or NULL. The coefficients of V in the regression of
+#'   mu.
+#' @param alpha_mu matrix or NULL. The coefficients of W in the regression of
+#'   mu.
 #' @param beta_pi matrix or NULL. The coefficients of X in the regression of pi.
-#' @param gamma_pi matrix or NULL. The coefficients of V in the regression of pi.
-#' @param alpha_pi matrix or NULL. The coefficients of W in the regression of pi.
+#' @param gamma_pi matrix or NULL. The coefficients of V in the regression of
+#'   pi.
+#' @param alpha_pi matrix or NULL. The coefficients of W in the regression of
+#'   pi.
 #' @param zeta numeric. A vector of log of inverse dispersion parameters.
 #' @param epsilon nonnegative scalar. Regularization parameter.
 #' @param epsilon_beta_mu nonnegative scalar. Regularization parameter for 
@@ -42,10 +46,10 @@ NULL
 #' @param epsilon_gamma_pi nonnegative scalar. Regularization parameter for 
 #'   gamma_pi.
 #' @param epsilon_W nonnegative scalar. Regularization parameter for W.
-#' @param epsilon_alpha nonnegative scalar. Regularization parameter for alpha
+#' @param epsilon_alpha nonnegative scalar. Regularization parameter for alpha 
 #'   (both alpha_mu and alpha_pi).
 #' @param epsilon_zeta nonnegative scalar. Regularization parameter for zeta.
-#' @param epsilon_min_logit scalar. Minimum regularization parameter for
+#' @param epsilon_min_logit scalar. Minimum regularization parameter for 
 #'   parameters of the logit model, including the intercept.
 #' @param n integer. Number of samples.
 #' @param J integer. Number of genes.
@@ -193,22 +197,26 @@ setMethod(
         if (!missing(beta_mu)) {
             .Object@beta_mu <- beta_mu
         } else {
-            .Object@beta_mu <- matrix(0, nrow=length(.Object@which_X_mu) , ncol=J)
+            .Object@beta_mu <- matrix(0, nrow=length(.Object@which_X_mu), 
+                                      ncol=J)
         }
         if (!missing(beta_pi)) {
             .Object@beta_pi <- beta_pi
         } else {
-            .Object@beta_pi <- matrix(0, nrow=length(.Object@which_X_pi) , ncol=J)
+            .Object@beta_pi <- matrix(0, nrow=length(.Object@which_X_pi), 
+                                      ncol=J)
         }
         if (!missing(gamma_mu)) {
             .Object@gamma_mu <- gamma_mu
         } else {
-            .Object@gamma_mu <- matrix(0, nrow=length(.Object@which_V_mu) , ncol=n)
+            .Object@gamma_mu <- matrix(0, nrow=length(.Object@which_V_mu), 
+                                       ncol=n)
         }
         if (!missing(gamma_pi)) {
             .Object@gamma_pi <- gamma_pi
         } else {
-            .Object@gamma_pi <- matrix(0, nrow=length(.Object@which_V_pi) , ncol=n)
+            .Object@gamma_pi <- matrix(0, nrow=length(.Object@which_V_pi), 
+                                       ncol=n)
         }
         if (!missing(alpha_mu)) {
             .Object@alpha_mu <- alpha_mu
@@ -281,12 +289,12 @@ setMethod(
 #'   \code{initialize}.
 #'   
 #' @details This is a light wrapper around the new() function to create an 
-#'   instance of class \code{ZinbModel}.
-#'   Rarely, the user will need to create a \code{ZinbModel} object from scratch,
-#'   as tipically this is the result of \code{\link{zinbFit}}.
-#' 
-#' @details If any of \code{X}, \code{V}, \code{W} matrices are passed,
-#'   \code{n}, \code{J}, and \code{K} are inferred. Alternatively, the user can
+#'   instance of class \code{ZinbModel}. Rarely, the user will need to create a
+#'   \code{ZinbModel} object from scratch, as tipically this is the result of
+#'   \code{\link{zinbFit}}.
+#'   
+#' @details If any of \code{X}, \code{V}, \code{W} matrices are passed, 
+#'   \code{n}, \code{J}, and \code{K} are inferred. Alternatively, the user can 
 #'   specify one or more of \code{n}, \code{J}, and \code{K}.
 #'   
 #' @details The regularization parameters can be set by a unique parameter 
@@ -301,8 +309,8 @@ setMethod(
 #'   \item epsilon_alpha = epsilon/J
 #'   \item epsilon_zeta = epsilon
 #'   }
-#'   We empirically found that large values of \code{epsilon} provide a more stable
-#'   estimation of \code{W}.
+#'   We empirically found that large values of \code{epsilon} provide a more
+#'   stable estimation of \code{W}.
 #'   
 #' @details A call with no argument has the following default values: \code{n = 
 #'   50}, \code{J = 100}, \code{K = 0}, \code{epsilon=J}.
@@ -311,7 +319,9 @@ setMethod(
 #'   calling this function, this is not the most common way of creating 
 #'   \code{ZinbModel} objects. The main use of the class is within the 
 #'   \code{\link{zinbFit}} function.
-#'   
+#' 
+#' @return an object of class \code{\linkS4class{ZinbModel}}.
+#' 
 #' @examples
 #' a <- zinbModel()
 #' nSamples(a)
@@ -329,7 +339,8 @@ zinbModel <- function(...) {
 setMethod("show", "ZinbModel",
           function(object) {
               cat(paste0("Object of class ZinbModel.\n",
-                         NROW(object@X), " samples; ", NROW(object@V), " genes.\n",
+                         NROW(object@X), " samples; ", NROW(object@V), 
+                         " genes.\n",
                          NCOL(object@X), " sample-level covariates; ",
                          NCOL(object@V), " gene-level covariates; ",
                          NCOL(object@W), " latent factors.\n"))
@@ -371,8 +382,8 @@ setMethod("nFactors", "ZinbModel",
 
 #' @export
 #' @describeIn getX_mu return the sample-level design matrix for mu.
-#' @param intercept logical. Whether to return the intercept (ignored if X_mu has
-#'   no intercept). Default \code{TRUE}
+#' @param intercept logical. Whether to return the intercept (ignored if X_mu
+#'   has no intercept). Default \code{TRUE}
 setMethod("getX_mu", "ZinbModel",
           function(object, intercept=TRUE) {
               if(object@X_mu_intercept && !intercept) {
@@ -386,8 +397,8 @@ setMethod("getX_mu", "ZinbModel",
 
 #' @export
 #' @describeIn getX_pi return the sample-level design matrix for pi.
-#' @param intercept logical. Whether to return the intercept (ignored if X_pi has
-#'   no intercept).
+#' @param intercept logical. Whether to return the intercept (ignored if X_pi
+#'   has no intercept).
 setMethod("getX_pi", "ZinbModel",
           function(object, intercept=TRUE) {
               if(object@X_pi_intercept && !intercept) {
@@ -401,8 +412,8 @@ setMethod("getX_pi", "ZinbModel",
 
 #' @export
 #' @describeIn getV_mu return the gene-level design matrix for mu.
-#' @param intercept logical. Whether to return the intercept (ignored if V_mu has
-#'   no intercept).
+#' @param intercept logical. Whether to return the intercept (ignored if V_mu
+#'   has no intercept).
 setMethod("getV_mu", "ZinbModel",
           function(object, intercept=TRUE) {
               if(object@V_mu_intercept && !intercept) {
@@ -416,8 +427,8 @@ setMethod("getV_mu", "ZinbModel",
 
 #' @export
 #' @describeIn getV_pi return the sample-level design matrix for pi.
-#' @param intercept logical. Whether to return the intercept (ignored if V_pi has
-#'   no intercept).
+#' @param intercept logical. Whether to return the intercept (ignored if V_pi
+#'   has no intercept).
 setMethod("getV_pi", "ZinbModel",
           function(object, intercept=TRUE) {
               if(object@V_pi_intercept && !intercept) {
@@ -475,7 +486,8 @@ setMethod("getPi", "ZinbModel",
 )
 
 #' @export
-#' @describeIn getZeta return the log of the inverse of the dispersion parameter.
+#' @describeIn getZeta return the log of the inverse of the dispersion
+#'   parameter.
 setMethod("getZeta", "ZinbModel",
           function(object) {
               return(object@zeta)
@@ -615,9 +627,9 @@ setMethod(
         # Simulate negative binomial with the mean matrix and dispersion
         # parameters
         datanb <- parallel::mclapply(seq(n*J), 
-                                     function(i) { 
-                                         rnbinom(1, mu = mu[i] , size = theta[ceiling(i/n)])
-                                     }, mc.cores = no_cores)
+                    function(i) { 
+                     rnbinom(1, mu = mu[i] , size = theta[ceiling(i/n)])
+                    }, mc.cores = no_cores)
         
         data.nb <- matrix(unlist(datanb), nrow = n )
         
@@ -649,7 +661,9 @@ setMethod(
     f="loglik",
     signature=c("ZinbModel","matrix"),
     definition=function(model, x) {
-        zinb.loglik(x, getMu(model), rep(getTheta(model),rep(nSamples(model),nFeatures(model))), getLogitPi(model))
+        zinb.loglik(x, getMu(model), 
+                    rep(getTheta(model), rep(nSamples(model),nFeatures(model))),
+                    getLogitPi(model))
     }
 )
 

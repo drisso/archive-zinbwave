@@ -24,7 +24,8 @@ parameters
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{ZinbModel}: return the log of the inverse of the dispersion parameter.
+\item \code{ZinbModel}: return the log of the inverse of the dispersion
+parameter.
 }}
 
 \examples{

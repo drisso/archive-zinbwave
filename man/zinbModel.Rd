@@ -20,7 +20,7 @@ zinbModel(...)
 \item{X}{matrix. The design matrix containing sample-level covariates, one 
 sample per row.}
 
-\item{V}{matrix. The design matrix containing gene-level covariates, one gene 
+\item{V}{matrix. The design matrix containing gene-level covariates, one gene
 per row.}
 
 \item{O_mu}{matrix. The offset matrix for mu.}
@@ -45,13 +45,17 @@ regression of pi.}
 
 \item{beta_pi}{matrix or NULL. The coefficients of X in the regression of pi.}
 
-\item{gamma_mu}{matrix or NULL. The coefficients of V in the regression of mu.}
+\item{gamma_mu}{matrix or NULL. The coefficients of V in the regression of
+mu.}
 
-\item{gamma_pi}{matrix or NULL. The coefficients of V in the regression of pi.}
+\item{gamma_pi}{matrix or NULL. The coefficients of V in the regression of
+pi.}
 
-\item{alpha_mu}{matrix or NULL. The coefficients of W in the regression of mu.}
+\item{alpha_mu}{matrix or NULL. The coefficients of W in the regression of
+mu.}
 
-\item{alpha_pi}{matrix or NULL. The coefficients of W in the regression of pi.}
+\item{alpha_pi}{matrix or NULL. The coefficients of W in the regression of
+pi.}
 
 \item{zeta}{numeric. A vector of log of inverse dispersion parameters.}
 
@@ -71,12 +75,12 @@ gamma_pi.}
 
 \item{epsilon_W}{nonnegative scalar. Regularization parameter for W.}
 
-\item{epsilon_alpha}{nonnegative scalar. Regularization parameter for alpha
+\item{epsilon_alpha}{nonnegative scalar. Regularization parameter for alpha 
 (both alpha_mu and alpha_pi).}
 
 \item{epsilon_zeta}{nonnegative scalar. Regularization parameter for zeta.}
 
-\item{epsilon_min_logit}{scalar. Minimum regularization parameter for
+\item{epsilon_min_logit}{scalar. Minimum regularization parameter for 
 parameters of the logit model, including the intercept.}
 
 \item{n}{integer. Number of samples.}
@@ -88,17 +92,20 @@ parameters of the logit model, including the intercept.}
 \item{...}{arguments passed to \code{new()}. See the parameter of
 \code{initialize}.}
 }
+\value{
+an object of class \code{\linkS4class{ZinbModel}}.
+}
 \description{
 Initialize an object of class ZinbModel
 }
 \details{
 This is a light wrapper around the new() function to create an 
-  instance of class \code{ZinbModel}.
-  Rarely, the user will need to create a \code{ZinbModel} object from scratch,
-  as tipically this is the result of \code{\link{zinbFit}}.
+  instance of class \code{ZinbModel}. Rarely, the user will need to create a
+  \code{ZinbModel} object from scratch, as tipically this is the result of
+  \code{\link{zinbFit}}.
 
-If any of \code{X}, \code{V}, \code{W} matrices are passed,
-  \code{n}, \code{J}, and \code{K} are inferred. Alternatively, the user can
+If any of \code{X}, \code{V}, \code{W} matrices are passed, 
+  \code{n}, \code{J}, and \code{K} are inferred. Alternatively, the user can 
   specify one or more of \code{n}, \code{J}, and \code{K}.
 
 The regularization parameters can be set by a unique parameter 
@@ -113,8 +120,8 @@ The regularization parameters can be set by a unique parameter
   \item epsilon_alpha = epsilon/J
   \item epsilon_zeta = epsilon
   }
-  We empirically found that large values of \code{epsilon} provide a more stable
-  estimation of \code{W}.
+  We empirically found that large values of \code{epsilon} provide a more
+  stable estimation of \code{W}.
 
 A call with no argument has the following default values: \code{n = 
   50}, \code{J = 100}, \code{K = 0}, \code{epsilon=J}.

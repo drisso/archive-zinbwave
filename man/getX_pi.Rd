@@ -16,8 +16,8 @@ distributions.}
 
 \item{...}{Additional parameters.}
 
-\item{intercept}{logical. Whether to return the intercept (ignored if X_pi has
-no intercept).}
+\item{intercept}{logical. Whether to return the intercept (ignored if X_pi
+has no intercept).}
 }
 \value{
 the sample-level design matrix for pi

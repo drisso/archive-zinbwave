@@ -14,6 +14,10 @@ getEpsilon_alpha(object)
 \item{object}{an object that describes a matrix of zero-inflated
 distributions.}
 }
+\value{
+the regularization parameters for \code{alpha_mu} and
+  \code{alpha_pi}.
+}
 \description{
 Given an object describing a ZINB model, returns a vector of size the number
 of rows in the parameter \code{alpha} with the regularization parameters

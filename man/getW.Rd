@@ -11,8 +11,8 @@ getW(object)
 \S4method{getW}{ZinbModel}(object)
 }
 \arguments{
-\item{object}{a \code{\linkS4class{ZinbModel}} object, typically the result of
-\code{\link{zinbFit}}.}
+\item{object}{a \code{\linkS4class{ZinbModel}} object, typically the result
+of \code{\link{zinbFit}}.}
 }
 \value{
 the matrix \code{W} of inferred sample-level covariates.

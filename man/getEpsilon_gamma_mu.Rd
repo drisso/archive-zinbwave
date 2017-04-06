@@ -14,9 +14,12 @@ getEpsilon_gamma_mu(object)
 \item{object}{an object that describes a matrix of zero-inflated 
 distributions.}
 }
+\value{
+the regularization parameters for \code{gamma_mu}.
+}
 \description{
 Given an object describing a ZINB model, returns a vector of size the number 
-of columns in the parameter \code{alpha_mu} with the regularization
+of columns in the parameter \code{gamma_mu} with the regularization
 parameters associated to each row.
 }
 \section{Methods (by class)}{

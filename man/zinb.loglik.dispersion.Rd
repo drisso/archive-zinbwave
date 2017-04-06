@@ -18,13 +18,13 @@ negative binomial model}
 \item{logitPi}{a vector of logit of the probabilities of the zero component}
 }
 \description{
-Given a unique dispersion parameter and a set of counts, together with a
-corresponding set of mean parameters and probabilities of zero components,
-this function computes the sum of the log-probabilities of the counts under
-the ZINB model. The dispersion parameter is provided to the function through
-zeta = log(theta), where theta is sometimes called the inverse dispersion parameter.
-The probabilities of the zero components are provided through their logit, in
-order to better numerical stability.
+Given a unique dispersion parameter and a set of counts, together with a 
+corresponding set of mean parameters and probabilities of zero components, 
+this function computes the sum of the log-probabilities of the counts under 
+the ZINB model. The dispersion parameter is provided to the function through 
+zeta = log(theta), where theta is sometimes called the inverse dispersion
+parameter. The probabilities of the zero components are provided through
+their logit, in order to better numerical stability.
 }
 \examples{
 mu <- seq(10,50,length.out=10)

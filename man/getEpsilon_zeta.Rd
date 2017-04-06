@@ -14,6 +14,9 @@ getEpsilon_zeta(object)
 \item{object}{an object that describes a matrix of zero-inflated
 distributions.}
 }
+\value{
+the regularization parameters for \code{zeta}.
+}
 \description{
 The regularization parameter penalizes the variance of zeta, the log of 
 the dispersion parameters across samples.

@@ -16,8 +16,8 @@ distributions.}
 
 \item{...}{Additional parameters.}
 
-\item{intercept}{logical. Whether to return the intercept (ignored if V_mu has
-no intercept).}
+\item{intercept}{logical. Whether to return the intercept (ignored if V_mu
+has no intercept).}
 }
 \value{
 the gene-level design matrix for mu

@@ -16,8 +16,8 @@ distributions.}
 
 \item{...}{Additional parameters.}
 
-\item{intercept}{logical. Whether to return the intercept (ignored if X_mu has
-no intercept). Default \code{TRUE}}
+\item{intercept}{logical. Whether to return the intercept (ignored if X_mu
+has no intercept). Default \code{TRUE}}
 }
 \value{
 the sample-level design matrix for mu
