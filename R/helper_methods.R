@@ -648,8 +648,9 @@ setMethod(
         # Fraction of zeros in the matrix
         zero.fraction <- sum(counts == 0) / (n*J)    
         
-        ret <- list(counts = counts, dataNB = data.nb, 
-                    dataDropouts = data.dropout, zeroFraction = zero.fraction)
+        ret <- list(counts = t(counts), dataNB = t(data.nb), 
+                    dataDropouts = t(data.dropout),
+                    zeroFraction = zero.fraction)
         attr(ret, "seed") <- RNGstate
         ret
     }
