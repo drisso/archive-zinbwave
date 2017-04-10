@@ -25,3 +25,25 @@ test_that("getX et al work with/without intercept", {
     expect_equal(getX_pi(m, intercept=TRUE), getX_pi(m, intercept=TRUE))
 })
 
+test_that("zinbFit works with genewise dispersion", {
+    bio <- gl(2, 3)
+    counts <- matrix(rpois(60, lambda=5), nrow=10, ncol=6)
+    m <- zinbFit(counts, X=model.matrix(~bio), commondispersion = TRUE)
+    m <- zinbFit(counts, X=model.matrix(~bio), commondispersion = FALSE)
+})
+
+test_that("zinbSim works", {
+    a <- zinbModel(n=5, J=10)
+    zinbSim(a)
+})
+
+test_that("getMu and getPi have the right dimensions", {
+    bio <- gl(2, 3)
+    counts <- matrix(rpois(60, lambda=5), nrow=10, ncol=6)
+    m <- zinbFit(counts, X=model.matrix(~bio), commondispersion = TRUE)
+
+    expect_equal(dim(getMu(m)), c(nSamples(m), nFeatures(m)))
+    expect_equal(dim(getLogMu(m)), c(nSamples(m), nFeatures(m)))
+    expect_equal(dim(getPi(m)), c(nSamples(m), nFeatures(m)))
+    expect_equal(dim(getLogitPi(m)), c(nSamples(m), nFeatures(m)))
+})

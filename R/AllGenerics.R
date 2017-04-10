@@ -15,6 +15,10 @@ setGeneric("nFactors", function(x) standardGeneric("nFactors"))
 #' @param object an object that describes a matrix of zero-inflated
 #'   distributions.
 #' @return the matrix of mean parameters
+#' @details Note that although the user interface of \code{\link{zinbFit}}
+#' requires a J x n matrix, internally this is stored as a n x J matrix (i.e., 
+#' samples in row and genes in column). Hence the parameter matrix returned by
+#' this function is of n x J dimensions.
 #' @examples
 #' a <- zinbModel(n=5, J=10)
 #' getMu(a) 
@@ -28,6 +32,10 @@ setGeneric("getMu", function(object) standardGeneric("getMu"))
 #' @param object an object that describes a matrix of zero-inflated
 #'   distributions.
 #' @return the matrix of logarithms of mean parameters
+#' @details Note that although the user interface of \code{\link{zinbFit}}
+#' requires a J x n matrix, internally this is stored as a n x J matrix (i.e., 
+#' samples in row and genes in column). Hence the parameter matrix returned by
+#' this function is of n x J dimensions.
 #' @examples
 #' a <- zinbModel(n=5, J=10)
 #' getLogMu(a) 
@@ -41,6 +49,10 @@ setGeneric("getLogMu", function(object) standardGeneric("getLogMu"))
 #' @param object an object that describes a matrix of zero-inflated
 #'   distributions.
 #' @return the matrix of logit-probabilities of 0
+#' @details Note that although the user interface of \code{\link{zinbFit}}
+#' requires a J x n matrix, internally this is stored as a n x J matrix (i.e., 
+#' samples in row and genes in column). Hence the parameter matrix returned by
+#' this function is of n x J dimensions.
 #' @examples
 #' a <- zinbModel(n=5, J=10)
 #' getLogitPi(a) 
@@ -54,6 +66,10 @@ setGeneric("getLogitPi", function(object) standardGeneric("getLogitPi"))
 #' @param object an object that describes a matrix of zero-inflated
 #'   distributions.
 #' @return the matrix of probabilities of 0
+#' @details Note that although the user interface of \code{\link{zinbFit}}
+#' requires a J x n matrix, internally this is stored as a n x J matrix (i.e., 
+#' samples in row and genes in column). Hence the parameter matrix returned by
+#' this function is of n x J dimensions.
 #' @examples
 #' a <- zinbModel(n=5, J=10)
 #' getPi(a) 
