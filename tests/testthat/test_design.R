@@ -30,6 +30,44 @@ test_that("zinbFit works with genewise dispersion", {
     counts <- matrix(rpois(60, lambda=5), nrow=10, ncol=6)
     m <- zinbFit(counts, X=model.matrix(~bio), commondispersion = TRUE)
     m <- zinbFit(counts, X=model.matrix(~bio), commondispersion = FALSE)
+    
+    m <- zinbFit(counts, X=model.matrix(~bio), verbose = TRUE)
+})
+
+test_that("zinbFit stops if one gene has only 0 counts", {
+    counts <- matrix(rpois(60, lambda=5), nrow=10, ncol=6)
+    counts <- rbind(counts, rep(0, ncol(counts)))
+    expect_error(zinbFit(counts), "only 0 counts")
+})
+
+test_that("zinbFit stops if one sample has only 0 counts", {
+    counts <- matrix(rpois(60, lambda=5), nrow=10, ncol=6)
+    counts <- cbind(counts, rep(0, nrow(counts)))
+    expect_error(zinbFit(counts), "only 0 counts")
+})
+
+test_that("zinbFit works without X and V", {
+    counts <- matrix(rpois(60, lambda=5), nrow=10, ncol=6)
+    m1 <- zinbFit(counts, X = matrix(0, ncol=1, nrow=ncol(counts)))
+    m2 <- zinbFit(counts, V = matrix(0, ncol=1, nrow=nrow(counts)))
+    m3 <- zinbFit(counts, X = matrix(0, ncol=1, nrow=ncol(counts)),
+                  V = matrix(0, ncol=1, nrow=nrow(counts)))
+    
+    expect_equal(sum(as.vector(m1@beta_mu)), 0)
+    expect_equal(sum(as.vector(m1@beta_pi)), 0)
+    expect_equal(sum(as.vector(m2@gamma_mu)), 0)
+    expect_equal(sum(as.vector(m2@gamma_pi)), 0)
+    expect_equal(sum(as.vector(m3@beta_mu)), 0)
+    expect_equal(sum(as.vector(m3@beta_pi)), 0)
+    expect_equal(sum(as.vector(m3@gamma_mu)), 0)
+    expect_equal(sum(as.vector(m3@gamma_pi)), 0)
+    
+})
+
+test_that("zinbFit works with K>0", {
+    counts <- matrix(rpois(60, lambda=5), nrow=10, ncol=6)
+    m <- zinbFit(counts, K = 2)
+    expect_equal(dim(getW(m)), c(nSamples(m), nFactors(m)))
 })
 
 test_that("zinbSim works", {
@@ -58,8 +96,40 @@ test_that("Initialization works", {
     zinbModel()
     
     ## specify W
-    W <- matrix(rnorm(10), ncol=2)
-    zinbModel(W = W)
+    mat <- matrix(rnorm(10), ncol=2)
+    m <- zinbModel(W = mat)
+    expect_equal(nSamples(m), nrow(mat))
     
-    ## add more
+    ## specify X
+    m <- zinbModel(X = mat)
+    expect_equal(nSamples(m), nrow(mat))
+    
+    ## specify V
+    m <- zinbModel(V = mat)
+    expect_equal(nFeatures(m), nrow(mat))
+    
+    ## specify different X, V for pi and mu
+    m <- zinbModel(X = mat, which_X_mu=1L, which_X_pi=2L,
+              V = mat, which_V_mu=2L, which_V_pi=1L)
+    expect_equal(nFeatures(m), nrow(mat))
+    expect_equal(nSamples(m), nrow(mat))
+    
+    ## specify O_mu
+    m <- zinbModel(O_mu = mat)
+    expect_equal(nSamples(m), nrow(mat))
+    expect_equal(nFeatures(m), ncol(mat))
+    
+    ## specify O_pi
+    m <- zinbModel(O_pi = mat)
+    expect_equal(nSamples(m), nrow(mat))
+    expect_equal(nFeatures(m), ncol(mat))
+    
+    ## check that "new" gives the same object
+    m1 <- zinbModel()
+    m2 <- new("ZinbModel")
+    expect_equal(m1, m2)
+    show(m1)
+    show(m2)
+    
+    
 })
