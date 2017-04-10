@@ -46,4 +46,20 @@ test_that("getMu and getPi have the right dimensions", {
     expect_equal(dim(getLogMu(m)), c(nSamples(m), nFeatures(m)))
     expect_equal(dim(getPi(m)), c(nSamples(m), nFeatures(m)))
     expect_equal(dim(getLogitPi(m)), c(nSamples(m), nFeatures(m)))
+    expect_equal(dim(getW(m)), c(nSamples(m), nFactors(m)))
+    expect_equal(length(getPhi(m)), nFeatures(m))
+    expect_equal(length(getTheta(m)), nFeatures(m))
+    expect_equal(length(getZeta(m)), nFeatures(m))
+})
+
+test_that("Initialization works", {
+    
+    ## no arguments specified
+    zinbModel()
+    
+    ## specify W
+    W <- matrix(rnorm(10), ncol=2)
+    zinbModel(W = W)
+    
+    ## add more
 })
