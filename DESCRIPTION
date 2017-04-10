@@ -21,7 +21,6 @@ Depends:
    R (>= 3.3),
    methods
 Imports:
-   clusterExperiment,
    copula,
    glmnet,
    parallel,
