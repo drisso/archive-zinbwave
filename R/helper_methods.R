@@ -353,7 +353,6 @@ setMethod("show", "ZinbModel",
 ################################################################
 
 #' @export
-#' @importFrom clusterExperiment nSamples
 #' @describeIn ZinbModel returns the number of samples.
 #' @param x an object of class \code{ZinbModel}.
 setMethod("nSamples", "ZinbModel",
@@ -363,7 +362,6 @@ setMethod("nSamples", "ZinbModel",
 )
 
 #' @export
-#' @importFrom clusterExperiment nFeatures
 #' @describeIn ZinbModel returns the number of features.
 setMethod("nFeatures", "ZinbModel",
           function(x) {

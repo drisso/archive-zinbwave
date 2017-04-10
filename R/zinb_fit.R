@@ -498,6 +498,7 @@ zinbOptimizeDispersion <- function(m, Y, commondispersion=TRUE, ncores=1) {
 #' @export
 #' @return the log-likelihood of the model.
 #' @importFrom copula log1pexp
+#' @importFrom stats dnbinom optim optimize rbinom rnbinom runif var
 #' @examples
 #' n <- 10
 #' mu <- seq(10,50,length.out=n)
