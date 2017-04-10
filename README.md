@@ -7,6 +7,10 @@ Zero-inflated Negative Binomial based Wanted Variation Extraction (ZINB-WaVE)
 
 This package implements a zero-inflated negative binomial model for single-cell RNA-seq data, with latent factors.
 
+The model is described in details in the paper:
+D. Risso, F. Perraudeau, S. Gribkova, S. Dudoit and JP. Vert (2017).
+ZINB-WaVE: A general and flexible method for signal extraction from single-cell RNA-seq data. bioRxiv. https://doi.org/10.1101/125112
+
 ## Installation
 
 ```{r}

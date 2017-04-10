@@ -6,8 +6,9 @@ bibentry("Article",
                     person("Sandrine", "Dudoit"),
                     person("Jean-Philippe", "Vert")),
          year = 2017,
-         journal = "In preparation",
+         journal = "bioRxiv",
+         url = "https://doi.org/10.1101/125112",
          textVersion = 
          paste("D. Risso, F. Perraudeau, S. Gribkova, S. Dudoit and JP. Vert","(2017).",
-               "ZINB-WaVE: A general and flexible method for signal extraction from single-cell RNA-seq data."
-         ))
+               "ZINB-WaVE: A general and flexible method for signal extraction from single-cell RNA-seq data. bioRxiv. https://doi.org/10.1101/125112")
+               )
