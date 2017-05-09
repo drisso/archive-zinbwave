@@ -1,7 +1,7 @@
 ---
 title: "An introduction to ZINB-WaVE"
 author: "Davide Risso"
-date: "3/28/2017"
+date: "Last modified: May 09, 2017; Compiled: format(Sys.time(), '%B %d, %Y')"
 bibliography: biblio.bib
 output:
   BiocStyle::html_document:
@@ -9,6 +9,11 @@ output:
 vignette: >
   %\VignetteEncoding{UTF-8}
 ---
+
+<!--
+%\VignetteEngine{knitr::rmarkdown}
+%\VignetteIndexEntry{zinbwave Vignette}
+-->
 
 # Introduction
 
@@ -169,7 +174,7 @@ We use the `biomaRt` package to compute gene length and GC-content.
 mart <- useMart("ensembl")
 mart <- useDataset("hsapiens_gene_ensembl", mart = mart)
 bm <- getBM(attributes=c('hgnc_symbol', 'start_position',
-                         'end_position', 'percentage_gc_content'),
+                         'end_position', 'percentage_gene_gc_content'),
             filters = 'hgnc_symbol',
             values = rownames(fluidigm),
             mart = mart)
@@ -177,7 +182,7 @@ bm <- getBM(attributes=c('hgnc_symbol', 'start_position',
 bm$length <- bm$end_position - bm$start_position
 len <- tapply(bm$length, bm$hgnc_symbol, mean)
 len <- len[rownames(fluidigm)]
-gcc <- tapply(bm$percentage_gc_content, bm$hgnc_symbol, mean)
+gcc <- tapply(bm$percentage_gene_gc_content, bm$hgnc_symbol, mean)
 gcc <- gcc[rownames(fluidigm)]
 
 modV <- model.matrix(~gcc + log(len))
