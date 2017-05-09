@@ -18,7 +18,7 @@ Description:
    RNA-seq data, with latent factors.
 License: Artistic-2.0
 Depends: 
-   R (>= 3.3),
+   R (>= 3.4),
    methods
 Imports:
    copula,
