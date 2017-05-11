@@ -16,8 +16,8 @@ distributions.}
 
 \item{...}{Additional parameters.}
 
-\item{intercept}{logical. Whether to return the intercept (ignored if X_mu has
-no intercept). Default \code{TRUE}}
+\item{intercept}{logical. Whether to return the intercept (ignored if X_mu
+has no intercept). Default \code{TRUE}}
 }
 \value{
 the sample-level design matrix for mu
@@ -31,3 +31,7 @@ returns the sample-level design matrix for mu
 \item \code{ZinbModel}: return the sample-level design matrix for mu.
 }}
 
+\examples{
+a <- zinbModel(n=5, J=10)
+getX_mu(a) 
+}

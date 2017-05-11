@@ -25,8 +25,8 @@ penalty.
 \itemize{
 \item \code{ZinbModel}: return the penalization.
 }}
+
 \examples{
 m <- zinbModel(K=2)
 penalty(m)
 }
-

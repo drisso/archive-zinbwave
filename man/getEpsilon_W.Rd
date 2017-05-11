@@ -14,6 +14,9 @@ getEpsilon_W(object)
 \item{object}{an object that describes a matrix of zero-inflated
 distributions.}
 }
+\value{
+the regularization parameters for \code{W}.
+}
 \description{
 Given an object describing a ZINB model, returns a vector of size the number 
 of columns in the parameter \code{W} with the regularization
@@ -24,3 +27,7 @@ parameters associated to each column.
 \item \code{ZinbModel}: method for ZinbModel.
 }}
 
+\examples{
+a <- zinbModel(n=5, J=10)
+getEpsilon_W(a) 
+}

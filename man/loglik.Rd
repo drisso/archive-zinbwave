@@ -34,9 +34,9 @@ data under the model.
 
 \item \code{model = ZinbModel,x = dgCMatrix}: return the log-likelihood of the ZINB model.
 }}
+
 \examples{
 m <- zinbModel(n=5, J=10)
 x <- zinbSim(m)
 loglik(m, x$counts)
 }
-

@@ -14,6 +14,9 @@ getEpsilon_beta_mu(object)
 \item{object}{an object that describes a matrix of zero-inflated
 distributions.}
 }
+\value{
+the regularization parameters for \code{beta_mu}.
+}
 \description{
 Given an object describing a ZINB model, returns a vector of size the number
 of rows in the parameter \code{beta_mu} with the regularization parameters
@@ -24,3 +27,7 @@ associated to each row.
 \item \code{ZinbModel}: method for ZinbModel.
 }}
 
+\examples{
+a <- zinbModel(n=5, J=10)
+getEpsilon_beta_mu(a) 
+}

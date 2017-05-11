@@ -17,6 +17,9 @@ binomial}
 
 \item{logitPi}{a vector of the logit of the probability of the zero component}
 }
+\value{
+the gradient of the inverse dispersion parameters.
+}
 \description{
 Derivative of the log-likelihood of the zero-inflated negative binomial model
 with respect to the log of the inverse dispersion parameter
@@ -24,4 +27,3 @@ with respect to the log of the inverse dispersion parameter
 \seealso{
 \code{\link{zinb.loglik}}, \code{\link{zinb.loglik.dispersion}}.
 }
-

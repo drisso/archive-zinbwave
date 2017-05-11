@@ -20,7 +20,8 @@ zinbFit(Y, ...)
 \arguments{
 \item{Y}{The data (genes in rows, samples in columns).}
 
-\item{...}{Additional parameters to describe the model, see \link{zinbModel}.}
+\item{...}{Additional parameters to describe the model, see
+\code{\link{zinbModel}}.}
 
 \item{commondispersion}{Whether or not a single dispersion for all features
 is estimated (default TRUE).}
@@ -62,11 +63,12 @@ This means that by default the model is fitted with \code{X_mu =
 
 \item \code{dgCMatrix}: Y is a sparse matrix of counts (genes in rows).
 }}
+
 \examples{
 bio <- gl(2, 3)
-m <- zinbFit(matrix(rpois(60, lambda=5), nrow=10, ncol=6), X=model.matrix(~bio))
+m <- zinbFit(matrix(rpois(60, lambda=5), nrow=10, ncol=6),
+             X=model.matrix(~bio))
 }
 \seealso{
 \code{\link[stats]{model.matrix}}.
 }
-

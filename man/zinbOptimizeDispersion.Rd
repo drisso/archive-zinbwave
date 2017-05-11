@@ -30,4 +30,3 @@ m = zinbModel(n=NROW(Y), J=NCOL(Y))
 m = zinbInitialize(m, Y)
 m = zinbOptimizeDispersion(m, Y)
 }
-

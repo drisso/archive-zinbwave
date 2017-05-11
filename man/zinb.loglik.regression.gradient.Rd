@@ -35,14 +35,17 @@ zinb.loglik.regression.gradient(alpha, Y, A.mu = matrix(nrow = length(Y), ncol
 regularization, or just a scalar is the regularization is the same for all
 coordinates of \code{alpha}. Default=\code{O}.}
 }
+\value{
+The gradient of the penalized log-likelihood.
+}
 \description{
-This function computes the gradient of the penalized log-likelihood of a ZINB regression
-model given a vector of counts.
+This function computes the gradient of the penalized log-likelihood of a ZINB
+regression model given a vector of counts.
 }
 \details{
-The regression model is described in \code{\link{zinb.loglik.regression}}.
+The regression model is described in
+  \code{\link{zinb.loglik.regression}}.
 }
 \seealso{
 \code{\link{zinb.loglik.regression}}
 }
-

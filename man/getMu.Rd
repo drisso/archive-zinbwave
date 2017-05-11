@@ -21,12 +21,18 @@ the matrix of mean parameters
 Given an object that describes a matrix of zero-inflated distributions,
 returns the matrix of mean parameters.
 }
+\details{
+Note that although the user interface of \code{\link{zinbFit}}
+requires a J x n matrix, internally this is stored as a n x J matrix (i.e., 
+samples in row and genes in column). Hence the parameter matrix returned by
+this function is of n x J dimensions.
+}
 \section{Methods (by class)}{
 \itemize{
 \item \code{ZinbModel}: return the mean of the non-zero component.
 }}
+
 \examples{
 a <- zinbModel(n=5, J=10)
 getMu(a) 
 }
-

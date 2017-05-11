@@ -36,4 +36,3 @@ m <- zinbModel(Y, X=model.matrix(~bio + time), V=model.matrix(~gc),
              which_X_pi=1L, which_V_mu=1L, K=1)
 m <- zinbInitialize(m, Y)
 }
-

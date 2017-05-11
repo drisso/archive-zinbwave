@@ -1,3 +1,25 @@
+Changes in Version 0.99.0 (2017-05-09)
+=====================================
+
+* Bumped version for submission to Bioconductor
+* Minor changes to compile vignette
+* Required R version 3.4
+
+Changes in Version 0.1.4 (2017-04-10)
+=====================================
+
+* Improved documentation
+* zinbSim now produces matrix of J x n dimension
+* Removed unnecessary dependency on clusterExperiment
+* Additional tests
+* Better default for epsilon
+
+Changes in Version 0.1.2 (2017-03-29)
+=====================================
+
+* New vignette
+* Change name to zinbwave
+
 Changes in Version 0.1.0 (2016-09-23)
 =====================================
 

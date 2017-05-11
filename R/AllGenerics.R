@@ -15,6 +15,10 @@ setGeneric("nFactors", function(x) standardGeneric("nFactors"))
 #' @param object an object that describes a matrix of zero-inflated
 #'   distributions.
 #' @return the matrix of mean parameters
+#' @details Note that although the user interface of \code{\link{zinbFit}}
+#' requires a J x n matrix, internally this is stored as a n x J matrix (i.e., 
+#' samples in row and genes in column). Hence the parameter matrix returned by
+#' this function is of n x J dimensions.
 #' @examples
 #' a <- zinbModel(n=5, J=10)
 #' getMu(a) 
@@ -28,6 +32,10 @@ setGeneric("getMu", function(object) standardGeneric("getMu"))
 #' @param object an object that describes a matrix of zero-inflated
 #'   distributions.
 #' @return the matrix of logarithms of mean parameters
+#' @details Note that although the user interface of \code{\link{zinbFit}}
+#' requires a J x n matrix, internally this is stored as a n x J matrix (i.e., 
+#' samples in row and genes in column). Hence the parameter matrix returned by
+#' this function is of n x J dimensions.
 #' @examples
 #' a <- zinbModel(n=5, J=10)
 #' getLogMu(a) 
@@ -41,6 +49,10 @@ setGeneric("getLogMu", function(object) standardGeneric("getLogMu"))
 #' @param object an object that describes a matrix of zero-inflated
 #'   distributions.
 #' @return the matrix of logit-probabilities of 0
+#' @details Note that although the user interface of \code{\link{zinbFit}}
+#' requires a J x n matrix, internally this is stored as a n x J matrix (i.e., 
+#' samples in row and genes in column). Hence the parameter matrix returned by
+#' this function is of n x J dimensions.
 #' @examples
 #' a <- zinbModel(n=5, J=10)
 #' getLogitPi(a) 
@@ -54,6 +66,10 @@ setGeneric("getLogitPi", function(object) standardGeneric("getLogitPi"))
 #' @param object an object that describes a matrix of zero-inflated
 #'   distributions.
 #' @return the matrix of probabilities of 0
+#' @details Note that although the user interface of \code{\link{zinbFit}}
+#' requires a J x n matrix, internally this is stored as a n x J matrix (i.e., 
+#' samples in row and genes in column). Hence the parameter matrix returned by
+#' this function is of n x J dimensions.
 #' @examples
 #' a <- zinbModel(n=5, J=10)
 #' getPi(a) 
@@ -101,6 +117,21 @@ setGeneric("getTheta", function(object) standardGeneric("getTheta"))
 #' getZeta(a) 
 #' @export
 setGeneric("getZeta", function(object) standardGeneric("getZeta"))
+
+#' Returns the low-dimensional matrix of inferred sample-level covariates W
+#' 
+#' Given an object that contains the fit of a ZINB-WaVE model, returns the
+#' matrix \code{W} of low-dimensional matrix of inferred sample-level
+#' covariates.
+#' 
+#' @param object a \code{\linkS4class{ZinbModel}} object, typically the result
+#'   of \code{\link{zinbFit}}.
+#' @return the matrix \code{W} of inferred sample-level covariates.
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getW(a) 
+#' @export
+setGeneric("getW", function(object) standardGeneric("getW"))
 
 #' Simulate counts from a zero-inflated negative binomial model
 #' 
@@ -159,7 +190,8 @@ setGeneric("penalty", function(model) standardGeneric("penalty"))
 #' Given an object with the data, it fits a ZINB model.
 #' 
 #' @param Y The data (genes in rows, samples in columns).
-#' @param ... Additional parameters to describe the model, see \link{zinbModel}.
+#' @param ... Additional parameters to describe the model, see
+#'   \code{\link{zinbModel}}.
 #' @return An object of class \code{ZinbModel} that has been fitted by penalized
 #'   maximum likelihood on the data.
 #' @export
@@ -174,6 +206,9 @@ setGeneric("zinbFit", function(Y, ...) standardGeneric("zinbFit"))
 #' @param ... Additional parameters.
 #' @return the sample-level design matrix for mu
 #' @export
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getX_mu(a) 
 setGeneric("getX_mu", function(object, ...) standardGeneric("getX_mu"))
 
 #' Returns the sample-level design matrix for pi
@@ -185,6 +220,9 @@ setGeneric("getX_mu", function(object, ...) standardGeneric("getX_mu"))
 #' @param ... Additional parameters.
 #' @return the sample-level design matrix for pi
 #' @export
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getX_pi(a) 
 setGeneric("getX_pi", function(object, ...) standardGeneric("getX_pi"))
 
 #' Returns the gene-level design matrix for mu
@@ -196,6 +234,9 @@ setGeneric("getX_pi", function(object, ...) standardGeneric("getX_pi"))
 #' @param ... Additional parameters.
 #' @return the gene-level design matrix for mu
 #' @export
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getV_mu(a) 
 setGeneric("getV_mu", function(object, ...) standardGeneric("getV_mu"))
 
 #' Returns the gene-level design matrix for pi
@@ -207,6 +248,9 @@ setGeneric("getV_mu", function(object, ...) standardGeneric("getV_mu"))
 #' @param ... Additional parameters.
 #' @return the gene-level design matrix for pi
 #' @export
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getV_pi(a) 
 setGeneric("getV_pi", function(object, ...) standardGeneric("getV_pi"))
 
 #' Returns the vector of regularization parameter for beta_mu
@@ -216,18 +260,28 @@ setGeneric("getV_pi", function(object, ...) standardGeneric("getV_pi"))
 #' associated to each row.
 #' @param object an object that describes a matrix of zero-inflated
 #'   distributions.
+#' @return the regularization parameters for \code{beta_mu}.
 #' @export
-setGeneric("getEpsilon_beta_mu", function(object) standardGeneric("getEpsilon_beta_mu"))
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getEpsilon_beta_mu(a) 
+setGeneric("getEpsilon_beta_mu", 
+           function(object) standardGeneric("getEpsilon_beta_mu"))
 
 #' Returns the vector of regularization parameter for gamma_mu
 #' 
 #' Given an object describing a ZINB model, returns a vector of size the number 
-#' of columns in the parameter \code{alpha_mu} with the regularization
+#' of columns in the parameter \code{gamma_mu} with the regularization
 #' parameters associated to each row.
 #' @param object an object that describes a matrix of zero-inflated 
 #'   distributions.
+#' @return the regularization parameters for \code{gamma_mu}.
 #' @export
-setGeneric("getEpsilon_gamma_mu", function(object) standardGeneric("getEpsilon_gamma_mu"))
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getEpsilon_gamma_mu(a) 
+setGeneric("getEpsilon_gamma_mu", 
+           function(object) standardGeneric("getEpsilon_gamma_mu"))
 
 #' Returns the vector of regularization parameter for beta_pi
 #' 
@@ -236,8 +290,13 @@ setGeneric("getEpsilon_gamma_mu", function(object) standardGeneric("getEpsilon_g
 #' associated to each row.
 #' @param object an object that describes a matrix of zero-inflated
 #'   distributions.
+#' @return the regularization parameters for \code{beta_pi}.
 #' @export
-setGeneric("getEpsilon_beta_pi", function(object) standardGeneric("getEpsilon_beta_pi"))
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getEpsilon_beta_pi(a) 
+setGeneric("getEpsilon_beta_pi", 
+           function(object) standardGeneric("getEpsilon_beta_pi"))
 
 #' Returns the vector of regularization parameter for gamma_pi
 #' 
@@ -246,8 +305,13 @@ setGeneric("getEpsilon_beta_pi", function(object) standardGeneric("getEpsilon_be
 #' parameters associated to each column.
 #' @param object an object that describes a matrix of zero-inflated 
 #'   distributions.
+#' @return the regularization parameters for \code{gamma_pi}.
 #' @export
-setGeneric("getEpsilon_gamma_pi", function(object) standardGeneric("getEpsilon_gamma_pi"))
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getEpsilon_gamma_pi(a) 
+setGeneric("getEpsilon_gamma_pi", 
+           function(object) standardGeneric("getEpsilon_gamma_pi"))
 
 #' Returns the vector of regularization parameter for W
 #' 
@@ -256,7 +320,11 @@ setGeneric("getEpsilon_gamma_pi", function(object) standardGeneric("getEpsilon_g
 #' parameters associated to each column.
 #' @param object an object that describes a matrix of zero-inflated
 #'   distributions.
+#' @return the regularization parameters for \code{W}.
 #' @export
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getEpsilon_W(a) 
 setGeneric("getEpsilon_W", function(object) standardGeneric("getEpsilon_W"))
 
 #' Returns the vector of regularization parameter for alpha
@@ -267,8 +335,14 @@ setGeneric("getEpsilon_W", function(object) standardGeneric("getEpsilon_W"))
 #' \code{alpha_pi}, which have the same size and have the same regularization.
 #' @param object an object that describes a matrix of zero-inflated
 #'   distributions.
+#' @return the regularization parameters for \code{alpha_mu} and
+#'   \code{alpha_pi}.
 #' @export
-setGeneric("getEpsilon_alpha", function(object) standardGeneric("getEpsilon_alpha"))
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getEpsilon_alpha(a) 
+setGeneric("getEpsilon_alpha", 
+           function(object) standardGeneric("getEpsilon_alpha"))
 
 #' Returns the regularization parameter for the dispersion parameter
 #' 
@@ -276,5 +350,38 @@ setGeneric("getEpsilon_alpha", function(object) standardGeneric("getEpsilon_alph
 #' the dispersion parameters across samples.
 #' @param object an object that describes a matrix of zero-inflated
 #'   distributions.
+#' @return the regularization parameters for \code{zeta}.
 #' @export
-setGeneric("getEpsilon_zeta", function(object) standardGeneric("getEpsilon_zeta"))
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getEpsilon_zeta(a) 
+setGeneric("getEpsilon_zeta", 
+           function(object) standardGeneric("getEpsilon_zeta"))
+
+#' Generic function that returns the number of features
+#'
+#' Given an object that describes a dataset or a model, it returns the number of
+#' features.
+#' @param x an object that describes a dataset or a model.
+#' @return the number of features.
+#' @export
+setGeneric(
+    name = "nFeatures",
+    def = function(x) {
+        standardGeneric("nFeatures")
+    }
+)
+
+#' Generic function that returns the number of samples
+#'
+#' Given an object that describes a model or a dataset, it returns the number of
+#' samples.
+#' @param x an object that describes a dataset or a model.
+#' @return the number of samples.
+#' @export
+setGeneric(
+    name = "nSamples",
+    def = function(x) {
+        standardGeneric("nSamples")
+    }
+)

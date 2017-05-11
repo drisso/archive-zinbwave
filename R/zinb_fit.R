@@ -26,11 +26,13 @@
 #'
 #' @examples
 #' bio <- gl(2, 3)
-#' m <- zinbFit(matrix(rpois(60, lambda=5), nrow=10, ncol=6), X=model.matrix(~bio))
+#' m <- zinbFit(matrix(rpois(60, lambda=5), nrow=10, ncol=6),
+#'              X=model.matrix(~bio))
 setMethod("zinbFit", "matrix",
-          function(Y, commondispersion=TRUE, ncores=1, verbose=FALSE, nb.repeat.initialize=2, maxiter.optimize=25, stop.epsilon.optimize=.0001, ...) {
-
-
+          function(Y, commondispersion=TRUE, ncores=1, verbose=FALSE, 
+                   nb.repeat.initialize=2, maxiter.optimize=25, 
+                   stop.epsilon.optimize=.0001, ...) {
+    
     # Transpose Y: UI wants genes in rows, internals genes in columns!
     Y <- t(Y)
 
@@ -46,7 +48,10 @@ setMethod("zinbFit", "matrix",
 
     # Optimize parameters
     if (verbose) {cat("Optimize parameters: \n")}
-    m <- zinbOptimize(m, Y, commondispersion=commondispersion, maxiter=maxiter.optimize, stop.epsilon=stop.epsilon.optimize, ncores=ncores, verbose=verbose)
+    m <- zinbOptimize(m, Y, commondispersion=commondispersion, 
+                      maxiter=maxiter.optimize, 
+                      stop.epsilon=stop.epsilon.optimize, 
+                      ncores=ncores, verbose=verbose)
     if (verbose) {cat("ok\n")}
 
     validObject(m)
@@ -127,7 +132,8 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
     P <- as.matrix(Y > 0)
 
     if(any(rowSums(P) == 0)) {
-        stop(paste0("Sample ", which(rowSums(P) == 0)[1], " has only 0 counts!"))
+        stop(paste0("Sample ", which(rowSums(P) == 0)[1], 
+                    " has only 0 counts!"))
     }
 
     if(any(colSums(P) == 0)) {
@@ -184,13 +190,15 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
         D <- L - getX_mu(m) %*% m@beta_mu - t(getV_mu(m) %*% m@gamma_mu)
 
         # Find a low-rank approximation with trace-norm regularization
-        R <- softImpute::softImpute(D,
-                                    lambda=sqrt(getEpsilon_W(m) * getEpsilon_alpha(m))[1],
-                                    rank.max=nFactors(m))
-
+        R <- softImpute::softImpute(D, 
+                lambda=sqrt(getEpsilon_W(m) * getEpsilon_alpha(m))[1],
+                rank.max=nFactors(m))
+        
         # Orthogonalize to get W and alpha
-        m@W <- (getEpsilon_alpha(m)/getEpsilon_W(m))[1]^(1/4) * R$u %*% diag(sqrt(R$d), nrow = length(R$d))
-        m@alpha_mu <- (getEpsilon_W(m)/getEpsilon_alpha(m))[1]^(1/4) * diag(sqrt(R$d), nrow = length(R$d)) %*% t(R$v)
+        m@W <- (getEpsilon_alpha(m) / getEpsilon_W(m))[1]^(1/4) *
+            R$u %*% diag(sqrt(R$d), nrow = length(R$d))
+        m@alpha_mu <- (getEpsilon_W(m)/getEpsilon_alpha(m))[1]^(1/4) *
+            diag(sqrt(R$d), nrow = length(R$d)) %*% t(R$v)
     }
 
     ## 6. Estimate beta_pi, gamma_pi, and alpha_pi
@@ -222,15 +230,18 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
                 solveRidgeRegression(x=XW,
                                      y=Z[,j],
                                      offset = tVgamma_pi[,j],
-                                     epsilon = c(getEpsilon_beta_pi(m),getEpsilon_alpha(m)),
+                                     epsilon = c(getEpsilon_beta_pi(m),
+                                                 getEpsilon_alpha(m)),
                                      family="binomial")
             }, mc.cores=ncores
             )), nrow=NCOL(getX_pi(m)) + nFactors(m))
             if (NCOL(getX_pi(m))>0) {
-                m@beta_pi <- s[1:NCOL(getX_pi(m)),,drop=F]
+                m@beta_pi <- s[1:NCOL(getX_pi(m)),,drop=FALSE]
             }
             if (nFactors(m)>0) {
-                m@alpha_pi <- s[(NCOL(getX_pi(m))+1):(NCOL(getX_pi(m))+nFactors(m)),,drop=F]
+                m@alpha_pi <- 
+                    s[(NCOL(getX_pi(m)) + 1):(NCOL(getX_pi(m)) + nFactors(m)),,
+                      drop=FALSE]
             }
         }
 
@@ -270,18 +281,23 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
 #' m = zinbInitialize(m, Y)
 #' m = zinbOptimize(m, Y)
 #' @export
-zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25, stop.epsilon=.0001, verbose=FALSE, ncores=1) {
-
+zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25, 
+                         stop.epsilon=.0001, verbose=FALSE, ncores=1) {
+    
     total.lik=rep(NA,maxiter)
     n <- nSamples(m)
     J <- nFeatures(m)
-
-    epsilonright <- c(getEpsilon_beta_mu(m) , getEpsilon_alpha(m) , getEpsilon_beta_pi(m) , getEpsilon_alpha(m))
-    nright <- c(length(getEpsilon_beta_mu(m)) , length(getEpsilon_alpha(m)) , length(getEpsilon_beta_pi(m)) , length(getEpsilon_alpha(m)))
+    
+    epsilonright <- c(getEpsilon_beta_mu(m), getEpsilon_alpha(m),
+                      getEpsilon_beta_pi(m), getEpsilon_alpha(m))
+    nright <- c(length(getEpsilon_beta_mu(m)), length(getEpsilon_alpha(m)),
+                length(getEpsilon_beta_pi(m)), length(getEpsilon_alpha(m)))
     optimright = (sum(nright)>0)
 
-    epsilonleft <- c(getEpsilon_gamma_mu(m) , getEpsilon_gamma_pi(m) , getEpsilon_W(m))
-    nleft <- c(length(getEpsilon_gamma_mu(m)) , length(getEpsilon_gamma_pi(m)) , length(getEpsilon_W(m)))
+    epsilonleft <- c(getEpsilon_gamma_mu(m),
+                     getEpsilon_gamma_pi(m), getEpsilon_W(m))
+    nleft <- c(length(getEpsilon_gamma_mu(m)),
+               length(getEpsilon_gamma_pi(m)), length(getEpsilon_W(m)))
     optimleft = (sum(nleft)>0)
 
     orthog <- (nFactors(m)>0)
@@ -291,94 +307,137 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25, stop.epsilon=.
 
         # Evaluate total penalized likelihood
         total.lik[iter] <- loglik(m, Y) - penalty(m)
-        if (verbose) {cat("penalized log-likelihood = ",total.lik[iter],"\n",sep="")}
-
+        if (verbose) {cat("penalized log-likelihood = ",
+                          total.lik[iter],"\n",sep="")}
+        
         # If the increase in likelihood is smaller than 0.5%, stop maximization
         if(iter>1){
-            if(abs((total.lik[iter]-total.lik[iter-1])/total.lik[iter-1])<stop.epsilon)
+            if(abs((total.lik[iter]-total.lik[iter-1]) /
+                   total.lik[iter-1])<stop.epsilon)
                 break
             }
 
         # 1. Optimize dispersion
-        m <- zinbOptimizeDispersion(m,Y,commondispersion=commondispersion,ncores=ncores)
-
+        m <- zinbOptimizeDispersion(m, Y,
+                                    commondispersion=commondispersion,
+                                    ncores=ncores)
+        
         # Evaluate total penalized likelihood
-        if (verbose) {cat("After dispersion optimization = ",loglik(m, Y) - penalty(m),"\n",sep="")}
+        if (verbose) {
+            cat("After dispersion optimization = ",
+                loglik(m, Y) - penalty(m),"\n",sep="")
+            }
 
         # 2. Optimize right factors
         if (optimright) {
             ptm <- proc.time()
-            estimate <- matrix(unlist( parallel::mclapply(seq(J), function(j) {
-                optim( fn=zinb.loglik.regression , gr=zinb.loglik.regression.gradient , par=c(m@beta_mu[,j], m@alpha_mu[,j], m@beta_pi[,j], m@alpha_pi[,j]) , Y=Y[,j] , A.mu=cbind(getX_mu(m), m@W) , C.mu=t(getV_mu(m)[j,] %*% m@gamma_mu) + m@O_mu[,j] , A.pi=cbind(getX_pi(m), m@W) , C.pi=t(getV_pi(m)[j,] %*% m@gamma_pi) + m@O_pi[,j], C.theta=matrix(m@zeta[j], nrow = n, ncol = 1) , epsilon=epsilonright , control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=ncores)) , nrow=sum(nright))
-
+            estimate <- matrix(unlist( 
+                parallel::mclapply(seq(J), function(j) {
+                optim( fn=zinb.loglik.regression, 
+                       gr=zinb.loglik.regression.gradient,
+                       par=c(m@beta_mu[,j], m@alpha_mu[,j],
+                             m@beta_pi[,j], m@alpha_pi[,j]),
+                       Y=Y[,j], A.mu=cbind(getX_mu(m), m@W),
+                       C.mu=t(getV_mu(m)[j,] %*% m@gamma_mu) + m@O_mu[,j],
+                       A.pi=cbind(getX_pi(m), m@W),
+                       C.pi=t(getV_pi(m)[j,] %*% m@gamma_pi) + m@O_pi[,j],
+                       C.theta=matrix(m@zeta[j], nrow = n, ncol = 1),
+                       epsilon=epsilonright,
+                       control=list(fnscale=-1,trace=0),
+                       method="BFGS")$par 
+                    }, mc.cores=ncores)), nrow=sum(nright))
+            
             if (verbose) {print(proc.time()-ptm)}
             ind <- 1
             if (nright[1]>0) {
-                m@beta_mu <- estimate[ind:(ind+nright[1]-1),,drop=F]
+                m@beta_mu <- estimate[ind:(ind+nright[1]-1),,drop=FALSE]
                 ind <- ind+nright[1]
                 }
             if (nright[2]>0) {
-                m@alpha_mu <- estimate[ind:(ind+nright[2]-1),,drop=F]
+                m@alpha_mu <- estimate[ind:(ind+nright[2]-1),,drop=FALSE]
                 ind <- ind+nright[2]
             }
             if (nright[3]>0) {
-                m@beta_pi <- estimate[ind:(ind+nright[3]-1),,drop=F]
+                m@beta_pi <- estimate[ind:(ind+nright[3]-1),,drop=FALSE]
                 ind <- ind+nright[3]
             }
             if (nright[4]>0) {
-                m@alpha_pi <- estimate[ind:(ind+nright[4]-1),,drop=F]
+                m@alpha_pi <- estimate[ind:(ind+nright[4]-1),,drop=FALSE]
             }
         }
         # Evaluate total penalized likelihood
-        if (verbose) {cat("After right optimization = ",loglik(m, Y)-penalty(m),"\n",sep="")}
+        if (verbose) {
+            cat("After right optimization = ",
+                loglik(m, Y)-penalty(m),"\n",sep="")
+            }
 
         # 3. Orthogonalize
         if (orthog) {
             o <- orthogonalizeTraceNorm(m@W, cbind(m@alpha_mu, m@alpha_pi),
                                       m@epsilon_W, m@epsilon_alpha)
             m@W <- o$U
-            m@alpha_mu <- o$V[,1:J,drop=F]
-            m@alpha_pi <- o$V[,(J+1):(2*J),drop=F]
+            m@alpha_mu <- o$V[,1:J,drop=FALSE]
+            m@alpha_pi <- o$V[,(J+1):(2*J),drop=FALSE]
         }
 
         # Evaluate total penalized likelihood
-        if (verbose) {cat("After orthogonalization = ",loglik(m, Y) - penalty(m),"\n",sep="")}
+        if (verbose) {cat("After orthogonalization = ",
+                          loglik(m, Y) - penalty(m),"\n",sep="")}
 
         # 4. Optimize left factors
         if (optimleft) {
             ptm <- proc.time()
-            estimate <- matrix(unlist( parallel::mclapply(seq(n), function(i) {
-                optim( fn=zinb.loglik.regression , gr=zinb.loglik.regression.gradient , par=c(m@gamma_mu[,i], m@gamma_pi[,i], t(m@W[i,])) , Y=t(Y[i,]) , A.mu=getV_mu(m) , B.mu=t(m@alpha_mu), C.mu=t(getX_mu(m)[i,]%*%m@beta_mu + m@O_mu[i,]) , A.pi=getV_pi(m), B.pi=t(m@alpha_pi), C.pi=t(getX_pi(m)[i,]%*%m@beta_pi + m@O_pi[i,]), C.theta=m@zeta , epsilon=epsilonleft , control=list(fnscale=-1,trace=0) , method="BFGS")$par } , mc.cores=ncores)) , nrow=sum(nleft))
+            estimate <- matrix(unlist( 
+                parallel::mclapply(seq(n), function(i) {
+                optim( fn=zinb.loglik.regression,
+                       gr=zinb.loglik.regression.gradient,
+                       par=c(m@gamma_mu[,i], m@gamma_pi[,i],
+                             t(m@W[i,])),
+                       Y=t(Y[i,]),
+                       A.mu=getV_mu(m),
+                       B.mu=t(m@alpha_mu),
+                       C.mu=t(getX_mu(m)[i,]%*%m@beta_mu + m@O_mu[i,]),
+                       A.pi=getV_pi(m), 
+                       B.pi=t(m@alpha_pi), 
+                       C.pi=t(getX_pi(m)[i,]%*%m@beta_pi + m@O_pi[i,]),
+                       C.theta=m@zeta,
+                       epsilon=epsilonleft,
+                       control=list(fnscale=-1,trace=0),
+                       method="BFGS")$par 
+                    }, mc.cores=ncores)), nrow=sum(nleft))
+            
             if (verbose) {print(proc.time()-ptm)}
             ind <- 1
             if (nleft[1]>0) {
-                m@gamma_mu <- estimate[ind:(ind+nleft[1]-1),,drop=F]
+                m@gamma_mu <- estimate[ind:(ind+nleft[1]-1),,drop=FALSE]
                 ind <- ind+nleft[1]
             }
             if (nleft[2]>0) {
-                m@gamma_pi <- estimate[ind:(ind+nleft[2]-1),,drop=F]
+                m@gamma_pi <- estimate[ind:(ind+nleft[2]-1),,drop=FALSE]
                 ind <- ind+nleft[2]
             }
             if (nleft[3]>0) {
-                m@W <- t(estimate[ind:(ind+nleft[3]-1),,drop=F])
+                m@W <- t(estimate[ind:(ind+nleft[3]-1),,drop=FALSE])
                 ind <- ind+nleft[3]
             }
         }
 
         # Evaluate total penalized likelihood
-        if (verbose) {cat("After left optimization = ",loglik(m, Y) - penalty(m),"\n",sep="")}
-
+        if (verbose) {cat("After left optimization = ",
+                          loglik(m, Y) - penalty(m),"\n",sep="")}
+        
         # 5. Orthogonalize
         if (orthog) {
             o <- orthogonalizeTraceNorm(m@W, cbind(m@alpha_mu, m@alpha_pi),
                                       m@epsilon_W, m@epsilon_alpha)
             m@W <- o$U
-            m@alpha_mu <- o$V[,1:J,drop=F]
-            m@alpha_pi <- o$V[,(J+1):(2*J),drop=F]
+            m@alpha_mu <- o$V[,1:J,drop=FALSE]
+            m@alpha_pi <- o$V[,(J+1):(2*J),drop=FALSE]
         }
         # Evaluate total penalized likelihood
-        if (verbose) {cat("After orthogonalization = ",loglik(m, Y) - penalty(m),"\n",sep="")}
-
+        if (verbose) {cat("After orthogonalization = ",
+                          loglik(m, Y) - penalty(m),"\n",sep="")}
+        
     }
     m
 }
@@ -430,8 +489,9 @@ zinbOptimizeDispersion <- function(m, Y, commondispersion=TRUE, ncores=1) {
         }
         locgrad <- function(logt) {
             s <- unlist(parallel::mclapply(seq(J),function(i) {
-                zinb.loglik.dispersion.gradient(logt[i],Y[,i],mu[,i],logitPi[,i])
-            }, mc.cores=ncores ))
+                zinb.loglik.dispersion.gradient(logt[i], Y[,i], mu[,i],
+                                                logitPi[,i])
+            }, mc.cores=ncores )) 
             if (J>1) {
                 s <- s - epsilon*(logt - mean(logt))/(J-1)
             }
@@ -464,7 +524,9 @@ zinbOptimizeDispersion <- function(m, Y, commondispersion=TRUE, ncores=1) {
 #'   theta is mu + mu^2/theta.
 #' @param logitPi the vector of logit of the probabilities of the zero component
 #' @export
+#' @return the log-likelihood of the model.
 #' @importFrom copula log1pexp
+#' @importFrom stats dnbinom optim optimize rbinom rnbinom runif var
 #' @examples
 #' n <- 10
 #' mu <- seq(10,50,length.out=n)
@@ -489,15 +551,15 @@ zinb.loglik <- function(Y, mu, theta, logitPi) {
 
 #' Log-likelihood of the zero-inflated negative binomial model, for a fixed
 #' dispersion parameter
-#'
-#' Given a unique dispersion parameter and a set of counts, together with a
-#' corresponding set of mean parameters and probabilities of zero components,
-#' this function computes the sum of the log-probabilities of the counts under
-#' the ZINB model. The dispersion parameter is provided to the function through
-#' zeta = log(theta), where theta is sometimes called the inverse dispersion parameter.
-#' The probabilities of the zero components are provided through their logit, in
-#' order to better numerical stability.
-#'
+#' 
+#' Given a unique dispersion parameter and a set of counts, together with a 
+#' corresponding set of mean parameters and probabilities of zero components, 
+#' this function computes the sum of the log-probabilities of the counts under 
+#' the ZINB model. The dispersion parameter is provided to the function through 
+#' zeta = log(theta), where theta is sometimes called the inverse dispersion
+#' parameter. The probabilities of the zero components are provided through
+#' their logit, in order to better numerical stability.
+#' 
 #' @param zeta a scalar, the log of the inverse dispersion parameters of the
 #'   negative binomial model
 #' @param Y a vector of counts
@@ -505,6 +567,7 @@ zinb.loglik <- function(Y, mu, theta, logitPi) {
 #' @param logitPi a vector of logit of the probabilities of the zero component
 #' @export
 #' @seealso \code{\link{zinb.loglik}}.
+#' @return the log-likelihood of the model.
 #' @examples
 #' mu <- seq(10,50,length.out=10)
 #' logitPi <- rnorm(10)
@@ -524,6 +587,7 @@ zinb.loglik.dispersion <- function(zeta, Y, mu, logitPi) {
 #' @param mu a vector of mean parameters of the negative binomial
 #' @param logitPi a vector of the logit of the probability of the zero component
 #' @export
+#' @return the gradient of the inverse dispersion parameters.
 #' @seealso \code{\link{zinb.loglik}}, \code{\link{zinb.loglik.dispersion}}.
 zinb.loglik.dispersion.gradient <- function(zeta, Y, mu, logitPi) {
     theta <- exp(zeta)
@@ -544,10 +608,10 @@ zinb.loglik.dispersion.gradient <- function(zeta, Y, mu, logitPi) {
     if (has0) {
         logPnb <- suppressWarnings(dnbinom(0, size = theta, mu = mu[Y0],
                                            log = TRUE))
-        grad <- grad + sum( theta * (zeta - log(mu[Y0] + theta) + 1 -
-                                theta/(mu[Y0] + theta)) / (1+exp(logitPi[Y0] - logPnb)))
-                                # *exp(- copula::log1pexp( -logPnb + logitPi[Y0])))
-
+        grad <- grad + sum( theta * (zeta - log(mu[Y0] + theta) + 1 - 
+                        theta/(mu[Y0] + theta)) / (1+exp(logitPi[Y0] - logPnb)))
+                        # *exp(- copula::log1pexp( -logPnb + logitPi[Y0])))
+                            
     }
 
     grad
@@ -576,8 +640,9 @@ zinb.loglik.dispersion.gradient <- function(zeta, Y, mu, logitPi) {
 #'   \code{a.pi} and \code{b} in \code{alpha}), and \code{start.alpha} (a vector
 #'   of length 3 with the starting indices of the 3 vectors in \code{alpha})
 #' @seealso \code{\link{zinb.loglik.regression}}
-zinb.regression.parseModel <- function( alpha , A.mu, B.mu, C.mu, A.pi, B.pi, C.pi) {
-
+zinb.regression.parseModel <- function(alpha, A.mu, B.mu, C.mu,
+                                       A.pi, B.pi, C.pi) {
+    
     n <- nrow(A.mu)
     logMu <- C.mu
     logitPi <- C.pi
@@ -609,15 +674,16 @@ zinb.regression.parseModel <- function( alpha , A.mu, B.mu, C.mu, A.pi, B.pi, C.
         start.alpha[3] <- i+1
     }
 
-    return(list( logMu=logMu , logitPi=logitPi , dim.alpha=dim.alpha , start.alpha=start.alpha))
+    return(list(logMu=logMu, logitPi=logitPi, dim.alpha=dim.alpha, 
+                 start.alpha=start.alpha))
 }
 
 
 
 
 #' Penalized log-likelihood of the ZINB regression model
-#'
-#' This function computes the penalized log-likelihood of a ZINB regression
+#' 
+#' This function computes the penalized log-likelihood of a ZINB regression 
 #' model given a vector of counts.
 #'
 #' @param alpha the vectors of parameters c(a.mu, a.pi, b) concatenated
@@ -633,24 +699,39 @@ zinb.regression.parseModel <- function( alpha , A.mu, B.mu, C.mu, A.pi, B.pi, C.
 #'   \code{alpha} if each coordinate of \code{alpha} has a specific
 #'   regularization, or just a scalar is the regularization is the same for all
 #'   coordinates of \code{alpha}. Default=\code{O}.
-#' @details The regression model is parametrized as follows: \deqn{log(\mu) =
+#' @details The regression model is parametrized as follows: \deqn{log(\mu) = 
 #'   A_\mu * a_\mu + B_\mu * b + C_\mu} \deqn{logit(\Pi) = A_\pi * a_\pi + B_\pi
-#'   * b} \deqn{log(\theta) = C_\theta} where \eqn{\mu, \Pi, \theta} are
-#'   respectively the vector of mean parameters of the NB distribution, the
-#'   vector of probabilities of the zero component, and the vector of inverse
-#'   dispersion parameters. Note that the \eqn{b} vector is shared between the mean of
-#'   the negative binomial and the probability of zero. The log-likelihood of a
-#'   vector of parameters \eqn{\alpha = (a_\mu; a_\pi; b)} is penalized by a
-#'   regularization term \eqn{\epsilon ||\alpha||^2 / 2} is \eqn{\epsilon} is a
-#'   scalar, or \eqn{\sum_{i}\epsilon_i \alpha_i^2 / 2} is \eqn{\epsilon} is a
-#'   vector of the same size as \eqn{\alpha} to allow for differential
-#'   regularization among the parameters.
+#'   * b} \deqn{log(\theta) = C_\theta} where \eqn{\mu, \Pi, \theta} are 
+#'   respectively the vector of mean parameters of the NB distribution, the 
+#'   vector of probabilities of the zero component, and the vector of inverse 
+#'   dispersion parameters. Note that the \eqn{b} vector is shared between the
+#'   mean of the negative binomial and the probability of zero. The
+#'   log-likelihood of a vector of parameters \eqn{\alpha = (a_\mu; a_\pi; b)}
+#'   is penalized by a regularization term \eqn{\epsilon ||\alpha||^2 / 2} is
+#'   \eqn{\epsilon} is a scalar, or \eqn{\sum_{i}\epsilon_i \alpha_i^2 / 2} is
+#'   \eqn{\epsilon} is a vector of the same size as \eqn{\alpha} to allow for
+#'   differential regularization among the parameters.
+#' @return the penalized log-likelihood.
 #' @export
-zinb.loglik.regression <- function( alpha , Y, A.mu = matrix(nrow=length(Y), ncol=0), B.mu = matrix(nrow=length(Y), ncol=0), C.mu = matrix(0, nrow=length(Y), ncol=1), A.pi = matrix(nrow=length(Y), ncol=0), B.pi = matrix(nrow=length(Y), ncol=0), C.pi = matrix(0, nrow=length(Y), ncol=1), C.theta = matrix(0, nrow=length(Y), ncol=1), epsilon=0) {
+zinb.loglik.regression <- function(alpha, Y, 
+                                   A.mu = matrix(nrow=length(Y), ncol=0),
+                                   B.mu = matrix(nrow=length(Y), ncol=0),
+                                   C.mu = matrix(0, nrow=length(Y), ncol=1),
+                                   A.pi = matrix(nrow=length(Y), ncol=0),
+                                   B.pi = matrix(nrow=length(Y), ncol=0),
+                                   C.pi = matrix(0, nrow=length(Y), ncol=1),
+                                   C.theta = matrix(0, nrow=length(Y), ncol=1),
+                                   epsilon=0) {
 
     # Parse the model
-    r <- zinb.regression.parseModel(alpha=alpha, A.mu = A.mu, B.mu = B.mu, C.mu = C.mu, A.pi = A.pi, B.pi = B.pi, C.pi = C.pi)
-
+    r <- zinb.regression.parseModel(alpha=alpha, 
+                                    A.mu = A.mu, 
+                                    B.mu = B.mu, 
+                                    C.mu = C.mu, 
+                                    A.pi = A.pi, 
+                                    B.pi = B.pi, 
+                                    C.pi = C.pi)
+    
     # Call the log likelihood function
     z <- zinb.loglik(Y, exp(r$logMu), exp(C.theta), r$logitPi)
 
@@ -661,10 +742,10 @@ zinb.loglik.regression <- function( alpha , Y, A.mu = matrix(nrow=length(Y), nco
 
 
 #' Gradient of the penalized log-likelihood of the ZINB regression model
-#'
-#' This function computes the gradient of the penalized log-likelihood of a ZINB regression
-#' model given a vector of counts.
-#'
+#' 
+#' This function computes the gradient of the penalized log-likelihood of a ZINB
+#' regression model given a vector of counts.
+#' 
 #' @param alpha the vectors of parameters c(a.mu, a.pi, b) concatenated
 #' @param Y the vector of counts
 #' @param A.mu matrix of the model (see Details, default=empty)
@@ -678,14 +759,30 @@ zinb.loglik.regression <- function( alpha , Y, A.mu = matrix(nrow=length(Y), nco
 #'   \code{alpha} if each coordinate of \code{alpha} has a specific
 #'   regularization, or just a scalar is the regularization is the same for all
 #'   coordinates of \code{alpha}. Default=\code{O}.
-#' @details The regression model is described in \code{\link{zinb.loglik.regression}}.
+#' @details The regression model is described in
+#'   \code{\link{zinb.loglik.regression}}.
 #' @seealso \code{\link{zinb.loglik.regression}}
+#' @return The gradient of the penalized log-likelihood.
 #' @export
-zinb.loglik.regression.gradient <- function( alpha , Y, A.mu = matrix(nrow=length(Y), ncol=0), B.mu = matrix(nrow=length(Y), ncol=0), C.mu = matrix(0, nrow=length(Y), ncol=1), A.pi = matrix(nrow=length(Y), ncol=0), B.pi = matrix(nrow=length(Y), ncol=0), C.pi = matrix(0, nrow=length(Y), ncol=1), C.theta = matrix(0, nrow=length(Y), ncol=1), epsilon=0) {
-
+zinb.loglik.regression.gradient <- function(alpha, Y, 
+                                     A.mu = matrix(nrow=length(Y), ncol=0),
+                                     B.mu = matrix(nrow=length(Y), ncol=0),
+                                     C.mu = matrix(0, nrow=length(Y), ncol=1),
+                                     A.pi = matrix(nrow=length(Y), ncol=0),
+                                     B.pi = matrix(nrow=length(Y), ncol=0),
+                                     C.pi = matrix(0, nrow=length(Y), ncol=1),
+                                     C.theta = matrix(0, nrow=length(Y), ncol=1),
+                                     epsilon=0) {
+    
     # Parse the model
-    r <- zinb.regression.parseModel(alpha=alpha, A.mu = A.mu, B.mu = B.mu, C.mu = C.mu, A.pi = A.pi, B.pi = B.pi, C.pi = C.pi)
-
+    r <- zinb.regression.parseModel(alpha=alpha, 
+                                    A.mu = A.mu, 
+                                    B.mu = B.mu, 
+                                    C.mu = C.mu, 
+                                    A.pi = A.pi, 
+                                    B.pi = B.pi, 
+                                    C.pi = C.pi)
+    
     theta <- exp(C.theta)
     mu <- exp(r$logMu)
     n <- length(Y)
@@ -696,7 +793,8 @@ zinb.loglik.regression.gradient <- function( alpha , Y, A.mu = matrix(nrow=lengt
     has0 <- !is.na(match(TRUE,Y0))
     has1 <- !is.na(match(TRUE,Y1))
 
-    # Check what we need to compute, depending on the variables over which we optimize
+    # Check what we need to compute, 
+    # depending on the variables over which we optimize
     need.wres.mu <- r$dim.alpha[1] >0 || r$dim.alpha[3] >0
     need.wres.pi <- r$dim.alpha[2] >0 || r$dim.alpha[3] >0
 
@@ -714,12 +812,15 @@ zinb.loglik.regression.gradient <- function( alpha , Y, A.mu = matrix(nrow=lengt
     if (need.wres.mu) {
         wres_mu <- numeric(length = n)
         if (has1) {
-            wres_mu[Y1] <- Y[Y1] - mu[Y1] * (Y[Y1] + theta[Y1])/(mu[Y1] + theta[Y1])
+            wres_mu[Y1] <- Y[Y1] - mu[Y1] *
+                (Y[Y1] + theta[Y1])/(mu[Y1] + theta[Y1])
         }
         if (has0) {
             #wres_mu[Y0] <- -exp(-log(dens0) + log(1 - muz[Y0]) + clogdens0 + r$logtheta[Y0] - log(mu[Y0] + theta[Y0]) + log(mu[Y0]))
             # more accurate:
-            wres_mu[Y0] <- -exp(-log(dens0) + lognorm[Y0] + clogdens0 + C.theta[Y0] - log(mu[Y0] + theta[Y0]) + log(mu[Y0]))
+            wres_mu[Y0] <- -exp(-log(dens0) + lognorm[Y0] + clogdens0 + 
+                                    C.theta[Y0] - log(mu[Y0] + theta[Y0]) + 
+                                    log(mu[Y0]))
         }
     }
 
@@ -746,21 +847,25 @@ zinb.loglik.regression.gradient <- function( alpha , Y, A.mu = matrix(nrow=lengt
     if (r$dim.alpha[1] >0) {
         istart <- r$start.alpha[1]
         iend <- r$start.alpha[1]+r$dim.alpha[1]-1
-        grad <- c(grad , colSums(wres_mu * A.mu) - epsilon[istart:iend]*alpha[istart:iend])
+        grad <- c(grad , colSums(wres_mu * A.mu) - 
+                      epsilon[istart:iend]*alpha[istart:iend])
     }
 
     ## w.r.t. a_pi
     if (r$dim.alpha[2] >0) {
         istart <- r$start.alpha[2]
         iend <- r$start.alpha[2]+r$dim.alpha[2]-1
-        grad <- c(grad , colSums(wres_pi * A.pi) - epsilon[istart:iend]*alpha[istart:iend])
+        grad <- c(grad , colSums(wres_pi * A.pi) - 
+                      epsilon[istart:iend]*alpha[istart:iend])
     }
 
     ## w.r.t. b
     if (r$dim.alpha[3] >0) {
         istart <- r$start.alpha[3]
         iend <- r$start.alpha[3]+r$dim.alpha[3]-1
-        grad <- c(grad , colSums(wres_mu * B.mu) + colSums(wres_pi * B.pi) - epsilon[istart:iend]*alpha[istart:iend])
+        grad <- c(grad , colSums(wres_mu * B.mu) + 
+                      colSums(wres_pi * B.pi) - 
+                      epsilon[istart:iend]*alpha[istart:iend])
     }
 
     grad

@@ -26,8 +26,8 @@ distributions, returns the vector of inverse dispersion parameters
 \itemize{
 \item \code{ZinbModel}: return the inverse of the dispersion parameter.
 }}
+
 \examples{
 a <- zinbModel(n=5, J=10)
 getTheta(a) 
 }
-

@@ -25,8 +25,8 @@ distributions, returns the vector of dispersion parameters \code{phi}.
 \itemize{
 \item \code{ZinbModel}: return the dispersion parameter.
 }}
+
 \examples{
 a <- zinbModel(n=5, J=10)
 getPhi(a) 
 }
-

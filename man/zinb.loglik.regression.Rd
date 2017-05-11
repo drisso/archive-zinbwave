@@ -35,22 +35,24 @@ zinb.loglik.regression(alpha, Y, A.mu = matrix(nrow = length(Y), ncol = 0),
 regularization, or just a scalar is the regularization is the same for all
 coordinates of \code{alpha}. Default=\code{O}.}
 }
+\value{
+the penalized log-likelihood.
+}
 \description{
-This function computes the penalized log-likelihood of a ZINB regression
+This function computes the penalized log-likelihood of a ZINB regression 
 model given a vector of counts.
 }
 \details{
-The regression model is parametrized as follows: \deqn{log(\mu) =
+The regression model is parametrized as follows: \deqn{log(\mu) = 
   A_\mu * a_\mu + B_\mu * b + C_\mu} \deqn{logit(\Pi) = A_\pi * a_\pi + B_\pi
-  * b} \deqn{log(\theta) = C_\theta} where \eqn{\mu, \Pi, \theta} are
-  respectively the vector of mean parameters of the NB distribution, the
-  vector of probabilities of the zero component, and the vector of inverse
-  dispersion parameters. Note that the \eqn{b} vector is shared between the mean of
-  the negative binomial and the probability of zero. The log-likelihood of a
-  vector of parameters \eqn{\alpha = (a_\mu; a_\pi; b)} is penalized by a
-  regularization term \eqn{\epsilon ||\alpha||^2 / 2} is \eqn{\epsilon} is a
-  scalar, or \eqn{\sum_{i}\epsilon_i \alpha_i^2 / 2} is \eqn{\epsilon} is a
-  vector of the same size as \eqn{\alpha} to allow for differential
-  regularization among the parameters.
+  * b} \deqn{log(\theta) = C_\theta} where \eqn{\mu, \Pi, \theta} are 
+  respectively the vector of mean parameters of the NB distribution, the 
+  vector of probabilities of the zero component, and the vector of inverse 
+  dispersion parameters. Note that the \eqn{b} vector is shared between the
+  mean of the negative binomial and the probability of zero. The
+  log-likelihood of a vector of parameters \eqn{\alpha = (a_\mu; a_\pi; b)}
+  is penalized by a regularization term \eqn{\epsilon ||\alpha||^2 / 2} is
+  \eqn{\epsilon} is a scalar, or \eqn{\sum_{i}\epsilon_i \alpha_i^2 / 2} is
+  \eqn{\epsilon} is a vector of the same size as \eqn{\alpha} to allow for
+  differential regularization among the parameters.
 }
-

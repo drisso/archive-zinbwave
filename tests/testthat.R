@@ -1,4 +1,4 @@
 library(testthat)
-library(zinb)
+library(zinbwave)
 
-test_check("zinb")
+test_check("zinbwave")

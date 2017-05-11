@@ -55,7 +55,11 @@
 #' @import methods
 #' @exportClass ZinbModel
 #' @aliases ZinbModel
-#'
+#' 
+#' @return \code{nSamples} returns the number of samples; \code{nFeatures}
+#' returns the number of features; \code{nFactors} returns the number of latent
+#' factors.
+#'   
 setClass(
     Class = "ZinbModel",
     slots = list(X = "matrix",
