@@ -19,7 +19,8 @@ Description:
 License: Artistic-2.0
 Depends: 
    R (>= 3.4),
-   methods
+   methods,
+   SummarizedExperiment
 Imports:
    copula,
    glmnet,

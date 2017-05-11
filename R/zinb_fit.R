@@ -1,3 +1,28 @@
+#' @describeIn zinbFit Y is a
+#'   \code{\link[SummarizedExperiment]{SummarizedExperiment}}.
+#' @export
+#' 
+#' @import SummarizedExperiment
+#' 
+#' @examples 
+#' se <- SummarizedExperiment(matrix(rpois(60, lambda=5), nrow=10, ncol=6),
+#'                            colData = data.frame(bio = gl(2, 3)))
+#' 
+#' m <- zinbFit(se, X=model.matrix(~bio, data=colData(se)))
+setMethod("zinbFit", "SummarizedExperiment",
+          function(Y, commondispersion=TRUE, ncores=1, verbose=FALSE, 
+                   nb.repeat.initialize=2, maxiter.optimize=25, 
+                   stop.epsilon.optimize=.0001, ...) {
+              
+              # Apply zinbFit on the assay of SummarizedExperiment
+              res <- zinbFit(assay(Y), commondispersion, ncores, 
+                             verbose, nb.repeat.initialize, maxiter.optimize, 
+                             stop.epsilon.optimize, ...)
+              
+              return(res)
+})
+
+
 #' @describeIn zinbFit Y is a matrix of counts (genes in rows).
 #' @export
 #' 

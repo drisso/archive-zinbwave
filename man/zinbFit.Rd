@@ -3,10 +3,15 @@
 \docType{methods}
 \name{zinbFit}
 \alias{zinbFit}
+\alias{zinbFit,SummarizedExperiment-method}
 \alias{zinbFit,matrix-method}
 \title{Fit a ZINB regression model}
 \usage{
 zinbFit(Y, ...)
+
+\S4method{zinbFit}{SummarizedExperiment}(Y, commondispersion = TRUE,
+  ncores = 1, verbose = FALSE, nb.repeat.initialize = 2,
+  maxiter.optimize = 25, stop.epsilon.optimize = 1e-04, ...)
 
 \S4method{zinbFit}{matrix}(Y, commondispersion = TRUE, ncores = 1,
   verbose = FALSE, nb.repeat.initialize = 2, maxiter.optimize = 25,
@@ -54,10 +59,17 @@ This means that by default the model is fitted with \code{X_mu =
 }
 \section{Methods (by class)}{
 \itemize{
+\item \code{SummarizedExperiment}: Y is a
+\code{\link[SummarizedExperiment]{SummarizedExperiment}}.
+
 \item \code{matrix}: Y is a matrix of counts (genes in rows).
 }}
 
 \examples{
+se <- SummarizedExperiment(matrix(rpois(60, lambda=5), nrow=10, ncol=6),
+                           colData = data.frame(bio = gl(2, 3)))
+
+m <- zinbFit(se, X=model.matrix(~bio, data=colData(se)))
 bio <- gl(2, 3)
 m <- zinbFit(matrix(rpois(60, lambda=5), nrow=10, ncol=6),
              X=model.matrix(~bio))

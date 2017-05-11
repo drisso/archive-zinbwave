@@ -64,6 +64,15 @@ test_that("zinbFit works without X and V", {
     
 })
 
+test_that("zinbFit gives the same results with matrix and SE", {
+    counts <- matrix(rpois(60, lambda=5), nrow=10, ncol=6)
+    se <- SummarizedExperiment(counts)
+    
+    m1 <- zinbFit(counts)
+    m2 <- zinbFit(se)
+    expect_equal(m1, m2)
+})
+
 test_that("zinbFit works with K>0", {
     counts <- matrix(rpois(60, lambda=5), nrow=10, ncol=6)
     m <- zinbFit(counts, K = 2)
