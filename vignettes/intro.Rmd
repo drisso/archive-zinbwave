@@ -105,7 +105,7 @@ to fit the ZINB model. Note that we use only one CPU here, but one can select
 the number of cores with the option `ncore`, to speed up computations.
 
 ```{r zinb}
-zinb <- zinbFit(assay(fluidigm), K=2, epsilon=1000)
+zinb <- zinbFit(fluidigm, K=2, epsilon=1000)
 ```
 
 By default, the `zinbFit` function fits a ZINB model with $X = {\bf 1}_n$ and $V = {\bf 1}_J$. In this case, the model is a factor model akin to principal component analysis (PCA), where $W$ is a factor matrix and $\alpha_\mu$ and $\alpha_\pi$ are loading matrices. 
@@ -147,7 +147,7 @@ head(modX)
 We can then pass this matrix to `zinbFit`.
 
 ```{r zinb_coverage}
-zinb_cov <- zinbFit(assay(fluidigm), K=2, X=modX, epsilon=1000)
+zinb_cov <- zinbFit(fluidigm, K=2, X=modX, epsilon=1000)
 ```
 
 ```{r zinb_plot2}
@@ -190,7 +190,7 @@ head(modV)
 ```
 
 ```{r zinb_gcc}
-zinb_gcc <- zinbFit(assay(fluidigm), K=2, V=modV, epsilon=1000)
+zinb_gcc <- zinbFit(fluidigm, K=2, V=modV, epsilon=1000)
 ```
 
 ```{r zinb_plot3}
