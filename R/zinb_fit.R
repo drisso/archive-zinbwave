@@ -3,6 +3,7 @@
 #' @export
 #' 
 #' @import SummarizedExperiment
+#' @importFrom stats model.matrix as.formula
 #' 
 #' @examples 
 #' se <- SummarizedExperiment(matrix(rpois(60, lambda=5), nrow=10, ncol=6),
