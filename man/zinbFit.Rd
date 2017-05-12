@@ -9,11 +9,11 @@
 \usage{
 zinbFit(Y, ...)
 
-\S4method{zinbFit}{SummarizedExperiment}(Y, commondispersion = TRUE,
+\S4method{zinbFit}{SummarizedExperiment}(Y, X, V, commondispersion = TRUE,
   ncores = 1, verbose = FALSE, nb.repeat.initialize = 2,
   maxiter.optimize = 25, stop.epsilon.optimize = 1e-04, ...)
 
-\S4method{zinbFit}{matrix}(Y, commondispersion = TRUE, ncores = 1,
+\S4method{zinbFit}{matrix}(Y, X, V, commondispersion = TRUE, ncores = 1,
   verbose = FALSE, nb.repeat.initialize = 2, maxiter.optimize = 25,
   stop.epsilon.optimize = 1e-04, ...)
 }
@@ -22,6 +22,16 @@ zinbFit(Y, ...)
 
 \item{...}{Additional parameters to describe the model, see
 \code{\link{zinbModel}}.}
+
+\item{X}{The design matrix containing sample-level covariates, one sample per
+row. If missing, X will contain only an intercept. If Y is a
+SummarizedExperiment object, X can be a formula using the variables in the
+colData slot of Y.}
+
+\item{V}{The design matrix containing gene-level covariates, one gene
+per row. If missing, V will contain only an intercept. If Y is a
+SummarizedExperiment object, V can be a formula using the variables in the
+rowData slot of Y.}
 
 \item{commondispersion}{Whether or not a single dispersion for all features 
 is estimated (default TRUE).}

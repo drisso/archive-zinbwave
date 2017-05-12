@@ -135,19 +135,11 @@ The ZINB-WaVE model is more general than PCA, allowing the inclusion of addition
 Typically, one could include batch information as sample-level covariate, to
 account for batch effects. Here, we illustrate this capability by including the coverage (high or low) as a sample-level covariate.
 
-We first create a design matrix, which includes an intercept and an indicator
-variable for the coverage.
-
-```{r design}
-coverage <- colData(fluidigm)$Coverage_Type
-modX <- model.matrix(~coverage)
-head(modX)
-```
-
-We can then pass this matrix to `zinbFit`.
+The column `Coverage_Type` in the `colData` of `fluidigm` contains the coverage information. We can specify a design matrix that includes an intercept and an indicator
+variable for the coverage, by using the formula interface of `zinbFit`.
 
 ```{r zinb_coverage}
-zinb_cov <- zinbFit(fluidigm, K=2, X=modX, epsilon=1000)
+zinb_cov <- zinbFit(fluidigm, K=2, X="~Coverage_Type", epsilon=1000)
 ```
 
 ```{r zinb_plot2}
@@ -184,13 +176,16 @@ len <- tapply(bm$length, bm$hgnc_symbol, mean)
 len <- len[rownames(fluidigm)]
 gcc <- tapply(bm$percentage_gene_gc_content, bm$hgnc_symbol, mean)
 gcc <- gcc[rownames(fluidigm)]
+```
 
-modV <- model.matrix(~gcc + log(len))
-head(modV)
+We then include the gene-level information as `rowData` in the `fluidigm` object.
+
+```{r rowdata}
+rowData(fluidigm) <- data.frame(gccontent = gcc, length = len)
 ```
 
 ```{r zinb_gcc}
-zinb_gcc <- zinbFit(fluidigm, K=2, V=modV, epsilon=1000)
+zinb_gcc <- zinbFit(fluidigm, K=2, V="~gccontent + log(length)", epsilon=1000)
 ```
 
 ```{r zinb_plot3}

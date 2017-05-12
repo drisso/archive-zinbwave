@@ -10,12 +10,36 @@
 #' 
 #' m <- zinbFit(se, X=model.matrix(~bio, data=colData(se)))
 setMethod("zinbFit", "SummarizedExperiment",
-          function(Y, commondispersion=TRUE, ncores=1, verbose=FALSE, 
+          function(Y, X, V, commondispersion=TRUE, ncores=1, verbose=FALSE, 
                    nb.repeat.initialize=2, maxiter.optimize=25, 
                    stop.epsilon.optimize=.0001, ...) {
               
+              if(!missing(X)) {
+                  if(!is.matrix(X)) {
+                      tryCatch({
+                          f <- as.formula(X)
+                          X <- model.matrix(f, data=colData(Y))
+                      },
+                      error = function(e) {
+                          stop("X must be a matrix or a formula with variables in colData(Y)")
+                      })
+                  }
+              }
+              
+              if(!missing(V)) {
+                  if(!is.matrix(V)) {
+                      tryCatch({
+                          f <- as.formula(V)
+                          V <- model.matrix(f, data=rowData(Y))
+                      },
+                      error = function(e) {
+                          stop("V must be a matrix or a formula with variables in rowData(Y)")
+                      })
+                  }
+              }
+              
               # Apply zinbFit on the assay of SummarizedExperiment
-              res <- zinbFit(assay(Y), commondispersion, ncores, 
+              res <- zinbFit(assay(Y), X, V, commondispersion, ncores, 
                              verbose, nb.repeat.initialize, maxiter.optimize, 
                              stop.epsilon.optimize, ...)
               
@@ -26,6 +50,14 @@ setMethod("zinbFit", "SummarizedExperiment",
 #' @describeIn zinbFit Y is a matrix of counts (genes in rows).
 #' @export
 #' 
+#' @param X The design matrix containing sample-level covariates, one sample per
+#'   row. If missing, X will contain only an intercept. If Y is a
+#'   SummarizedExperiment object, X can be a formula using the variables in the
+#'   colData slot of Y.
+#' @param V The design matrix containing gene-level covariates, one gene
+#'   per row. If missing, V will contain only an intercept. If Y is a
+#'   SummarizedExperiment object, V can be a formula using the variables in the
+#'   rowData slot of Y.
 #' @param commondispersion Whether or not a single dispersion for all features 
 #'   is estimated (default TRUE).
 #' @param ncores The number of cores for parallel computations (passed to
@@ -54,16 +86,16 @@ setMethod("zinbFit", "SummarizedExperiment",
 #' m <- zinbFit(matrix(rpois(60, lambda=5), nrow=10, ncol=6),
 #'              X=model.matrix(~bio))
 setMethod("zinbFit", "matrix",
-          function(Y, commondispersion=TRUE, ncores=1, verbose=FALSE, 
+          function(Y, X, V, commondispersion=TRUE, ncores=1, verbose=FALSE, 
                    nb.repeat.initialize=2, maxiter.optimize=25, 
-                   stop.epsilon.optimize=.0001, ...) {
+                   stop.epsilon.optimize=.0001,...) {
     
     # Transpose Y: UI wants genes in rows, internals genes in columns!
     Y <- t(Y)
     
     # Create a ZinbModel object
     if (verbose) {cat("Create model: ")}
-    m <- zinbModel(n=NROW(Y), J=NCOL(Y), ...)
+    m <- zinbModel(n=NROW(Y), J=NCOL(Y), X=X, V=V, ...)
     if (verbose) {cat("ok\n")}
     
     # Initialize the parameters

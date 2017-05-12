@@ -73,6 +73,29 @@ test_that("zinbFit gives the same results with matrix and SE", {
     expect_equal(m1, m2)
 })
 
+test_that("zinbFit gives the same results with matrix and formula", {
+    counts <- matrix(rpois(60, lambda=5), nrow=10, ncol=6)
+    bio <- gl(2, 3)
+    gcc <- rnorm(10)
+    se <- SummarizedExperiment(counts, colData=data.frame(Bio=bio),
+                               rowData=data.frame(GCC=gcc))
+
+    m1 <- zinbFit(se, X = model.matrix(~bio))
+    m2 <- zinbFit(se, X = "~Bio")
+    expect_equivalent(m1, m2)
+
+    m3 <- zinbFit(se, V = model.matrix(~gcc))
+    m4 <- zinbFit(se, V = "~GCC")
+    expect_equivalent(m3, m4)
+    
+    # misstyping
+    expect_error(zinbFit(se, V = "~gc"), "V must be a matrix or a formula")
+    
+    # colData / rowData missmatch
+    expect_error(zinbFit(se, V = "~BIO"), "V must be a matrix or a formula")
+    
+})
+
 test_that("zinbFit works with K>0", {
     counts <- matrix(rpois(60, lambda=5), nrow=10, ncol=6)
     m <- zinbFit(counts, K = 2)
