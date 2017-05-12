@@ -1,7 +1,7 @@
 Package: zinbwave
 Type: Package
 Title: Zero-Inflated Negative Binomial Model for RNA-Seq Data
-Version: 0.99.1
+Version: 0.99.2
 Authors@R: 
     c(person("Davide","Risso", role=c("aut","cre", "cph"), 
           email="risso.davide@gmail.com" ),
@@ -36,7 +36,8 @@ Suggests:
     scRNAseq,
     ggplot2,
     biomaRt,
-    BiocStyle
+    BiocStyle,
+    Rtsne
 VignetteBuilder: knitr
 LazyData: TRUE
 RoxygenNote: 6.0.1

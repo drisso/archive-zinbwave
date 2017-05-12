@@ -198,6 +198,27 @@ data.frame(W, bio=colData(fluidigm)$Biological_Condition,
     scale_color_brewer(type = "qual", palette = "Set1") + theme_classic()
 ```
 
+# t-SNE representation
+
+A t-SNE representation of the data can be obtained by computing the cell distances
+in the reduced space and running the t-SNE algorithm on the distance.
+
+```{r tsne}
+set.seed(93024)
+
+library(Rtsne)
+d <- dist(getW(zinb_gcc))
+tsne_data <- Rtsne(d, is_distance = TRUE, pca = FALSE, 
+                   perplexity=10, max_iter=5000)
+
+data.frame(Dim1=tsne_data$Y[,1], Dim2=tsne_data$Y[,2], 
+           bio=colData(fluidigm)$Biological_Condition,
+           coverage=colData(fluidigm)$Coverage_Type) %>%
+    ggplot(aes(Dim1, Dim2, colour=bio, shape=coverage)) + geom_point() + 
+    scale_color_brewer(type = "qual", palette = "Set1") + theme_classic()
+```
+
+
 # Session Info
 
 ```{r}
