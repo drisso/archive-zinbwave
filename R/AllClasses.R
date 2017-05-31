@@ -94,9 +94,9 @@ setClass(
 )
 
 setValidity("ZinbModel", function(object){
-    n <- NROW(object@X) # number of samples
-    J <- NROW(object@V) # number of genes
-    K <- NCOL(object@W) # number of latent factors
+    n <- NROW(getX_mu(object)) # number of samples
+    J <- NROW(getV_mu(object)) # number of genes
+    K <- NCOL(getW(object)) # number of latent factors
     
     if(K > n) {
         return("Cannot have more latent factors than samples.")        
@@ -104,7 +104,7 @@ setValidity("ZinbModel", function(object){
     if(K > J) {
         return("Cannot have more latent factors than genes.")        
     }
-    if(NROW(object@W) != n) {
+    if(NROW(getW(object)) != n) {
         return("W must have n rows!")
     }
     if((length(object@which_X_mu)>0) && (max(object@which_X_mu) > NCOL(object@X))) {
@@ -119,40 +119,40 @@ setValidity("ZinbModel", function(object){
     if((length(object@which_V_pi)>0) && (max(object@which_V_pi) > NCOL(object@V))) {
         return("which_V_pi: subscript out of bound!")
     }
-    if(length(object@which_X_mu) != NROW(object@beta_mu)){
-        return("beta_mu must have the same number of rows as there are indices in which_X_mu!")
+    if(NCOL(getX_mu(object)) != NROW(getBeta_mu(object))){
+        return("beta_mu must have the same number of rows as there are columns in X_mu!")
     }
-    if(length(object@which_X_pi) != NROW(object@beta_pi)){
-        return("beta_pi must have the same number of rows as there are indices in which_X_pi!")
+    if(NCOL(getX_pi(object)) != NROW(getBeta_pi(object))){
+        return("beta_pi must have the same number of rows as there are columns in X_pi!")
     }
-    if(length(object@which_V_mu) != NROW(object@gamma_mu)){
-        return("gamma_mu must have the same number of rows as there are indices in which_V_mu!")
+    if(NCOL(getV_mu(object)) != NROW(getGamma_mu(object))){
+        return("gamma_mu must have the same number of rows as there are columns in V_mu!")
     }
-    if(length(object@which_V_pi) != NROW(object@gamma_pi)){
-        return("gamma_pi must have the same number of rows as there are indices in which_V_pi!")
+    if(NCOL(getV_pi(object)) != NROW(getGamma_pi(object))){
+        return("gamma_pi must have the same number of rows as there are columns in V_pi!")
     }
-    if(NCOL(object@beta_mu) != J) {
+    if(NCOL(getBeta_mu(object)) != J) {
         return("beta_mu must have J columns!")
     }
-    if(NCOL(object@beta_pi) != J) {
+    if(NCOL(getBeta_pi(object)) != J) {
         return("beta_pi must have J columns!")
     }
-    if(NCOL(object@gamma_mu) != n) {
+    if(NCOL(getGamma_mu(object)) != n) {
         return("gamma_mu must have n columns!")
     }
-    if(NCOL(object@gamma_pi) != n) {
+    if(NCOL(getGamma_pi(object)) != n) {
         return("gamma_pi must have n columns!")
     }
-    if(NCOL(object@alpha_mu) != J) {
+    if(NCOL(getAlpha_mu(object)) != J) {
         return("alpha_mu must have J columns!")
     }
-    if(NCOL(object@alpha_pi) != J) {
+    if(NCOL(getAlpha_pi(object)) != J) {
         return("alpha_pi must have J columns!")
     }
-    if(NROW(object@alpha_mu) != K) {
+    if(NROW(getAlpha_mu(object)) != K) {
         return("alpha_mu must have K rows!")
     }
-    if(NROW(object@alpha_pi) != K) {
+    if(NROW(getAlpha_pi(object)) != K) {
         return("alpha_pi must have K rows!")
     }
     if(NROW(object@O_mu) != n) {
@@ -167,7 +167,7 @@ setValidity("ZinbModel", function(object){
     if(NCOL(object@O_pi) != J) {
         return("O_pi must have J columns!")
     }
-    if(length(object@zeta) != J) {
+    if(length(getZeta(object)) != J) {
         return("zeta must have length J!")
     }
     if((length(object@epsilon_beta_mu) != 1) || (object@epsilon_beta_mu < 0)) {
