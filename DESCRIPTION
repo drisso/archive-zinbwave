@@ -14,8 +14,12 @@ Author: Davide Risso [aut, cre, cph],
         Jean-Philippe Vert [aut]
 Maintainer: Davide Risso <risso.davide@gmail.com>
 Description: 
-   Implements a zero-inflated negative binomial model for single-cell 
-   RNA-seq data, with latent factors.
+   Implements a general and flexible zero-inflated negative binomial model that
+   can be used to provide a low-dimensional representations of single-cell
+   RNA-seq data. The model accounts for zero inflation (dropouts), 
+   over-dispersion, and the count nature of the data. The model also
+   accounts for the difference in library sizes and optionally for batch effects
+   and/or other covariates, avoiding the need for pre-normalize the data.
 License: Artistic-2.0
 Depends: 
    R (>= 3.4),
