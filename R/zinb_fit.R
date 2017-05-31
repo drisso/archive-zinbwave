@@ -331,7 +331,7 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
 
     orthog <- (nFactors(m)>0)
 
-    for (iter in 1:maxiter){
+    for (iter in seq_len(maxiter)){
         if (verbose) {message("Iteration ",iter)}
 
         # Evaluate total penalized likelihood
