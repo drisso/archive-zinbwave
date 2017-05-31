@@ -33,7 +33,7 @@ per row. If missing, V will contain only an intercept. If Y is a
 SummarizedExperiment object, V can be a formula using the variables in the
 rowData slot of Y.}
 
-\item{commondispersion}{Whether or not a single dispersion for all features 
+\item{commondispersion}{Whether or not a single dispersion for all features
 is estimated (default TRUE).}
 
 \item{ncores}{The number of cores for parallel computations (passed to
@@ -58,13 +58,13 @@ An object of class \code{ZinbModel} that has been fitted by penalized
 Given an object with the data, it fits a ZINB model.
 }
 \details{
-By default, i.e., if no arguments other than \code{Y} are passed, 
+By default, i.e., if no arguments other than \code{Y} are passed,
   the model is fitted with an intercept for the regression across-samples and
   one intercept for the regression across genes, both for mu and for pi.
 
-This means that by default the model is fitted with \code{X_mu = 
+This means that by default the model is fitted with \code{X_mu =
   X_pi = 1_n} and \code{V_mu = V_pi = 1_J}. If the user explicitly passes the
-  design matrices, this behavior is overwritten, i.e., the user needs to 
+  design matrices, this behavior is overwritten, i.e., the user needs to
   explicitly include the intercept in the design matrices.
 }
 \section{Methods (by class)}{
