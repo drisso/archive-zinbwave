@@ -379,9 +379,9 @@ setMethod("nFactors", "ZinbModel",
 
 
 #' @export
-#' @describeIn getX_mu return the sample-level design matrix for mu.
-#' @param intercept logical. Whether to return the intercept (ignored if X_mu
-#'   has no intercept). Default \code{TRUE}
+#' @describeIn ZinbModel returns the sample-level design matrix for mu.
+#' @param intercept logical. Whether to return the intercept (ignored if the
+#'   design matrix has no intercept). Default \code{TRUE}
 setMethod("getX_mu", "ZinbModel",
           function(object, intercept=TRUE) {
               if(object@X_mu_intercept && !intercept) {
@@ -394,9 +394,7 @@ setMethod("getX_mu", "ZinbModel",
 )
 
 #' @export
-#' @describeIn getX_pi return the sample-level design matrix for pi.
-#' @param intercept logical. Whether to return the intercept (ignored if X_pi
-#'   has no intercept).
+#' @describeIn ZinbModel returns the sample-level design matrix for pi.
 setMethod("getX_pi", "ZinbModel",
           function(object, intercept=TRUE) {
               if(object@X_pi_intercept && !intercept) {
@@ -409,9 +407,7 @@ setMethod("getX_pi", "ZinbModel",
 )
 
 #' @export
-#' @describeIn getV_mu return the gene-level design matrix for mu.
-#' @param intercept logical. Whether to return the intercept (ignored if V_mu
-#'   has no intercept).
+#' @describeIn ZinbModel returns the gene-level design matrix for mu.
 setMethod("getV_mu", "ZinbModel",
           function(object, intercept=TRUE) {
               if(object@V_mu_intercept && !intercept) {
@@ -424,9 +420,7 @@ setMethod("getV_mu", "ZinbModel",
 )
 
 #' @export
-#' @describeIn getV_pi return the sample-level design matrix for pi.
-#' @param intercept logical. Whether to return the intercept (ignored if V_pi
-#'   has no intercept).
+#' @describeIn ZinbModel returns the sample-level design matrix for pi.
 setMethod("getV_pi", "ZinbModel",
           function(object, intercept=TRUE) {
               if(object@V_pi_intercept && !intercept) {
@@ -439,7 +433,7 @@ setMethod("getV_pi", "ZinbModel",
 )
 
 #' @export
-#' @describeIn getLogMu return the logarithm of the mean of the non-zero
+#' @describeIn ZinbModel returns the logarithm of the mean of the non-zero
 #'   component.
 setMethod("getLogMu", "ZinbModel",
           function(object) {
@@ -451,7 +445,7 @@ setMethod("getLogMu", "ZinbModel",
 )
 
 #' @export
-#' @describeIn getMu return the mean of the non-zero component.
+#' @describeIn ZinbModel returns the mean of the non-zero component.
 setMethod("getMu", "ZinbModel",
     function(object) {
         return(exp(getLogMu(object)))
@@ -459,7 +453,7 @@ setMethod("getMu", "ZinbModel",
 )
 
 #' @export
-#' @describeIn getLogitPi return the logit-probability of zero.
+#' @describeIn ZinbModel returns the logit-probability of zero.
 #' @importFrom stats binomial
 setMethod("getLogitPi", "ZinbModel",
           function(object) {
@@ -471,7 +465,7 @@ setMethod("getLogitPi", "ZinbModel",
 )
 
 #' @export
-#' @describeIn getPi return the probability of zero.
+#' @describeIn ZinbModel returns the probability of zero.
 #' @importFrom stats binomial
 setMethod("getPi", "ZinbModel",
     function(object) {
@@ -484,7 +478,7 @@ setMethod("getPi", "ZinbModel",
 )
 
 #' @export
-#' @describeIn getZeta return the log of the inverse of the dispersion
+#' @describeIn ZinbModel returns the log of the inverse of the dispersion
 #'   parameter.
 setMethod("getZeta", "ZinbModel",
           function(object) {
@@ -493,7 +487,7 @@ setMethod("getZeta", "ZinbModel",
 )
 
 #' @export
-#' @describeIn getPhi return the dispersion parameter.
+#' @describeIn ZinbModel returns the dispersion parameter.
 setMethod("getPhi", "ZinbModel",
           function(object) {
               return(exp(-object@zeta))
@@ -501,7 +495,7 @@ setMethod("getPhi", "ZinbModel",
 )
 
 #' @export
-#' @describeIn getTheta return the inverse of the dispersion parameter.
+#' @describeIn ZinbModel returns the inverse of the dispersion parameter.
 setMethod("getTheta", "ZinbModel",
           function(object) {
               return(exp(object@zeta))
@@ -509,7 +503,8 @@ setMethod("getTheta", "ZinbModel",
 )
 
 #' @export
-#' @describeIn getEpsilon_beta_mu method for ZinbModel.
+#' @describeIn ZinbModel returns the regularization parameters for
+#'   \code{beta_mu}.
 setMethod("getEpsilon_beta_mu", "ZinbModel",
           function(object) {
               e <- rep(object@epsilon_beta_mu, length(object@which_X_mu))
@@ -521,7 +516,8 @@ setMethod("getEpsilon_beta_mu", "ZinbModel",
 )
 
 #' @export
-#' @describeIn getEpsilon_gamma_mu method for ZinbModel.
+#' @describeIn ZinbModel returns the regularization parameters for
+#'   \code{gamma_mu}.
 setMethod("getEpsilon_gamma_mu", "ZinbModel",
           function(object) {
               e <- rep(object@epsilon_gamma_mu, length(object@which_V_mu))
@@ -533,7 +529,8 @@ setMethod("getEpsilon_gamma_mu", "ZinbModel",
 )
 
 #' @export
-#' @describeIn getEpsilon_beta_pi method for ZinbModel.
+#' @describeIn ZinbModel returns the regularization parameters for
+#'   \code{beta_pi}.
 setMethod("getEpsilon_beta_pi", "ZinbModel",
           function(object) {
               e <- rep(object@epsilon_beta_pi, length(object@which_X_pi))
@@ -545,7 +542,8 @@ setMethod("getEpsilon_beta_pi", "ZinbModel",
 )
 
 #' @export
-#' @describeIn getEpsilon_gamma_pi method for ZinbModel.
+#' @describeIn ZinbModel returns the regularization parameters for
+#'   \code{gamma_pi}.
 setMethod("getEpsilon_gamma_pi", "ZinbModel",
           function(object) {
               e <- rep(object@epsilon_gamma_pi, length(object@which_V_pi))
@@ -557,7 +555,8 @@ setMethod("getEpsilon_gamma_pi", "ZinbModel",
 )
 
 #' @export
-#' @describeIn getEpsilon_W method for ZinbModel.
+#' @describeIn ZinbModel returns the regularization parameters for
+#'   \code{W}.
 setMethod("getEpsilon_W", "ZinbModel",
           function(object) {
               rep(object@epsilon_W, nFactors(object))
@@ -565,7 +564,8 @@ setMethod("getEpsilon_W", "ZinbModel",
 )
 
 #' @export
-#' @describeIn getEpsilon_alpha method for ZinbModel.
+#' @describeIn ZinbModel returns the regularization parameters for
+#'   \code{alpha}.
 setMethod("getEpsilon_alpha", "ZinbModel",
           function(object) {
               rep(object@epsilon_alpha, nFactors(object))
@@ -573,7 +573,8 @@ setMethod("getEpsilon_alpha", "ZinbModel",
 )
 
 #' @export
-#' @describeIn getEpsilon_zeta method for ZinbModel.
+#' @describeIn ZinbModel returns the regularization parameters for
+#'   \code{zeta}.
 setMethod("getEpsilon_zeta", "ZinbModel",
           function(object) {
               object@epsilon_zeta
@@ -581,10 +582,60 @@ setMethod("getEpsilon_zeta", "ZinbModel",
 )
 
 #' @export
-#' @describeIn getW method for ZinbModel.
+#' @describeIn ZinbModel returns the matrix W of inferred sample-level
+#'   covariates.
 setMethod("getW", "ZinbModel",
           function(object) {
               object@W
+          }
+)
+
+#' @export
+#' @describeIn ZinbModel returns the matrix beta_mu of inferred parameters.
+setMethod("getBeta_mu", "ZinbModel",
+          function(object) {
+              object@beta_mu
+          }
+)
+
+#' @export
+#' @describeIn ZinbModel returns the matrix beta_pi of inferred parameters.
+setMethod("getBeta_pi", "ZinbModel",
+          function(object) {
+              object@beta_pi
+          }
+)
+
+#' @export
+#' @describeIn ZinbModel returns the matrix gamma_mu of inferred parameters.
+setMethod("getGamma_mu", "ZinbModel",
+          function(object) {
+              object@gamma_mu
+          }
+)
+
+#' @export
+#' @describeIn ZinbModel returns the matrix gamma_pi of inferred parameters.
+setMethod("getGamma_pi", "ZinbModel",
+          function(object) {
+              object@gamma_pi
+          }
+)
+
+
+#' @export
+#' @describeIn ZinbModel returns the matrix alpha_mu of inferred parameters.
+setMethod("getAlpha_mu", "ZinbModel",
+          function(object) {
+              object@alpha_mu
+          }
+)
+
+#' @export
+#' @describeIn ZinbModel returns the matrix alpha_pi of inferred parameters.
+setMethod("getAlpha_pi", "ZinbModel",
+          function(object) {
+              object@alpha_pi
           }
 )
 

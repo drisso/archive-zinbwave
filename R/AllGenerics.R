@@ -253,6 +253,90 @@ setGeneric("getV_mu", function(object, ...) standardGeneric("getV_mu"))
 #' getV_pi(a) 
 setGeneric("getV_pi", function(object, ...) standardGeneric("getV_pi"))
 
+#' Returns the matrix of paramters beta_mu
+#' 
+#' Given an object that describes a matrix of zero-inflated distributions,
+#' returns the matrix of parameters associated with X_mu
+#' @param object an object that describes a matrix of zero-inflated
+#'   distributions.
+#' @param ... Additional parameters.
+#' @return the matrix of beta_mu parameters
+#' @export
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getBeta_mu(a) 
+setGeneric("getBeta_mu", function(object, ...) standardGeneric("getBeta_mu"))
+
+#' Returns the matrix of paramters beta_pi
+#' 
+#' Given an object that describes a matrix of zero-inflated distributions,
+#' returns the matrix of parameters associated with X_pi
+#' @param object an object that describes a matrix of zero-inflated
+#'   distributions.
+#' @param ... Additional parameters.
+#' @return the matrix of beta_pi parameters
+#' @export
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getBeta_pi(a) 
+setGeneric("getBeta_pi", function(object, ...) standardGeneric("getBeta_pi"))
+
+#' Returns the matrix of paramters gamma_mu
+#' 
+#' Given an object that describes a matrix of zero-inflated distributions,
+#' returns the matrix of parameters associated with V_mu
+#' @param object an object that describes a matrix of zero-inflated
+#'   distributions.
+#' @param ... Additional parameters.
+#' @return the matrix of gamma_mu parameters
+#' @export
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getGamma_mu(a) 
+setGeneric("getGamma_mu", function(object, ...) standardGeneric("getGamma_mu"))
+
+#' Returns the matrix of paramters gamma_pi
+#' 
+#' Given an object that describes a matrix of zero-inflated distributions,
+#' returns the matrix of parameters associated with V_pi
+#' @param object an object that describes a matrix of zero-inflated
+#'   distributions.
+#' @param ... Additional parameters.
+#' @return the matrix of gamma_pi parameters
+#' @export
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getGamma_pi(a) 
+setGeneric("getGamma_pi", function(object, ...) standardGeneric("getGamma_pi"))
+
+#' Returns the matrix of paramters alpha_mu
+#' 
+#' Given an object that describes a matrix of zero-inflated distributions,
+#' returns the matrix of parameters associated with W for the mean part (mu)
+#' @param object an object that describes a matrix of zero-inflated
+#'   distributions.
+#' @param ... Additional parameters.
+#' @return the matrix of alpha_mu parameters
+#' @export
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getAlpha_mu(a) 
+setGeneric("getAlpha_mu", function(object, ...) standardGeneric("getAlpha_mu"))
+
+#' Returns the matrix of paramters alpha_pi
+#' 
+#' Given an object that describes a matrix of zero-inflated distributions,
+#' returns the matrix of parameters associated with W for the zero part (pi)
+#' @param object an object that describes a matrix of zero-inflated
+#'   distributions.
+#' @param ... Additional parameters.
+#' @return the matrix of alpha_pi parameters
+#' @export
+#' @examples
+#' a <- zinbModel(n=5, J=10)
+#' getAlpha_pi(a) 
+setGeneric("getAlpha_pi", function(object, ...) standardGeneric("getAlpha_pi"))
+
 #' Returns the vector of regularization parameter for beta_mu
 #' 
 #' Given an object describing a ZINB model, returns a vector of size the number
