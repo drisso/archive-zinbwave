@@ -192,27 +192,33 @@ zinbModel <- function(X, V, O_mu, O_pi, which_X_mu,
         }
     }
 
-    if (all(X[, which_X_mu[1]]==1)) {
-        X_mu_intercept <- TRUE
-    } else {
-        X_mu_intercept <- FALSE
+    X_mu_intercept <- FALSE
+    if(length(which_X_mu) > 0) {
+        if (all(X[, which_X_mu[1]]==1)) {
+            X_mu_intercept <- TRUE
+        }
     }
 
-    if (all(V[, which_V_mu[1]]==1)) {
-        V_mu_intercept <- TRUE
-    } else {
-        V_mu_intercept <- FALSE
-    }
-    if (all(X[, which_X_pi[1]]==1)) {
-        X_pi_intercept <- TRUE
-    } else {
-        X_pi_intercept <- FALSE
+
+    V_mu_intercept <- FALSE
+    if(length(which_V_mu) > 0) {
+        if (all(V[, which_V_mu[1]]==1)) {
+            V_mu_intercept <- TRUE
+        }
     }
 
-    if (all(V[, which_V_pi[1]]==1)) {
-        V_pi_intercept <- TRUE
-    } else {
-        V_pi_intercept <- FALSE
+    X_pi_intercept <- FALSE
+    if(length(which_X_pi) > 0) {
+        if (all(X[, which_X_pi[1]]==1)) {
+            X_pi_intercept <- TRUE
+        }
+    }
+
+    V_pi_intercept <- FALSE
+    if(length(which_V_pi) > 0) {
+        if (all(V[, which_V_pi[1]]==1)) {
+            V_pi_intercept <- TRUE
+        }
     }
 
     if (missing(O_mu)) {
