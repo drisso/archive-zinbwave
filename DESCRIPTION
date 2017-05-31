@@ -9,10 +9,6 @@ Authors@R:
           email="svetlana.gribkova@mines-paristech.fr"),
       person("Jean-Philippe", "Vert", role="aut", 
           email="jean-philippe.vert@mines-paristech.fr"))
-Author: Davide Risso [aut, cre, cph], 
-        Svetlana Gribkova [aut], 
-        Jean-Philippe Vert [aut]
-Maintainer: Davide Risso <risso.davide@gmail.com>
 Description: 
    Implements a general and flexible zero-inflated negative binomial model that
    can be used to provide a low-dimensional representations of single-cell
