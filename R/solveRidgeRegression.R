@@ -1,5 +1,5 @@
 #' Solve ridge regression or logistic regression problems
-#' 
+#'
 #' This function solves a regression or logistic regression problem regularized
 #' by a L2 or weighted L2 penalty. Contrary to \code{lm.ridge} or \code{glmnet},
 #' it works for any number of predictors.
@@ -24,35 +24,41 @@
 #'   weighted L2 norm \eqn{\sum_i \epsilon_i \beta_i^2 / 2}.
 #' @export
 solveRidgeRegression <- function(x, y, beta=rep(0,NCOL(x)), epsilon=1e-6, family=c("gaussian","binomial"), offset=rep(0,NROW(x))) {
-    
+
     family <-  match.arg(family)
-    
+
     # loglik
-    f <- function(b) {
-        eta <- x %*% b + offset
-        if (family=="gaussian") {
+    f <- if (family == "gaussian") {
+        function(b) {
+            eta <- x %*% b + offset
             l <- sum((y-eta)^2)/2
+            l + sum(epsilon*b^2)/2
         }
-        if (family=="binomial") {
+    } else if (family == "binomial") {
+        function(b) {
+            eta <- x %*% b + offset
             l <- sum(-y*eta + copula::log1pexp(eta))
+            l + sum(epsilon*b^2)/2
         }
-        l + sum(epsilon*b^2)/2
     }
-    
+
     # gradient of loglik
-    g <- function(b) {
-        eta <- x %*% b + offset
-        if (family=="gaussian") {
+    g <- if (family == "gaussian") {
+        function(b) {
+            eta <- x %*% b + offset
             l <- t(x) %*% (-y + eta)
+            l + epsilon*b
         }
-        if (family=="binomial") {
+    } else if (family == "binomial") {
+        function(b) {
+            eta <- x %*% b + offset
             l <- t(x) %*% (-y + 1/(1+exp(-eta)))
+            l + epsilon*b
         }
-        l + epsilon*b
     }
-    
+
     # optimize
     m <- optim( fn=f , gr=g , par=beta, control=list(trace=0) , method="BFGS")
     m$par
-    
+
 }
