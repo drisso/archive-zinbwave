@@ -156,12 +156,4 @@ test_that("Initialization works", {
     expect_equal(nSamples(m), nrow(mat))
     expect_equal(nFeatures(m), ncol(mat))
     
-    ## check that "new" gives the same object
-    m1 <- zinbModel()
-    m2 <- new("ZinbModel")
-    expect_equal(m1, m2)
-    show(m1)
-    show(m2)
-    
-    
 })
