@@ -151,23 +151,22 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
     J <- NCOL(Y)
 
     if(n != nSamples(m)) {
-        stop(paste0("Y needs to have ", nSamples(m), " rows (genes)"))
+        stop("Y needs to have ", nSamples(m), " rows (genes)")
     }
 
     if(J != nFeatures(m)) {
-        stop(paste0("Y needs to have ", nFeatures(m), " columns (samples)"))
+        stop("Y needs to have ", nFeatures(m), " columns (samples)")
     }
 
     ## 1. Define P
     P <- Y > 0
 
     if(any(rowSums(P) == 0)) {
-        stop(paste0("Sample ", which(rowSums(P) == 0)[1],
-                    " has only 0 counts!"))
+        stop("Sample ", which(rowSums(P) == 0)[1], " has only 0 counts!")
     }
 
     if(any(colSums(P) == 0)) {
-        stop(paste0("Gene ", which(colSums(P) == 0)[1], " has only 0 counts!"))
+        stop("Gene ", which(colSums(P) == 0)[1], " has only 0 counts!")
     }
 
     ## 2. Define L
