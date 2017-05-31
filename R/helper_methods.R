@@ -617,14 +617,11 @@ setMethod("getAlpha_pi", "ZinbModel",
 
 #' @export
 #' @describeIn zinbSim simulate from a ZINB distribution.
-#' @importFrom parallel mclapply
 #'
-#' @param no_cores number of cores for parallel computations (to be passed to
-#'   mclapply).
 setMethod(
     f="zinbSim",
     signature="ZinbModel",
-    definition=function(object, seed, no_cores=1) {
+    definition=function(object, seed) {
 
         if (!exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
             runif(1)
@@ -647,21 +644,15 @@ setMethod(
 
         # Simulate negative binomial with the mean matrix and dispersion
         # parameters
-        datanb <- parallel::mclapply(seq(n*J),
-                    function(i) {
-                     rnbinom(1, mu = mu[i] , size = theta[ceiling(i/n)])
-                    }, mc.cores = no_cores)
-
-        data.nb <- matrix(unlist(datanb), nrow = n )
+        i <- seq(n*J)
+        datanb <- rnbinom(length(i), mu = mu[i], size = theta[ceiling(i/n)])
+        data.nb <- matrix(datanb, nrow = n)
 
         # Simulate the binary dropout matrix. "1" means that a dropout (zero) is
         # observed instead of the value
-        datado <- parallel::mclapply(seq(n*J),
-                                     function(i) {
-                                         rbinom(1, size =1, prob = pi[i])
-                                     }, mc.cores = no_cores)
-
-        data.dropout <- matrix(unlist(datado), nrow = n)
+        i <- seq(n*J)
+        datado <- rbinom(length(i), size=1, prob = pi[i])
+        data.dropout <- matrix(datado, nrow = n)
 
         # Matrix of zero-inflated counts
         counts <- data.nb * (1 - data.dropout)

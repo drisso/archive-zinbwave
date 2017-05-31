@@ -8,7 +8,7 @@
 \usage{
 zinbSim(object, seed, ...)
 
-\S4method{zinbSim}{ZinbModel}(object, seed, no_cores = 1)
+\S4method{zinbSim}{ZinbModel}(object, seed)
 }
 \arguments{
 \item{object}{an object that describes a matrix of zero-inflated negative
@@ -19,9 +19,6 @@ should be initialized with a call to \code{set.seed}. If missing, the
 random generator state is not changed.}
 
 \item{...}{additional arguments.}
-
-\item{no_cores}{number of cores for parallel computations (to be passed to
-mclapply).}
 }
 \value{
 A list with the following elements.
