@@ -185,7 +185,7 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
         if (NCOL(getV_mu(m)) == 0) {
             iter <- nb.repeat # no need to estimate gamma_mu nor to iterate
         } else {
-            Xbeta_mu <- getX_mu(m) %*% m@beta_mu
+            Xbeta_mu <- getX_mu(m) %*% getBeta_mu(m)
             m@gamma_mu <- matrix(unlist(parallel::mclapply(seq(n), function(i) {
                 solveRidgeRegression(x=getV_mu(m)[P[i,], , drop=FALSE],
                                      y=L[i,P[i,]] - Xbeta_mu[i, P[i,]],
@@ -199,7 +199,7 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
         if (NCOL(getX_mu(m)) == 0) {
             iter <- nb.repeat # no need to estimate gamma_mu nor to iterate
         } else {
-            tVgamma_mu <- t(getV_mu(m) %*% m@gamma_mu)
+            tVgamma_mu <- t(getV_mu(m) %*% getGamma_mu(m))
             m@beta_mu <- matrix(unlist(parallel::mclapply(seq(J), function(j) {
                 solveRidgeRegression(x=getX_mu(m)[P[,j], , drop=FALSE],
                                      y=L[P[,j],j] - tVgamma_mu[P[,j], j],
@@ -217,7 +217,7 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
     if(nFactors(m) > 0) {
         
         # Compute the residual D (with missing values at the 0 count)
-        D <- L - getX_mu(m) %*% m@beta_mu - t(getV_mu(m) %*% m@gamma_mu)
+        D <- L - getX_mu(m) %*% getBeta_mu(m) - t(getV_mu(m) %*% getGamma_mu(m))
         
         # Find a low-rank approximation with trace-norm regularization
         R <- softImpute::softImpute(D, 
@@ -239,7 +239,7 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
         if (NCOL(getV_pi(m)) == 0) {
             iter <- nb.repeat # no need to estimate gamma_pi nor to iterate
         } else {
-            off <- getX_pi(m) %*% m@beta_pi + m@W %*% m@alpha_pi
+            off <- getX_pi(m) %*% getBeta_pi(m) + getW(m) %*% getAlpha_pi(m)
             m@gamma_pi <- matrix(unlist(parallel::mclapply(seq(n), function(i) {
                 solveRidgeRegression(x=getV_pi(m),
                                      y=Z[i,],
@@ -254,8 +254,8 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
         if (NCOL(getX_pi(m)) + nFactors(m) == 0) {
             iter <- nb.repeat # no need to estimate nor to iterate
         } else {
-            tVgamma_pi <- t(getV_pi(m) %*% m@gamma_pi)
-            XW <- cbind(getX_pi(m),m@W)
+            tVgamma_pi <- t(getV_pi(m) %*% getGamma_pi(m))
+            XW <- cbind(getX_pi(m),getW(m))
             s <- matrix(unlist(parallel::mclapply(seq(J), function(j) {
                 solveRidgeRegression(x=XW,
                                      y=Z[,j],
@@ -365,12 +365,12 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
                 parallel::mclapply(seq(J), function(j) {
                 optim( fn=zinb.loglik.regression, 
                        gr=zinb.loglik.regression.gradient,
-                       par=c(m@beta_mu[,j], m@alpha_mu[,j],
-                             m@beta_pi[,j], m@alpha_pi[,j]),
-                       Y=Y[,j], A.mu=cbind(getX_mu(m), m@W),
-                       C.mu=t(getV_mu(m)[j,] %*% m@gamma_mu) + m@O_mu[,j],
-                       A.pi=cbind(getX_pi(m), m@W),
-                       C.pi=t(getV_pi(m)[j,] %*% m@gamma_pi) + m@O_pi[,j],
+                       par=c(getBeta_mu(m)[,j], getAlpha_mu(m)[,j],
+                             getBeta_pi(m)[,j], getAlpha_pi(m)[,j]),
+                       Y=Y[,j], A.mu=cbind(getX_mu(m), getW(m)),
+                       C.mu=t(getV_mu(m)[j,] %*% getGamma_mu(m)) + m@O_mu[,j],
+                       A.pi=cbind(getX_pi(m), getW(m)),
+                       C.pi=t(getV_pi(m)[j,] %*% getGamma_pi(m)) + m@O_pi[,j],
                        C.theta=matrix(m@zeta[j], nrow = n, ncol = 1),
                        epsilon=epsilonright,
                        control=list(fnscale=-1,trace=0),
@@ -403,7 +403,8 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
 
         # 3. Orthogonalize
         if (orthog) {
-            o <- orthogonalizeTraceNorm(m@W, cbind(m@alpha_mu, m@alpha_pi), 
+            o <- orthogonalizeTraceNorm(getW(m), cbind(getAlpha_mu(m), 
+                                                       getAlpha_pi(m)), 
                                       m@epsilon_W, m@epsilon_alpha)
             m@W <- o$U
             m@alpha_mu <- o$V[,1:J,drop=FALSE]
@@ -421,15 +422,15 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
                 parallel::mclapply(seq(n), function(i) {
                 optim( fn=zinb.loglik.regression,
                        gr=zinb.loglik.regression.gradient,
-                       par=c(m@gamma_mu[,i], m@gamma_pi[,i],
-                             t(m@W[i,])),
+                       par=c(getGamma_mu(m)[,i], getGamma_pi(m)[,i],
+                             t(getW(m)[i,])),
                        Y=t(Y[i,]),
                        A.mu=getV_mu(m),
-                       B.mu=t(m@alpha_mu),
-                       C.mu=t(getX_mu(m)[i,]%*%m@beta_mu + m@O_mu[i,]),
+                       B.mu=t(getAlpha_mu(m)),
+                       C.mu=t(getX_mu(m)[i,]%*%getBeta_mu(m) + m@O_mu[i,]),
                        A.pi=getV_pi(m), 
-                       B.pi=t(m@alpha_pi), 
-                       C.pi=t(getX_pi(m)[i,]%*%m@beta_pi + m@O_pi[i,]),
+                       B.pi=t(getAlpha_pi(m)), 
+                       C.pi=t(getX_pi(m)[i,]%*%getBeta_pi(m) + m@O_pi[i,]),
                        C.theta=m@zeta,
                        epsilon=epsilonleft,
                        control=list(fnscale=-1,trace=0),
@@ -458,7 +459,8 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
         
         # 5. Orthogonalize
         if (orthog) {
-            o <- orthogonalizeTraceNorm(m@W, cbind(m@alpha_mu, m@alpha_pi), 
+            o <- orthogonalizeTraceNorm(getW(m), cbind(getAlpha_mu(m), 
+                                                       getAlpha_pi(m)), 
                                       m@epsilon_W, m@epsilon_alpha)
             m@W <- o$U
             m@alpha_mu <- o$V[,1:J,drop=FALSE]
