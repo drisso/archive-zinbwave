@@ -305,11 +305,17 @@ zinbModel <- function(X, V, O_mu, O_pi, which_X_mu,
 setMethod("show", "ZinbModel",
           function(object) {
               cat(paste0("Object of class ZinbModel.\n",
-                         NROW(object@X), " samples; ", NROW(object@V),
+                         nSamples(object), " samples; ", nFeatures(object),
                          " genes.\n",
-                         NCOL(object@X), " sample-level covariates; ",
-                         NCOL(object@V), " gene-level covariates; ",
-                         NCOL(object@W), " latent factors.\n"))
+                         NCOL(getX_mu(object)),
+                         " sample-level covariate(s) (mu); ",
+                         NCOL(getX_pi(object)),
+                         " sample-level covariate(s) (pi);\n",
+                         NCOL(getV_mu(object)),
+                         " gene-level covariate(s) (mu); ",
+                         NCOL(getV_pi(object)),
+                         " gene-level covariate(s) (pi);\n",
+                         nFactors(object), " latent factor(s).\n"))
           }
 )
 
