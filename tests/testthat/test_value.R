@@ -1,6 +1,8 @@
 context("Test numerical correctness of functions.")
 set.seed(13124)
 
+BiocParallel::register(BiocParallel::SerialParam())
+
 test_that("Estimates are reasonable when data is Poisson", {
     counts <- matrix(rpois(10000, lambda=50), nrow=100, ncol=100)
     m1 <- zinbFit(counts, commondispersion = TRUE)

@@ -1,6 +1,8 @@
 context("Test zinbModel class and methods.")
 set.seed(13124)
 
+BiocParallel::register(BiocParallel::SerialParam())
+
 test_that("getX et al work with/without intercept", {
 
     bio <- gl(2, 3)
