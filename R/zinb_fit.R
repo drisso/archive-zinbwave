@@ -149,9 +149,6 @@ setMethod("zinbFit", "matrix",
 #' @importFrom softImpute softImpute
 zinbInitialize <- function(m, Y, nb.repeat=2, BPPARAM=BiocParallel::bpparam()) {
 
-    ## we want to work with genes in columns
-    #Y <- t(Y)
-
     n <- NROW(Y)
     J <- NCOL(Y)
 
@@ -183,14 +180,17 @@ zinbInitialize <- function(m, Y, nb.repeat=2, BPPARAM=BiocParallel::bpparam()) {
 
     ## 4. Estimate gamma_mu and beta_mu
     iter <- 0
+    beta_mu <- getBeta_mu(m)
+    gamma_mu <- getGamma_mu(m)
+
     while (iter < nb.repeat) {
 
         # Optimize gamma_mu (in parallel for each sample)
         if (NCOL(getV_mu(m)) == 0) {
             iter <- nb.repeat # no need to estimate gamma_mu nor to iterate
         } else {
-            Xbeta_mu <- getX_mu(m) %*% getBeta_mu(m)
-            m@gamma_mu <- matrix(unlist(bplapply(seq(n), function(i) {
+            Xbeta_mu <- getX_mu(m) %*% beta_mu
+            gamma_mu <- matrix(unlist(bplapply(seq(n), function(i) {
                 solveRidgeRegression(x=getV_mu(m)[P[i,], , drop=FALSE],
                                      y=L[i,P[i,]] - Xbeta_mu[i, P[i,]],
                                      epsilon = getEpsilon_gamma_mu(m),
@@ -203,8 +203,8 @@ zinbInitialize <- function(m, Y, nb.repeat=2, BPPARAM=BiocParallel::bpparam()) {
         if (NCOL(getX_mu(m)) == 0) {
             iter <- nb.repeat # no need to estimate gamma_mu nor to iterate
         } else {
-            tVgamma_mu <- t(getV_mu(m) %*% getGamma_mu(m))
-            m@beta_mu <- matrix(unlist(bplapply(seq(J), function(j) {
+            tVgamma_mu <- t(getV_mu(m) %*% gamma_mu)
+            beta_mu <- matrix(unlist(bplapply(seq(J), function(j) {
                 solveRidgeRegression(x=getX_mu(m)[P[,j], , drop=FALSE],
                                      y=L[P[,j],j] - tVgamma_mu[P[,j], j],
                                      epsilon = getEpsilon_beta_mu(m),
@@ -216,12 +216,11 @@ zinbInitialize <- function(m, Y, nb.repeat=2, BPPARAM=BiocParallel::bpparam()) {
         iter <- iter+1
     }
 
-
     ## 5. Estimate W and alpha (only if K>0)
     if(nFactors(m) > 0) {
 
         # Compute the residual D (with missing values at the 0 count)
-        D <- L - getX_mu(m) %*% getBeta_mu(m) - t(getV_mu(m) %*% getGamma_mu(m))
+        D <- L - getX_mu(m) %*% beta_mu - t(getV_mu(m) %*% gamma_mu)
 
         # Find a low-rank approximation with trace-norm regularization
         R <- softImpute::softImpute(D,
@@ -229,22 +228,29 @@ zinbInitialize <- function(m, Y, nb.repeat=2, BPPARAM=BiocParallel::bpparam()) {
                 rank.max=nFactors(m))
 
         # Orthogonalize to get W and alpha
-        m@W <- (getEpsilon_alpha(m) / getEpsilon_W(m))[1]^(1/4) *
+        W <- (getEpsilon_alpha(m) / getEpsilon_W(m))[1]^(1/4) *
             R$u %*% diag(sqrt(R$d), nrow = length(R$d))
-        m@alpha_mu <- (getEpsilon_W(m)/getEpsilon_alpha(m))[1]^(1/4) *
+        alpha_mu <- (getEpsilon_W(m)/getEpsilon_alpha(m))[1]^(1/4) *
             diag(sqrt(R$d), nrow = length(R$d)) %*% t(R$v)
+    } else {
+        W <- getW(m)
+        alpha_mu <- getAlpha_mu(m)
     }
 
     ## 6. Estimate beta_pi, gamma_pi, and alpha_pi
     iter <- 0
+    beta_pi <- getBeta_pi(m)
+    gamma_pi <- getGamma_pi(m)
+    alpha_pi <- getAlpha_pi(m)
+
     while (iter < nb.repeat) {
 
         # Optimize gamma_pi (in parallel for each sample)
         if (NCOL(getV_pi(m)) == 0) {
             iter <- nb.repeat # no need to estimate gamma_pi nor to iterate
         } else {
-            off <- getX_pi(m) %*% getBeta_pi(m) + getW(m) %*% getAlpha_pi(m)
-            m@gamma_pi <- matrix(unlist(bplapply(seq(n), function(i) {
+            off <- getX_pi(m) %*% beta_pi + W %*% alpha_pi
+            gamma_pi <- matrix(unlist(bplapply(seq(n), function(i) {
                 solveRidgeRegression(x=getV_pi(m),
                                      y=Z[i,],
                                      offset=off[i,],
@@ -258,8 +264,8 @@ zinbInitialize <- function(m, Y, nb.repeat=2, BPPARAM=BiocParallel::bpparam()) {
         if (NCOL(getX_pi(m)) + nFactors(m) == 0) {
             iter <- nb.repeat # no need to estimate nor to iterate
         } else {
-            tVgamma_pi <- t(getV_pi(m) %*% getGamma_pi(m))
-            XW <- cbind(getX_pi(m),getW(m))
+            tVgamma_pi <- t(getV_pi(m) %*% gamma_pi)
+            XW <- cbind(getX_pi(m),W)
             s <- matrix(unlist(bplapply(seq(J), function(j) {
                 solveRidgeRegression(x=XW,
                                      y=Z[,j],
@@ -270,10 +276,10 @@ zinbInitialize <- function(m, Y, nb.repeat=2, BPPARAM=BiocParallel::bpparam()) {
             }, BPPARAM=BPPARAM
             )), nrow=NCOL(getX_pi(m)) + nFactors(m))
             if (NCOL(getX_pi(m))>0) {
-                m@beta_pi <- s[1:NCOL(getX_pi(m)),,drop=FALSE]
+                beta_pi <- s[1:NCOL(getX_pi(m)),,drop=FALSE]
             }
             if (nFactors(m)>0) {
-                m@alpha_pi <-
+                alpha_pi <-
                     s[(NCOL(getX_pi(m)) + 1):(NCOL(getX_pi(m)) + nFactors(m)),,
                       drop=FALSE]
             }
@@ -283,11 +289,23 @@ zinbInitialize <- function(m, Y, nb.repeat=2, BPPARAM=BiocParallel::bpparam()) {
     }
 
     ## 7. Initialize dispersion to 1
-    m@zeta <- rep(0, J)
+    zeta <- rep(0, J)
 
-    validObject(m)
+    out <- zinbModel(X = m@X, V = m@V, O_mu = m@O_mu, O_pi = m@O_pi,
+                     which_X_mu = m@which_X_mu, which_X_pi = m@which_X_pi,
+                     which_V_mu = m@which_V_mu, which_V_pi = m@which_V_pi,
+                     W = W, beta_mu = beta_mu, beta_pi = beta_pi,
+                     gamma_mu = gamma_mu, gamma_pi = gamma_pi,
+                     alpha_mu = alpha_mu, alpha_pi = alpha_pi, zeta = zeta,
+                     epsilon_beta_mu = m@epsilon_beta_mu,
+                     epsilon_gamma_mu = m@epsilon_gamma_mu,
+                     epsilon_beta_pi = m@epsilon_beta_pi,
+                     epsilon_gamma_pi = m@epsilon_gamma_pi,
+                     epsilon_W = m@epsilon_W, epsilon_alpha = m@epsilon_alpha,
+                     epsilon_zeta = m@epsilon_zeta,
+                     epsilon_min_logit = m@epsilon_min_logit)
 
-    return(m)
+    return(out)
 }
 
 #' Optimize the parameters of a ZINB regression model
@@ -357,7 +375,15 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
         # 1. Optimize dispersion
         m <- zinbOptimizeDispersion(m, Y,
                                     commondispersion=commondispersion,
-                                    BPPARAM=bpparam)
+                                    BPPARAM=BPPARAM)
+
+        beta_mu <- getBeta_mu(m)
+        alpha_mu <- getAlpha_mu(m)
+        gamma_mu <- getGamma_mu(m)
+        beta_pi <- getBeta_pi(m)
+        alpha_pi <- getAlpha_pi(m)
+        gamma_pi <- getGamma_pi(m)
+        W <- getW(m)
 
         # Evaluate total penalized likelihood
         if (verbose) {
@@ -366,18 +392,19 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
             }
 
         # 2. Optimize right factors
+
         if (optimright) {
             ptm <- proc.time()
             estimate <- matrix(unlist(
                 bplapply(seq(J), function(j) {
                 optim( fn=zinb.loglik.regression,
                        gr=zinb.loglik.regression.gradient,
-                       par=c(getBeta_mu(m)[,j], getAlpha_mu(m)[,j],
-                             getBeta_pi(m)[,j], getAlpha_pi(m)[,j]),
-                       Y=Y[,j], A.mu=cbind(getX_mu(m), getW(m)),
-                       C.mu=t(getV_mu(m)[j,] %*% getGamma_mu(m)) + m@O_mu[,j],
-                       A.pi=cbind(getX_pi(m), getW(m)),
-                       C.pi=t(getV_pi(m)[j,] %*% getGamma_pi(m)) + m@O_pi[,j],
+                       par=c(beta_mu[,j], alpha_mu[,j],
+                             beta_pi[,j], alpha_pi[,j]),
+                       Y=Y[,j], A.mu=cbind(getX_mu(m), W),
+                       C.mu=t(getV_mu(m)[j,] %*% gamma_mu) + m@O_mu[,j],
+                       A.pi=cbind(getX_pi(m), W),
+                       C.pi=t(getV_pi(m)[j,] %*% gamma_pi) + m@O_pi[,j],
                        C.theta=matrix(m@zeta[j], nrow = n, ncol = 1),
                        epsilon=epsilonright,
                        control=list(fnscale=-1,trace=0),
@@ -387,19 +414,19 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
             if (verbose) {print(proc.time()-ptm)}
             ind <- 1
             if (nright[1]>0) {
-                m@beta_mu <- estimate[ind:(ind+nright[1]-1),,drop=FALSE]
+                beta_mu <- estimate[ind:(ind+nright[1]-1),,drop=FALSE]
                 ind <- ind+nright[1]
                 }
             if (nright[2]>0) {
-                m@alpha_mu <- estimate[ind:(ind+nright[2]-1),,drop=FALSE]
+                alpha_mu <- estimate[ind:(ind+nright[2]-1),,drop=FALSE]
                 ind <- ind+nright[2]
             }
             if (nright[3]>0) {
-                m@beta_pi <- estimate[ind:(ind+nright[3]-1),,drop=FALSE]
+                beta_pi <- estimate[ind:(ind+nright[3]-1),,drop=FALSE]
                 ind <- ind+nright[3]
             }
             if (nright[4]>0) {
-                m@alpha_pi <- estimate[ind:(ind+nright[4]-1),,drop=FALSE]
+                alpha_pi <- estimate[ind:(ind+nright[4]-1),,drop=FALSE]
             }
         }
         # Evaluate total penalized likelihood
@@ -410,12 +437,12 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
 
         # 3. Orthogonalize
         if (orthog) {
-            o <- orthogonalizeTraceNorm(getW(m), cbind(getAlpha_mu(m),
-                                                       getAlpha_pi(m)),
+            o <- orthogonalizeTraceNorm(W, cbind(alpha_mu,
+                                                       alpha_pi),
                                       m@epsilon_W, m@epsilon_alpha)
-            m@W <- o$U
-            m@alpha_mu <- o$V[,1:J,drop=FALSE]
-            m@alpha_pi <- o$V[,(J+1):(2*J),drop=FALSE]
+            W <- o$U
+            alpha_mu <- o$V[,1:J,drop=FALSE]
+            alpha_pi <- o$V[,(J+1):(2*J),drop=FALSE]
         }
 
         # Evaluate total penalized likelihood
@@ -429,15 +456,15 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
                 bplapply(seq(n), function(i) {
                 optim( fn=zinb.loglik.regression,
                        gr=zinb.loglik.regression.gradient,
-                       par=c(getGamma_mu(m)[,i], getGamma_pi(m)[,i],
-                             t(getW(m)[i,])),
+                       par=c(gamma_mu[,i], gamma_pi[,i],
+                             t(W[i,])),
                        Y=t(Y[i,]),
                        A.mu=getV_mu(m),
-                       B.mu=t(getAlpha_mu(m)),
-                       C.mu=t(getX_mu(m)[i,]%*%getBeta_mu(m) + m@O_mu[i,]),
+                       B.mu=t(alpha_mu),
+                       C.mu=t(getX_mu(m)[i,]%*%beta_mu + m@O_mu[i,]),
                        A.pi=getV_pi(m),
-                       B.pi=t(getAlpha_pi(m)),
-                       C.pi=t(getX_pi(m)[i,]%*%getBeta_pi(m) + m@O_pi[i,]),
+                       B.pi=t(alpha_pi),
+                       C.pi=t(getX_pi(m)[i,]%*%beta_pi + m@O_pi[i,]),
                        C.theta=m@zeta,
                        epsilon=epsilonleft,
                        control=list(fnscale=-1,trace=0),
@@ -447,15 +474,15 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
             if (verbose) {print(proc.time()-ptm)}
             ind <- 1
             if (nleft[1]>0) {
-                m@gamma_mu <- estimate[ind:(ind+nleft[1]-1),,drop=FALSE]
+                gamma_mu <- estimate[ind:(ind+nleft[1]-1),,drop=FALSE]
                 ind <- ind+nleft[1]
             }
             if (nleft[2]>0) {
-                m@gamma_pi <- estimate[ind:(ind+nleft[2]-1),,drop=FALSE]
+                gamma_pi <- estimate[ind:(ind+nleft[2]-1),,drop=FALSE]
                 ind <- ind+nleft[2]
             }
             if (nleft[3]>0) {
-                m@W <- t(estimate[ind:(ind+nleft[3]-1),,drop=FALSE])
+                W <- t(estimate[ind:(ind+nleft[3]-1),,drop=FALSE])
                 ind <- ind+nleft[3]
             }
         }
@@ -466,19 +493,34 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
 
         # 5. Orthogonalize
         if (orthog) {
-            o <- orthogonalizeTraceNorm(getW(m), cbind(getAlpha_mu(m),
-                                                       getAlpha_pi(m)),
+            o <- orthogonalizeTraceNorm(W, cbind(alpha_mu,
+                                                       alpha_pi),
                                       m@epsilon_W, m@epsilon_alpha)
-            m@W <- o$U
-            m@alpha_mu <- o$V[,1:J,drop=FALSE]
-            m@alpha_pi <- o$V[,(J+1):(2*J),drop=FALSE]
+            W <- o$U
+            alpha_mu <- o$V[,1:J,drop=FALSE]
+            alpha_pi <- o$V[,(J+1):(2*J),drop=FALSE]
         }
         # Evaluate total penalized likelihood
         if (verbose) {message("After orthogonalization = ",
                           loglik(m, Y) - penalty(m))}
 
     }
-    m
+
+    out <- zinbModel(X = m@X, V = m@V, O_mu = m@O_mu, O_pi = m@O_pi,
+                     which_X_mu = m@which_X_mu, which_X_pi = m@which_X_pi,
+                     which_V_mu = m@which_V_mu, which_V_pi = m@which_V_pi,
+                     W = W, beta_mu = beta_mu, beta_pi = beta_pi,
+                     gamma_mu = gamma_mu, gamma_pi = gamma_pi,
+                     alpha_mu = alpha_mu, alpha_pi = alpha_pi, zeta = m@zeta,
+                     epsilon_beta_mu = m@epsilon_beta_mu,
+                     epsilon_gamma_mu = m@epsilon_gamma_mu,
+                     epsilon_beta_pi = m@epsilon_beta_pi,
+                     epsilon_gamma_pi = m@epsilon_gamma_pi,
+                     epsilon_W = m@epsilon_W, epsilon_alpha = m@epsilon_alpha,
+                     epsilon_zeta = m@epsilon_zeta,
+                     epsilon_min_logit = m@epsilon_min_logit)
+
+    return(out)
 }
 
 #' Optimize the dispersion parameters of a ZINB regression model
@@ -542,8 +584,6 @@ zinbOptimizeDispersion <- function(m, Y, commondispersion=TRUE,
         m@zeta <- optim( par=zeta, fn=locfun , gr=locgrad,
                         control=list(fnscale=-1,trace=0), method="BFGS")$par
     }
-    validObject(m)
-
     return(m)
 }
 
