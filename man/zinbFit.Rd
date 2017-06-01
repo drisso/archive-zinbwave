@@ -10,12 +10,12 @@
 zinbFit(Y, ...)
 
 \S4method{zinbFit}{SummarizedExperiment}(Y, X, V, commondispersion = TRUE,
-  ncores = 1, verbose = FALSE, nb.repeat.initialize = 2,
-  maxiter.optimize = 25, stop.epsilon.optimize = 1e-04, ...)
-
-\S4method{zinbFit}{matrix}(Y, X, V, commondispersion = TRUE, ncores = 1,
   verbose = FALSE, nb.repeat.initialize = 2, maxiter.optimize = 25,
-  stop.epsilon.optimize = 1e-04, ...)
+  stop.epsilon.optimize = 1e-04, BPPARAM = BiocParallel::bpparam(), ...)
+
+\S4method{zinbFit}{matrix}(Y, X, V, commondispersion = TRUE,
+  verbose = FALSE, nb.repeat.initialize = 2, maxiter.optimize = 25,
+  stop.epsilon.optimize = 1e-04, BPPARAM = BiocParallel::bpparam(), ...)
 }
 \arguments{
 \item{Y}{The data (genes in rows, samples in columns).}
@@ -36,9 +36,6 @@ rowData slot of Y.}
 \item{commondispersion}{Whether or not a single dispersion for all features
 is estimated (default TRUE).}
 
-\item{ncores}{The number of cores for parallel computations (passed to
-mclapply).}
-
 \item{verbose}{Print helpful messages.}
 
 \item{nb.repeat.initialize}{Number of iterations for the initialization of
@@ -49,6 +46,10 @@ step (default 25).}
 
 \item{stop.epsilon.optimize}{stopping criterion in the optimization step,
 when the relative gain in likelihood is below epsilon (default 0.0001).}
+
+\item{BPPARAM}{object of class \code{bpparamClass} that specifies the
+back-end to be used for computations. See
+\code{\link[BiocParallel]{bpparam}} for details.}
 }
 \value{
 An object of class \code{ZinbModel} that has been fitted by penalized

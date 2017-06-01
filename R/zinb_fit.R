@@ -11,9 +11,10 @@
 #'
 #' m <- zinbFit(se, X=model.matrix(~bio, data=colData(se)))
 setMethod("zinbFit", "SummarizedExperiment",
-          function(Y, X, V, commondispersion=TRUE, ncores=1, verbose=FALSE,
+          function(Y, X, V, commondispersion=TRUE, verbose=FALSE,
                    nb.repeat.initialize=2, maxiter.optimize=25,
-                   stop.epsilon.optimize=.0001, ...) {
+                   stop.epsilon.optimize=.0001,
+                   BPPARAM=BiocParallel::bpparam(), ...) {
 
               if(!missing(X)) {
                   if(!is.matrix(X)) {
@@ -40,9 +41,9 @@ setMethod("zinbFit", "SummarizedExperiment",
               }
 
               # Apply zinbFit on the assay of SummarizedExperiment
-              res <- zinbFit(assay(Y), X, V, commondispersion, ncores,
+              res <- zinbFit(assay(Y), X, V, commondispersion,
                              verbose, nb.repeat.initialize, maxiter.optimize,
-                             stop.epsilon.optimize, ...)
+                             stop.epsilon.optimize, BPPARAM, ...)
 
               return(res)
 })
@@ -61,8 +62,9 @@ setMethod("zinbFit", "SummarizedExperiment",
 #'   rowData slot of Y.
 #' @param commondispersion Whether or not a single dispersion for all features
 #'   is estimated (default TRUE).
-#' @param ncores The number of cores for parallel computations (passed to
-#'   mclapply).
+#' @param BPPARAM object of class \code{bpparamClass} that specifies the
+#'   back-end to be used for computations. See
+#'   \code{\link[BiocParallel]{bpparam}} for details.
 #' @param verbose Print helpful messages.
 #' @param nb.repeat.initialize Number of iterations for the initialization of
 #'   beta_mu and gamma_mu.
@@ -82,14 +84,16 @@ setMethod("zinbFit", "SummarizedExperiment",
 #'
 #' @seealso \code{\link[stats]{model.matrix}}.
 #'
+#' @import BiocParallel
 #' @examples
 #' bio <- gl(2, 3)
 #' m <- zinbFit(matrix(rpois(60, lambda=5), nrow=10, ncol=6),
 #'              X=model.matrix(~bio))
 setMethod("zinbFit", "matrix",
-          function(Y, X, V, commondispersion=TRUE, ncores=1, verbose=FALSE,
+          function(Y, X, V, commondispersion=TRUE, verbose=FALSE,
                    nb.repeat.initialize=2, maxiter.optimize=25,
-                   stop.epsilon.optimize=.0001,...) {
+                   stop.epsilon.optimize=.0001,
+                   BPPARAM=BiocParallel::bpparam(), ...) {
 
     # Transpose Y: UI wants genes in rows, internals genes in columns!
     Y <- t(Y)
@@ -101,7 +105,7 @@ setMethod("zinbFit", "matrix",
 
     # Initialize the parameters
     if (verbose) {message("Initialize parameters:")}
-    m <- zinbInitialize(m, Y, ncores = ncores, nb.repeat=nb.repeat.initialize)
+    m <- zinbInitialize(m, Y, nb.repeat=nb.repeat.initialize, BPPARAM=BPPARAM)
     if (verbose) {message("ok")}
 
     # Optimize parameters
@@ -109,7 +113,7 @@ setMethod("zinbFit", "matrix",
     m <- zinbOptimize(m, Y, commondispersion=commondispersion,
                       maxiter=maxiter.optimize,
                       stop.epsilon=stop.epsilon.optimize,
-                      ncores=ncores, verbose=verbose)
+                      BPPARAM=BPPARAM, verbose=verbose)
     if (verbose) {message("ok")}
 
     validObject(m)
@@ -126,7 +130,9 @@ setMethod("zinbFit", "matrix",
 #' @param Y The matrix of counts.
 #' @param nb.repeat Number of iterations for the estimation of beta_mu and
 #'   gamma_mu.
-#' @param ncores The number of cores. To be passed to mclapply.
+#' @param BPPARAM object of class \code{bpparamClass} that specifies the
+#'   back-end to be used for computations. See
+#'   \code{\link[BiocParallel]{bpparam}} for details.
 #' @return An object of class ZinbModel similar to the one given as argument
 #'   with modified parameters alpha_mu, alpha_pi, beta_mu, beta_pi, gamma_mu,
 #'   gamma_pi, W.
@@ -140,9 +146,8 @@ setMethod("zinbFit", "matrix",
 #' m <- zinbInitialize(m, Y)
 #' @export
 #' @importFrom glmnet glmnet
-#' @importFrom parallel mclapply
 #' @importFrom softImpute softImpute
-zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
+zinbInitialize <- function(m, Y, nb.repeat=2, BPPARAM=BiocParallel::bpparam()) {
 
     ## we want to work with genes in columns
     #Y <- t(Y)
@@ -185,12 +190,12 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
             iter <- nb.repeat # no need to estimate gamma_mu nor to iterate
         } else {
             Xbeta_mu <- getX_mu(m) %*% getBeta_mu(m)
-            m@gamma_mu <- matrix(unlist(parallel::mclapply(seq(n), function(i) {
+            m@gamma_mu <- matrix(unlist(bplapply(seq(n), function(i) {
                 solveRidgeRegression(x=getV_mu(m)[P[i,], , drop=FALSE],
                                      y=L[i,P[i,]] - Xbeta_mu[i, P[i,]],
                                      epsilon = getEpsilon_gamma_mu(m),
                                      family="gaussian")
-                } , mc.cores=ncores
+                } , BPPARAM=BPPARAM
                 )), nrow=NCOL(getV_mu(m)))
         }
 
@@ -199,12 +204,12 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
             iter <- nb.repeat # no need to estimate gamma_mu nor to iterate
         } else {
             tVgamma_mu <- t(getV_mu(m) %*% getGamma_mu(m))
-            m@beta_mu <- matrix(unlist(parallel::mclapply(seq(J), function(j) {
+            m@beta_mu <- matrix(unlist(bplapply(seq(J), function(j) {
                 solveRidgeRegression(x=getX_mu(m)[P[,j], , drop=FALSE],
                                      y=L[P[,j],j] - tVgamma_mu[P[,j], j],
                                      epsilon = getEpsilon_beta_mu(m),
                                      family="gaussian")
-            }, mc.cores=ncores
+            }, BPPARAM=BPPARAM
             )), nrow=NCOL(getX_mu(m)))
         }
 
@@ -239,13 +244,13 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
             iter <- nb.repeat # no need to estimate gamma_pi nor to iterate
         } else {
             off <- getX_pi(m) %*% getBeta_pi(m) + getW(m) %*% getAlpha_pi(m)
-            m@gamma_pi <- matrix(unlist(parallel::mclapply(seq(n), function(i) {
+            m@gamma_pi <- matrix(unlist(bplapply(seq(n), function(i) {
                 solveRidgeRegression(x=getV_pi(m),
                                      y=Z[i,],
                                      offset=off[i,],
                                      epsilon = getEpsilon_gamma_pi(m),
                                      family="binomial")
-            }, mc.cores=ncores
+            }, BPPARAM=BPPARAM
             )), nrow=NCOL(getV_pi(m)))
         }
 
@@ -255,14 +260,14 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
         } else {
             tVgamma_pi <- t(getV_pi(m) %*% getGamma_pi(m))
             XW <- cbind(getX_pi(m),getW(m))
-            s <- matrix(unlist(parallel::mclapply(seq(J), function(j) {
+            s <- matrix(unlist(bplapply(seq(J), function(j) {
                 solveRidgeRegression(x=XW,
                                      y=Z[,j],
                                      offset = tVgamma_pi[,j],
                                      epsilon = c(getEpsilon_beta_pi(m),
                                                  getEpsilon_alpha(m)),
                                      family="binomial")
-            }, mc.cores=ncores
+            }, BPPARAM=BPPARAM
             )), nrow=NCOL(getX_pi(m)) + nFactors(m))
             if (NCOL(getX_pi(m))>0) {
                 m@beta_pi <- s[1:NCOL(getX_pi(m)),,drop=FALSE]
@@ -300,7 +305,9 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
 #' @param stop.epsilon stopping criterion, when the relative gain in
 #'   likelihood is below epsilon (default 0.0001)
 #' @param verbose print information (default FALSE)
-#' @param ncores number of cores (default to 1)
+#' @param BPPARAM object of class \code{bpparamClass} that specifies the
+#'   back-end to be used for computations. See
+#'   \code{\link[BiocParallel]{bpparam}} for details.
 #' @return An object of class ZinbModel similar to the one given as argument
 #'   with modified parameters alpha_mu, alpha_pi, beta_mu, beta_pi, gamma_mu,
 #'   gamma_pi, W.
@@ -311,7 +318,8 @@ zinbInitialize <- function(m, Y, nb.repeat=2, ncores=1) {
 #' m = zinbOptimize(m, Y)
 #' @export
 zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
-                         stop.epsilon=.0001, verbose=FALSE, ncores=1) {
+                         stop.epsilon=.0001, verbose=FALSE,
+                         BPPARAM=BiocParallel::bpparam()) {
 
     total.lik=rep(NA,maxiter)
     n <- nSamples(m)
@@ -349,7 +357,7 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
         # 1. Optimize dispersion
         m <- zinbOptimizeDispersion(m, Y,
                                     commondispersion=commondispersion,
-                                    ncores=ncores)
+                                    BPPARAM=bpparam)
 
         # Evaluate total penalized likelihood
         if (verbose) {
@@ -361,7 +369,7 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
         if (optimright) {
             ptm <- proc.time()
             estimate <- matrix(unlist(
-                parallel::mclapply(seq(J), function(j) {
+                bplapply(seq(J), function(j) {
                 optim( fn=zinb.loglik.regression,
                        gr=zinb.loglik.regression.gradient,
                        par=c(getBeta_mu(m)[,j], getAlpha_mu(m)[,j],
@@ -374,7 +382,7 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
                        epsilon=epsilonright,
                        control=list(fnscale=-1,trace=0),
                        method="BFGS")$par
-                    }, mc.cores=ncores)), nrow=sum(nright))
+                    }, BPPARAM=BPPARAM)), nrow=sum(nright))
 
             if (verbose) {print(proc.time()-ptm)}
             ind <- 1
@@ -418,7 +426,7 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
         if (optimleft) {
             ptm <- proc.time()
             estimate <- matrix(unlist(
-                parallel::mclapply(seq(n), function(i) {
+                bplapply(seq(n), function(i) {
                 optim( fn=zinb.loglik.regression,
                        gr=zinb.loglik.regression.gradient,
                        par=c(getGamma_mu(m)[,i], getGamma_pi(m)[,i],
@@ -434,7 +442,7 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
                        epsilon=epsilonleft,
                        control=list(fnscale=-1,trace=0),
                        method="BFGS")$par
-                    }, mc.cores=ncores)), nrow=sum(nleft))
+                    }, BPPARAM=BPPARAM)), nrow=sum(nleft))
 
             if (verbose) {print(proc.time()-ptm)}
             ind <- 1
@@ -481,7 +489,9 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
 #' @param Y The matrix of counts.
 #' @param commondispersion Whether or not a single dispersion for all features
 #'   is estimated (default TRUE)
-#' @param ncores Number of cores for parallel computation (default 1)
+#' @param BPPARAM object of class \code{bpparamClass} that specifies the
+#'   back-end to be used for computations. See
+#'   \code{\link[BiocParallel]{bpparam}} for details.
 #' @return An object of class ZinbModel similar to the one given as argument
 #'   with modified parameters zeta.
 #' @examples
@@ -490,7 +500,8 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
 #' m = zinbInitialize(m, Y)
 #' m = zinbOptimizeDispersion(m, Y)
 #' @export
-zinbOptimizeDispersion <- function(m, Y, commondispersion=TRUE, ncores=1) {
+zinbOptimizeDispersion <- function(m, Y, commondispersion=TRUE,
+                                   BPPARAM=BiocParallel::bpparam()) {
 
     J <- nFeatures(m)
     mu <- getMu(m)
@@ -510,19 +521,19 @@ zinbOptimizeDispersion <- function(m, Y, commondispersion=TRUE, ncores=1) {
 
         # 2) Optimize the dispersion parameter of each sample
         locfun <- function(logt) {
-            s <- sum(unlist(parallel::mclapply(seq(J),function(i) {
+            s <- sum(unlist(bplapply(seq(J),function(i) {
                 zinb.loglik.dispersion(logt[i],Y[,i],mu[,i],logitPi[,i])
-            }, mc.cores=ncores)))
+            }, BPPARAM=BPPARAM)))
             if (J>1) {
                 s <- s - epsilon*var(logt)/2
             }
             s
         }
         locgrad <- function(logt) {
-            s <- unlist(parallel::mclapply(seq(J),function(i) {
+            s <- unlist(bplapply(seq(J),function(i) {
                 zinb.loglik.dispersion.gradient(logt[i], Y[,i], mu[,i],
                                                 logitPi[,i])
-            }, mc.cores=ncores ))
+            }, BPPARAM=BPPARAM ))
             if (J>1) {
                 s <- s - epsilon*(logt - mean(logt))/(J-1)
             }

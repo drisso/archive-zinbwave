@@ -4,7 +4,7 @@
 \alias{zinbInitialize}
 \title{Initialize the parameters of a ZINB regression model}
 \usage{
-zinbInitialize(m, Y, nb.repeat = 2, ncores = 1)
+zinbInitialize(m, Y, nb.repeat = 2, BPPARAM = BiocParallel::bpparam())
 }
 \arguments{
 \item{m}{The model of class ZinbModel}
@@ -14,7 +14,9 @@ zinbInitialize(m, Y, nb.repeat = 2, ncores = 1)
 \item{nb.repeat}{Number of iterations for the estimation of beta_mu and
 gamma_mu.}
 
-\item{ncores}{The number of cores. To be passed to mclapply.}
+\item{BPPARAM}{object of class \code{bpparamClass} that specifies the
+back-end to be used for computations. See
+\code{\link[BiocParallel]{bpparam}} for details.}
 }
 \value{
 An object of class ZinbModel similar to the one given as argument

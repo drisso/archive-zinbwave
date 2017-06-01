@@ -20,7 +20,7 @@ A list with the two matrices that solve the problem in the slots U
   and V.
 }
 \description{
-Given two matrices U and V that can be multiplied, this function finds two 
+Given two matrices U and V that can be multiplied, this function finds two
 new matrices U2 and V2 such that their product is conserved (U*V = U2*V2) and
 such that a||U||^2 + b||V||^2 is minimized.
 }

@@ -5,7 +5,8 @@
 \title{Optimize the parameters of a ZINB regression model}
 \usage{
 zinbOptimize(m, Y, commondispersion = TRUE, maxiter = 25,
-  stop.epsilon = 1e-04, verbose = FALSE, ncores = 1)
+  stop.epsilon = 1e-04, verbose = FALSE,
+  BPPARAM = BiocParallel::bpparam())
 }
 \arguments{
 \item{m}{The model of class ZinbModel}
@@ -22,7 +23,9 @@ likelihood is below epsilon (default 0.0001)}
 
 \item{verbose}{print information (default FALSE)}
 
-\item{ncores}{number of cores (default to 1)}
+\item{BPPARAM}{object of class \code{bpparamClass} that specifies the
+back-end to be used for computations. See
+\code{\link[BiocParallel]{bpparam}} for details.}
 }
 \value{
 An object of class ZinbModel similar to the one given as argument

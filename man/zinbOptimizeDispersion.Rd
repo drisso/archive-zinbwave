@@ -4,7 +4,8 @@
 \alias{zinbOptimizeDispersion}
 \title{Optimize the dispersion parameters of a ZINB regression model}
 \usage{
-zinbOptimizeDispersion(m, Y, commondispersion = TRUE, ncores = 1)
+zinbOptimizeDispersion(m, Y, commondispersion = TRUE,
+  BPPARAM = BiocParallel::bpparam())
 }
 \arguments{
 \item{m}{The model of class ZinbModel}
@@ -14,7 +15,9 @@ zinbOptimizeDispersion(m, Y, commondispersion = TRUE, ncores = 1)
 \item{commondispersion}{Whether or not a single dispersion for all features
 is estimated (default TRUE)}
 
-\item{ncores}{Number of cores for parallel computation (default 1)}
+\item{BPPARAM}{object of class \code{bpparamClass} that specifies the
+back-end to be used for computations. See
+\code{\link[BiocParallel]{bpparam}} for details.}
 }
 \value{
 An object of class ZinbModel similar to the one given as argument
