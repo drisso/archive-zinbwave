@@ -26,6 +26,9 @@ library(matrixStats)
 library(magrittr)
 library(ggplot2)
 library(biomaRt)
+
+# Register BiocParallel Serial Execution
+BiocParallel::register(BiocParallel::SerialParam())
 ```
 
 This vignette provides an introductory example on how to work with the `zinbwave`
