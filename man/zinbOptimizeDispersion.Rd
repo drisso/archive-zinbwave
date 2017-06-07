@@ -4,11 +4,18 @@
 \alias{zinbOptimizeDispersion}
 \title{Optimize the dispersion parameters of a ZINB regression model}
 \usage{
-zinbOptimizeDispersion(m, Y, commondispersion = TRUE,
+zinbOptimizeDispersion(J, mu, logitPi, epsilon, Y, commondispersion = TRUE,
   BPPARAM = BiocParallel::bpparam())
 }
 \arguments{
-\item{m}{The model of class ZinbModel}
+\item{J}{The number of genes.}
+
+\item{mu}{the matrix containing the mean of the negative binomial.}
+
+\item{logitPi}{the matrix containing the logit of the probability parameter
+of the zero-inflation part of the model.}
+
+\item{epsilon}{the regularization parameter.}
 
 \item{Y}{The matrix of counts.}
 
@@ -24,12 +31,12 @@ An object of class ZinbModel similar to the one given as argument
   with modified parameters zeta.
 }
 \description{
-The dispersion parameters of the model given as argument are optimized by
+The dispersion parameters of the model are optimized by
 penalized maximum likelihood on the count matrix given as argument.
 }
 \examples{
 Y = matrix(10, 3, 5)
 m = zinbModel(n=NROW(Y), J=NCOL(Y))
 m = zinbInitialize(m, Y)
-m = zinbOptimizeDispersion(m, Y)
+m = zinbOptimizeDispersion(NROW(Y), getMu(m), getLogitPi(m), getEpsilon_zeta(m), Y)
 }

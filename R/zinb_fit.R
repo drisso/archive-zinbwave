@@ -571,9 +571,13 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
 
 #' Optimize the dispersion parameters of a ZINB regression model
 #'
-#' The dispersion parameters of the model given as argument are optimized by
+#' The dispersion parameters of the model are optimized by
 #' penalized maximum likelihood on the count matrix given as argument.
-#' @param m The model of class ZinbModel
+#' @param J The number of genes.
+#' @param mu the matrix containing the mean of the negative binomial.
+#' @param logitPi the matrix containing the logit of the probability parameter
+#' of the zero-inflation part of the model.
+#' @param epsilon the regularization parameter.
 #' @param Y The matrix of counts.
 #' @param commondispersion Whether or not a single dispersion for all features
 #'   is estimated (default TRUE)
@@ -586,7 +590,7 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
 #' Y = matrix(10, 3, 5)
 #' m = zinbModel(n=NROW(Y), J=NCOL(Y))
 #' m = zinbInitialize(m, Y)
-#' m = zinbOptimizeDispersion(m, Y)
+#' m = zinbOptimizeDispersion(NROW(Y), getMu(m), getLogitPi(m), getEpsilon_zeta(m), Y)
 #' @export
 zinbOptimizeDispersion <- function(J, mu, logitPi, epsilon,
                                    Y, commondispersion=TRUE,
