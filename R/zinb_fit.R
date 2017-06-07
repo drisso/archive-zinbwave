@@ -357,12 +357,23 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
 
     orthog <- (nFactors(m)>0)
 
+    # extract fixed quantities from m
     X_mu <- getX_mu(m)
     V_mu <- getV_mu(m)
     X_pi <- getX_pi(m)
     V_pi <- getV_pi(m)
     O_mu <- m@O_mu
     O_pi <- m@O_pi
+
+    # exctract paramters from m (remember to update!)
+    beta_mu <- getBeta_mu(m)
+    alpha_mu <- getAlpha_mu(m)
+    gamma_mu <- getGamma_mu(m)
+    beta_pi <- getBeta_pi(m)
+    alpha_pi <- getAlpha_pi(m)
+    gamma_pi <- getGamma_pi(m)
+    W <- getW(m)
+    zeta <- getZeta(m)
 
     optimright_fun <- function(j, beta_mu, alpha_mu, beta_pi, alpha_pi,
                                Y, X_mu, W, V_mu, gamma_mu, O_mu, X_pi,
@@ -405,30 +416,42 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
         if (verbose) {message("Iteration ",iter)}
 
         # Evaluate total penalized likelihood
-        total.lik[iter] <- loglik(m, Y) - penalty(m)
+        mu <- exp(X_mu %*% beta_mu + t(V_mu %*% gamma_mu) +
+                      W %*% alpha_mu + O_mu)
+
+        logitPi <- X_pi %*% beta_pi + t(V_pi %*% gamma_pi) +
+            W %*% alpha_pi + O_pi
+
+        theta <- exp(zeta)
+
+        loglik <- zinb.loglik(Y, mu, rep(theta, rep(n, J)), logitPi)
+
+        penalty <- sum(getEpsilon_alpha(m) * (alpha_mu)^2)/2 +
+            sum(getEpsilon_alpha(m) * (alpha_pi)^2)/2 +
+            sum(getEpsilon_beta_mu(m) * (beta_mu)^2)/2 +
+            sum(getEpsilon_beta_pi(m) * (beta_pi)^2)/2 +
+            sum(getEpsilon_gamma_mu(m)*(gamma_mu)^2)/2 +
+            sum(getEpsilon_gamma_pi(m)*(gamma_pi)^2)/2 +
+            sum(getEpsilon_W(m)*t(W)^2)/2 +
+            getEpsilon_zeta(m)*var(zeta)/2
+
+        total.lik[iter] <- loglik - penalty
+
         if (verbose) {message("penalized log-likelihood = ",
                           total.lik[iter])}
 
         # If the increase in likelihood is smaller than 0.5%, stop maximization
-        if(iter>1){
+        if(iter > 1){
             if(abs((total.lik[iter]-total.lik[iter-1]) /
                    total.lik[iter-1])<stop.epsilon)
                 break
             }
 
         # 1. Optimize dispersion
-        m <- zinbOptimizeDispersion(m, Y,
+        zeta <- zinbOptimizeDispersion(J, mu, logitPi, getEpsilon_zeta(m), Y,
                                     commondispersion=commondispersion,
                                     BPPARAM=BPPARAM)
 
-        beta_mu <- getBeta_mu(m)
-        alpha_mu <- getAlpha_mu(m)
-        gamma_mu <- getGamma_mu(m)
-        beta_pi <- getBeta_pi(m)
-        alpha_pi <- getAlpha_pi(m)
-        gamma_pi <- getGamma_pi(m)
-        W <- getW(m)
-        zeta <- m@zeta
         # Evaluate total penalized likelihood
         if (verbose) {
             message("After dispersion optimization = ",
@@ -534,7 +557,7 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
                      which_V_mu = m@which_V_mu, which_V_pi = m@which_V_pi,
                      W = W, beta_mu = beta_mu, beta_pi = beta_pi,
                      gamma_mu = gamma_mu, gamma_pi = gamma_pi,
-                     alpha_mu = alpha_mu, alpha_pi = alpha_pi, zeta = m@zeta,
+                     alpha_mu = alpha_mu, alpha_pi = alpha_pi, zeta = zeta,
                      epsilon_beta_mu = m@epsilon_beta_mu,
                      epsilon_gamma_mu = m@epsilon_gamma_mu,
                      epsilon_beta_pi = m@epsilon_beta_pi,
@@ -565,13 +588,9 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
 #' m = zinbInitialize(m, Y)
 #' m = zinbOptimizeDispersion(m, Y)
 #' @export
-zinbOptimizeDispersion <- function(m, Y, commondispersion=TRUE,
+zinbOptimizeDispersion <- function(J, mu, logitPi, epsilon,
+                                   Y, commondispersion=TRUE,
                                    BPPARAM=BiocParallel::bpparam()) {
-
-    J <- nFeatures(m)
-    mu <- getMu(m)
-    logitPi <- getLogitPi(m)
-    epsilon <- getEpsilon_zeta(m)
 
     # 1) Find a single dispersion parameter for all counts by 1-dimensional
     # optimization of the likelihood
@@ -580,9 +599,7 @@ zinbOptimizeDispersion <- function(m, Y, commondispersion=TRUE,
 
     zeta <- rep(g$maximum,J)
 
-    if (commondispersion) {
-        m@zeta <- zeta
-    } else {
+    if (!commondispersion) {
 
         # 2) Optimize the dispersion parameter of each sample
         locfun <- function(logt) {
@@ -604,10 +621,10 @@ zinbOptimizeDispersion <- function(m, Y, commondispersion=TRUE,
             }
             s
         }
-        m@zeta <- optim( par=zeta, fn=locfun , gr=locgrad,
-                        control=list(fnscale=-1,trace=0), method="BFGS")$par
+        zeta <- optim( par=zeta, fn=locfun , gr=locgrad,
+                       control=list(fnscale=-1,trace=0), method="BFGS")$par
     }
-    return(m)
+    return(zeta)
 }
 
 
