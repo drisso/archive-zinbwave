@@ -357,6 +357,50 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
 
     orthog <- (nFactors(m)>0)
 
+    X_mu <- getX_mu(m)
+    V_mu <- getV_mu(m)
+    X_pi <- getX_pi(m)
+    V_pi <- getV_pi(m)
+    O_mu <- m@O_mu
+    O_pi <- m@O_pi
+
+    optimright_fun <- function(j, beta_mu, alpha_mu, beta_pi, alpha_pi,
+                               Y, X_mu, W, V_mu, gamma_mu, O_mu, X_pi,
+                               V_pi, gamma_pi, O_pi, zeta, n, epsilonright) {
+        optim( fn=zinb.loglik.regression,
+               gr=zinb.loglik.regression.gradient,
+               par=c(beta_mu[,j], alpha_mu[,j],
+                     beta_pi[,j], alpha_pi[,j]),
+               Y=Y[,j], A.mu=cbind(X_mu, W),
+               C.mu=t(V_mu[j,] %*% gamma_mu) + O_mu[,j],
+               A.pi=cbind(X_pi, W),
+               C.pi=t(V_pi[j,] %*% gamma_pi) + O_pi[,j],
+               C.theta=matrix(zeta[j], nrow = n, ncol = 1),
+               epsilon=epsilonright,
+               control=list(fnscale=-1,trace=0),
+               method="BFGS")$par
+    }
+
+    optimleft_fun <- function(i, gamma_mu, gamma_pi, W, Y, V_mu, alpha_mu,
+                              X_mu, beta_mu, O_mu, V_pi, alpha_pi, X_pi,
+                              beta_pi, O_pi, zeta, epsilonleft) {
+        optim( fn=zinb.loglik.regression,
+               gr=zinb.loglik.regression.gradient,
+               par=c(gamma_mu[,i], gamma_pi[,i],
+                     t(W[i,])),
+               Y=t(Y[i,]),
+               A.mu=V_mu,
+               B.mu=t(alpha_mu),
+               C.mu=t(X_mu[i,]%*%beta_mu + O_mu[i,]),
+               A.pi=V_pi,
+               B.pi=t(alpha_pi),
+               C.pi=t(X_pi[i,]%*%beta_pi + O_pi[i,]),
+               C.theta=zeta,
+               epsilon=epsilonleft,
+               control=list(fnscale=-1,trace=0),
+               method="BFGS")$par
+    }
+
     for (iter in seq_len(maxiter)){
         if (verbose) {message("Iteration ",iter)}
 
@@ -384,7 +428,7 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
         alpha_pi <- getAlpha_pi(m)
         gamma_pi <- getGamma_pi(m)
         W <- getW(m)
-
+        zeta <- m@zeta
         # Evaluate total penalized likelihood
         if (verbose) {
             message("After dispersion optimization = ",
@@ -396,20 +440,11 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
         if (optimright) {
             ptm <- proc.time()
             estimate <- matrix(unlist(
-                bplapply(seq(J), function(j) {
-                optim( fn=zinb.loglik.regression,
-                       gr=zinb.loglik.regression.gradient,
-                       par=c(beta_mu[,j], alpha_mu[,j],
-                             beta_pi[,j], alpha_pi[,j]),
-                       Y=Y[,j], A.mu=cbind(getX_mu(m), W),
-                       C.mu=t(getV_mu(m)[j,] %*% gamma_mu) + m@O_mu[,j],
-                       A.pi=cbind(getX_pi(m), W),
-                       C.pi=t(getV_pi(m)[j,] %*% gamma_pi) + m@O_pi[,j],
-                       C.theta=matrix(m@zeta[j], nrow = n, ncol = 1),
-                       epsilon=epsilonright,
-                       control=list(fnscale=-1,trace=0),
-                       method="BFGS")$par
-                    }, BPPARAM=BPPARAM)), nrow=sum(nright))
+                bplapply(seq(J), optimright_fun,
+                         beta_mu, alpha_mu, beta_pi, alpha_pi,
+                         Y, X_mu, W, V_mu, gamma_mu, O_mu, X_pi,
+                         V_pi, gamma_pi, O_pi, zeta, n, epsilonright,
+                         BPPARAM=BPPARAM)), nrow=sum(nright))
 
             if (verbose) {print(proc.time()-ptm)}
             ind <- 1
@@ -453,23 +488,11 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
         if (optimleft) {
             ptm <- proc.time()
             estimate <- matrix(unlist(
-                bplapply(seq(n), function(i) {
-                optim( fn=zinb.loglik.regression,
-                       gr=zinb.loglik.regression.gradient,
-                       par=c(gamma_mu[,i], gamma_pi[,i],
-                             t(W[i,])),
-                       Y=t(Y[i,]),
-                       A.mu=getV_mu(m),
-                       B.mu=t(alpha_mu),
-                       C.mu=t(getX_mu(m)[i,]%*%beta_mu + m@O_mu[i,]),
-                       A.pi=getV_pi(m),
-                       B.pi=t(alpha_pi),
-                       C.pi=t(getX_pi(m)[i,]%*%beta_pi + m@O_pi[i,]),
-                       C.theta=m@zeta,
-                       epsilon=epsilonleft,
-                       control=list(fnscale=-1,trace=0),
-                       method="BFGS")$par
-                    }, BPPARAM=BPPARAM)), nrow=sum(nleft))
+                bplapply(seq(n), optimleft_fun,
+                         gamma_mu, gamma_pi, W, Y, V_mu, alpha_mu,
+                         X_mu, beta_mu, O_mu, V_pi, alpha_pi, X_pi,
+                         beta_pi, O_pi, zeta, epsilonleft,
+                         BPPARAM=BPPARAM)), nrow=sum(nleft))
 
             if (verbose) {print(proc.time()-ptm)}
             ind <- 1
