@@ -375,43 +375,6 @@ zinbOptimize <- function(m, Y, commondispersion=TRUE, maxiter=25,
     W <- getW(m)
     zeta <- getZeta(m)
 
-    optimright_fun <- function(j, beta_mu, alpha_mu, beta_pi, alpha_pi,
-                               Y, X_mu, W, V_mu, gamma_mu, O_mu, X_pi,
-                               V_pi, gamma_pi, O_pi, zeta, n, epsilonright) {
-        optim( fn=zinb.loglik.regression,
-               gr=zinb.loglik.regression.gradient,
-               par=c(beta_mu[,j], alpha_mu[,j],
-                     beta_pi[,j], alpha_pi[,j]),
-               Y=Y[,j], A.mu=cbind(X_mu, W),
-               C.mu=t(V_mu[j,] %*% gamma_mu) + O_mu[,j],
-               A.pi=cbind(X_pi, W),
-               C.pi=t(V_pi[j,] %*% gamma_pi) + O_pi[,j],
-               C.theta=matrix(zeta[j], nrow = n, ncol = 1),
-               epsilon=epsilonright,
-               control=list(fnscale=-1,trace=0),
-               method="BFGS")$par
-    }
-
-    optimleft_fun <- function(i, gamma_mu, gamma_pi, W, Y, V_mu, alpha_mu,
-                              X_mu, beta_mu, O_mu, V_pi, alpha_pi, X_pi,
-                              beta_pi, O_pi, zeta, epsilonleft) {
-        optim( fn=zinb.loglik.regression,
-               gr=zinb.loglik.regression.gradient,
-               par=c(gamma_mu[,i], gamma_pi[,i],
-                     t(W[i,])),
-               Y=t(Y[i,]),
-               A.mu=V_mu,
-               B.mu=t(alpha_mu),
-               C.mu=t(X_mu[i,]%*%beta_mu + O_mu[i,]),
-               A.pi=V_pi,
-               B.pi=t(alpha_pi),
-               C.pi=t(X_pi[i,]%*%beta_pi + O_pi[i,]),
-               C.theta=zeta,
-               epsilon=epsilonleft,
-               control=list(fnscale=-1,trace=0),
-               method="BFGS")$par
-    }
-
     for (iter in seq_len(maxiter)){
         if (verbose) {message("Iteration ",iter)}
 
@@ -995,4 +958,41 @@ zinb.loglik.regression.gradient <- function(alpha, Y,
     }
 
     grad
+}
+
+optimright_fun <- function(j, beta_mu, alpha_mu, beta_pi, alpha_pi,
+                           Y, X_mu, W, V_mu, gamma_mu, O_mu, X_pi,
+                           V_pi, gamma_pi, O_pi, zeta, n, epsilonright) {
+    optim( fn=zinb.loglik.regression,
+           gr=zinb.loglik.regression.gradient,
+           par=c(beta_mu[,j], alpha_mu[,j],
+                 beta_pi[,j], alpha_pi[,j]),
+           Y=Y[,j], A.mu=cbind(X_mu, W),
+           C.mu=t(V_mu[j,] %*% gamma_mu) + O_mu[,j],
+           A.pi=cbind(X_pi, W),
+           C.pi=t(V_pi[j,] %*% gamma_pi) + O_pi[,j],
+           C.theta=matrix(zeta[j], nrow = n, ncol = 1),
+           epsilon=epsilonright,
+           control=list(fnscale=-1,trace=0),
+           method="BFGS")$par
+}
+
+optimleft_fun <- function(i, gamma_mu, gamma_pi, W, Y, V_mu, alpha_mu,
+                          X_mu, beta_mu, O_mu, V_pi, alpha_pi, X_pi,
+                          beta_pi, O_pi, zeta, epsilonleft) {
+    optim( fn=zinb.loglik.regression,
+           gr=zinb.loglik.regression.gradient,
+           par=c(gamma_mu[,i], gamma_pi[,i],
+                 t(W[i,])),
+           Y=t(Y[i,]),
+           A.mu=V_mu,
+           B.mu=t(alpha_mu),
+           C.mu=t(X_mu[i,]%*%beta_mu + O_mu[i,]),
+           A.pi=V_pi,
+           B.pi=t(alpha_pi),
+           C.pi=t(X_pi[i,]%*%beta_pi + O_pi[i,]),
+           C.theta=zeta,
+           epsilon=epsilonleft,
+           control=list(fnscale=-1,trace=0),
+           method="BFGS")$par
 }
