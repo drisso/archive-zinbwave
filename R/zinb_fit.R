@@ -190,13 +190,14 @@ zinbInitialize <- function(m, Y, nb.repeat=2, BPPARAM=BiocParallel::bpparam()) {
             iter <- nb.repeat # no need to estimate gamma_mu nor to iterate
         } else {
             Xbeta_mu <- getX_mu(m) %*% beta_mu
-            gamma_mu <- matrix(unlist(bplapply(seq(n), function(i) {
-                solveRidgeRegression(x=getV_mu(m)[P[i,], , drop=FALSE],
-                                     y=L[i,P[i,]] - Xbeta_mu[i, P[i,]],
-                                     epsilon = getEpsilon_gamma_mu(m),
-                                     family="gaussian")
-                } , BPPARAM=BPPARAM
-                )), nrow=NCOL(getV_mu(m)))
+            y <- matrix(0, nrow=n, ncol=J)
+            y[P] <- L[P] - Xbeta_mu[P]
+
+            gamma_mu <- solveRidgeRegression(x = getV_mu(m),
+                                             y = y,
+                                             P = P,
+                                             epsilon = getEpsilon_gamma_mu(m),
+                                             family="gaussian")
         }
 
         # Optimize beta_mu (in parallel for each gene)
@@ -204,13 +205,14 @@ zinbInitialize <- function(m, Y, nb.repeat=2, BPPARAM=BiocParallel::bpparam()) {
             iter <- nb.repeat # no need to estimate gamma_mu nor to iterate
         } else {
             tVgamma_mu <- t(getV_mu(m) %*% gamma_mu)
-            beta_mu <- matrix(unlist(bplapply(seq(J), function(j) {
-                solveRidgeRegression(x=getX_mu(m)[P[,j], , drop=FALSE],
-                                     y=L[P[,j],j] - tVgamma_mu[P[,j], j],
-                                     epsilon = getEpsilon_beta_mu(m),
-                                     family="gaussian")
-            }, BPPARAM=BPPARAM
-            )), nrow=NCOL(getX_mu(m)))
+            y <- matrix(0, nrow=n, ncol=J)
+            y[P] = L[P] - tVgamma_mu[P]
+
+            beta_mu <- solveRidgeRegression(x = getX_mu(m),
+                                            y = t(y),
+                                            P = t(P),
+                                            epsilon = getEpsilon_beta_mu(m),
+                                            family="gaussian")
         }
 
         iter <- iter+1
@@ -250,31 +252,26 @@ zinbInitialize <- function(m, Y, nb.repeat=2, BPPARAM=BiocParallel::bpparam()) {
             iter <- nb.repeat # no need to estimate gamma_pi nor to iterate
         } else {
             off <- getX_pi(m) %*% beta_pi + W %*% alpha_pi
-            gamma_pi <- matrix(unlist(bplapply(seq(n), function(i) {
-                solveRidgeRegression(x=getV_pi(m),
-                                     y=Z[i,],
-                                     offset=off[i,],
-                                     epsilon = getEpsilon_gamma_pi(m),
-                                     family="binomial")
-            }, BPPARAM=BPPARAM
-            )), nrow=NCOL(getV_pi(m)))
+            gamma_pi <- solveRidgeRegression(x = getV_pi(m),
+                                             y = Z,
+                                             offset = off,
+                                             epsilon = getEpsilon_gamma_pi(m),
+                                             family="binomial")
         }
 
         # Optimize beta_pi and alpha_pi (in parallel for each gene)
         if (NCOL(getX_pi(m)) + nFactors(m) == 0) {
             iter <- nb.repeat # no need to estimate nor to iterate
         } else {
-            tVgamma_pi <- t(getV_pi(m) %*% gamma_pi)
+            Vgamma_pi <- getV_pi(m) %*% gamma_pi
             XW <- cbind(getX_pi(m),W)
-            s <- matrix(unlist(bplapply(seq(J), function(j) {
-                solveRidgeRegression(x=XW,
-                                     y=Z[,j],
-                                     offset = tVgamma_pi[,j],
-                                     epsilon = c(getEpsilon_beta_pi(m),
-                                                 getEpsilon_alpha(m)),
-                                     family="binomial")
-            }, BPPARAM=BPPARAM
-            )), nrow=NCOL(getX_pi(m)) + nFactors(m))
+            s <- solveRidgeRegression(x = XW,
+                                      y = t(Z),
+                                      offset = Vgamma_pi,
+                                      epsilon = c(getEpsilon_beta_pi(m),
+                                                  getEpsilon_alpha(m)),
+                                      family="binomial")
+
             if (NCOL(getX_pi(m))>0) {
                 beta_pi <- s[1:NCOL(getX_pi(m)),,drop=FALSE]
             }

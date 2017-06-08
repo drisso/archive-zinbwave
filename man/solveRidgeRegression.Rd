@@ -4,15 +4,19 @@
 \alias{solveRidgeRegression}
 \title{Solve ridge regression or logistic regression problems}
 \usage{
-solveRidgeRegression(x, y, beta = rep(0, NCOL(x)), epsilon = 1e-06,
-  family = c("gaussian", "binomial"), offset = rep(0, NROW(x)))
+solveRidgeRegression(x, y, P = matrix(TRUE, nrow = NROW(y), ncol = NCOL(y)),
+  beta = rep(0, NCOL(x) * NROW(y)), epsilon = 1e-06,
+  family = c("gaussian", "binomial"), offset = 0)
 }
 \arguments{
 \item{x}{a matrix of covariates, one sample per row, one covariate per
 column.}
 
-\item{y}{a vector of response (continuous for regression, 0/1 binary for
-logistic regression)}
+\item{y}{a matrix of responses (continuous for regression, 0/1 binary for
+logistic regression), one sample per row, one feature per column.}
+
+\item{P}{a logical matrix of the same size of \code{y} indicating whether
+value should be used for the regression (useful to "mask" NA values).}
 
 \item{beta}{an initial solution where optimization starts (null vector by
 default)}
@@ -23,7 +27,8 @@ default)}
 \item{family}{a string to choose the type of regression (default
 \code{family="gaussian"})}
 
-\item{offset}{a vector of offsets (default null vector)}
+\item{offset}{scalar or matrix of offsets (default 0); if a matrix, it must
+have the same size of \code{y}}
 }
 \value{
 A vector solution of the regression problem
