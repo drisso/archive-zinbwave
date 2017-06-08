@@ -88,7 +88,7 @@ This leaves us with `r sum(filter)` genes.
 We next identify the 100 most variable genes, which will be the input of our
 ZINB-WaVE procedure. Although we apply ZINB-WaVE to only these genes primarily
 for computational reasons, it is generally a good idea to focus on a subset of
-higly-variable genes, in order to remove transcriptional noise and focus on the
+highly-variable genes, in order to remove transcriptional noise and focus on the
 more biologically meaningful signals. However, at least 1,000 genes are probably
 needed for real analyses.
 
@@ -160,7 +160,7 @@ covariates, indicating that the scaling factor included in the model (the $\gamm
 
 ### Gene-level covariates
 
-Anagously, we can include gene-level covariates, as columns of $V$. Here, we 
+Analogously, we can include gene-level covariates, as columns of $V$. Here, we 
 illustrate this capability by including gene length and GC-content.
 
 We use the `biomaRt` package to compute gene length and GC-content.
