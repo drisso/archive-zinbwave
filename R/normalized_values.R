@@ -81,6 +81,7 @@ computeDevianceResiduals <- function(model, x, ignoreW = TRUE) {
 #' the biology.
 #'
 #' @import SummarizedExperiment
+#' @import SingleCellExperiment
 #'
 #' @examples
 #' se <- SummarizedExperiment(matrix(rpois(60, lambda=5), nrow=10, ncol=6),
@@ -98,27 +99,25 @@ setMethod("zinbDimRed", "SummarizedExperiment",
                              verbose, nb.repeat.initialize, maxiter.optimize,
                              stop.epsilon.optimize, BPPARAM, ...)
 
+              out <- as(Y, "SingleCellExperiment")
 
-              # Returns a summarizedExperiment object where normalized values
-              # and deviance residuals can be added to the list of assays and
-              # the W has been added to the colData matrix if K > 0
               if (normalizedValues){
                   norm <- computeDevianceResiduals(res, assay(Y), ignoreW = T)
-                  assays(Y)[['normalizedValues']] <- norm
+                  assay(out, "normalizedValues") <- norm
               }
 
               if (residuals){
                   devres <- computeDevianceResiduals(res, assay(Y), ignoreW = F)
-                  assays(Y)[['residuals']] <- devres
+                  assay(out, "residuals") <- devres
               }
 
               if (nFactors(res) > 0){
-                  W <- data.frame(getW(res))
+                  W <- getW(res)
                   colnames(W) <- paste0('W', seq_len(nFactors(res)))
-                  colData(Y) <- cbind(colData(Y), W)
+                  reducedDim(out, "zinbwave") <- W
               }
 
-              return(Y)
+              return(out)
           }
 )
 
