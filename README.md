@@ -15,6 +15,15 @@ ZINB-WaVE: A general and flexible method for signal extraction from single-cell 
 ## Installation
 
 ```{r}
+source("https://bioconductor.org/biocLite.R")
+biocLite("zinbwave")
+```
+
+Note that `zinbwave` requires `R (>=3.4)` and `Bioconductor (>=3.6)`. Bioconductor 3.6 is currently the **devel version** of Bioconductor. See [here](https://www.bioconductor.org/developers/how-to/useDevel/) on how to install it.
+
+In virtually all cases, installing from Bioconductor is recommended. However, if you want to install the development version of `zinbwave` from GitHub, you can do so with the following.
+
+```{r}
 library(devtools)
 install_github("drisso/zinbwave")
 ```

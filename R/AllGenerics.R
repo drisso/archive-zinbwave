@@ -483,4 +483,4 @@ setGeneric(
 #'   reduced matrix is stored in the \code{reducedDims} slot and optionally
 #'   normalized values and residuals are added in the list of assays.
 #' @export
-setGeneric("zinbDimRed", function(Y, ...) standardGeneric("zinbDimRed"))
+setGeneric("zinbwave", function(Y, ...) standardGeneric("zinbwave"))
