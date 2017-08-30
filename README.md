@@ -1,29 +1,6 @@
 # zinbwave
 Zero-inflated Negative Binomial based Wanted Variation Extraction (ZINB-WaVE)
 
-[![Project Status: Active - The project has reached a stable, usable state and is being actively developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
-[![Build Status](https://travis-ci.org/drisso/zinbwave.svg?branch=master)](https://travis-ci.org/drisso/zinbwave)
-[![Coverage](https://codecov.io/gh/drisso/zinbwave/branch/master/graph/badge.svg)](https://codecov.io/gh/drisso/zinbwave)
+This is the archived version of the repository with the complete history before the switch to the Bioconductor git.
 
-This package implements a zero-inflated negative binomial model for single-cell RNA-seq data, with latent factors.
-
-The model is described in details in the paper:
-
-D. Risso, F. Perraudeau, S. Gribkova, S. Dudoit and JP. Vert (2017).
-ZINB-WaVE: A general and flexible method for signal extraction from single-cell RNA-seq data. bioRxiv. https://doi.org/10.1101/125112
-
-## Installation
-
-```{r}
-source("https://bioconductor.org/biocLite.R")
-biocLite("zinbwave")
-```
-
-Note that `zinbwave` requires `R (>=3.4)` and `Bioconductor (>=3.6)`. Bioconductor 3.6 is currently the **devel version** of Bioconductor. See [here](https://www.bioconductor.org/developers/how-to/useDevel/) on how to install it.
-
-In virtually all cases, installing from Bioconductor is recommended. However, if you want to install the development version of `zinbwave` from GitHub, you can do so with the following.
-
-```{r}
-library(devtools)
-install_github("drisso/zinbwave")
-```
+Please, visit https://github.com/drisso/zinbwave for the current version of zinbwave.
